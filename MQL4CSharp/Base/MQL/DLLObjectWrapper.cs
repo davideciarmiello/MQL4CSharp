@@ -17,7 +17,6 @@ limitations under the License.
 using System;
 using System.Collections.Generic;
 using System.Runtime.InteropServices;
-using Grapevine.Server;
 using log4net;
 using MQL4CSharp.Base.REST;
 using RGiesecke.DllExport;
@@ -60,9 +59,7 @@ namespace MQL4CSharp.Base.MQL
 
         private readonly object mqlCommandManagersLock;
         private readonly object mqlExpertsLock;
-
-        private RESTServer restServer;
-
+        
         private DLLObjectWrapper()
         {
             restCommandLock = 0;
@@ -70,9 +67,7 @@ namespace MQL4CSharp.Base.MQL
             mqlCommandManagers = new Dictionary<Int64, MQLCommandManager>();
             mqlThreadPools = new Dictionary<Int64, MQLThreadPool>();
             mqlExpertsLock = new object();
-            restServer = new RESTServer();
-            restServer.Start();
-
+            
             // create the default command manager for REST
             // Only need to use chart specific one for ChartObjects
             mqlCommandManagers[DEFAULT_CHART_ID] = new MQLCommandManager(DEFAULT_CHART_ID);

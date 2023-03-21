@@ -22,6 +22,8 @@ limitations under the License.
 #import "MQL4CSharp.dll"
 void InitLogging();
 int ExecOnInit(long, string);
+void RestServerStart(long, string);
+void RestServerStop(long);
 int InitRates(long, MqlRates&[], int);
 void SetRatesSize(long, int);
 void ExecOnDeinit(long);
@@ -53,13 +55,14 @@ int ratesSize;
 MqlRates rates[];
 long chartID;
  
-input string CSharpFullTypeName = "MQL4CSharp.UserDefined.Strategy.MaCrossStrategy"; 
+//input string CSharpFullTypeName = "MQL4CSharp.UserDefined.Strategy.MaCrossStrategy";
+input string CSharpFullTypeName = "MQL4CSharp.UserDefined.Strategy.MQLRESTStrategy"; 
+input string RestServerAddress = "127.0.0.1:1234";
+input int LOGLEVEL = 3;
 
 int INFO = 3;
 int DEBUG = 4;
 int TRACE = 5;
-
-int LOGLEVEL = INFO;
  
 char DELIM = 29;
 
@@ -100,6 +103,17 @@ void trace(string m1, string m2 = "", string m3 = "", string m4 = "", string m5 
    }
 }
 
+int getLastErrorPrivate() 
+{
+	int error = GetLastError();
+	if (error == 4052) 
+	{
+		error = 0;
+		ResetLastError();
+	}
+	return error;
+}
+
 bool executeCommands(long ix)
 {
    trace("IsCommandWaiting(): " + IsCommandWaiting(ix));
@@ -132,48 +146,49 @@ bool executeCommands(long ix)
          if(returnType == RETURN_TYPE_BOOL)
          {
             bool boolresult = executeBoolCommand(id, paramArray);
-            error = GetLastError();
+            error = getLastErrorPrivate();
             trace ("command: " + name + ", params" + params + ", result: " + boolresult + ", error: " + error);
             SetBoolCommandResponse(ix, requestId, boolresult, error);
          }
          else if(returnType == RETURN_TYPE_DOUBLE)
          {
             double doubleresult = executeDoubleCommand(id, paramArray);
-            error = GetLastError();
+            error = getLastErrorPrivate();
             trace ("command: " + name + ", params" + params + ", result: " + doubleresult + ", error: " + error);
             SetDoubleCommandResponse(ix, requestId, doubleresult, error);
          }
          else if(returnType == RETURN_TYPE_INT)
          {
             int intresult = executeIntCommand(id, paramArray);
-            error = GetLastError();
+            error = getLastErrorPrivate();
             trace ("command: " + name + ", params" + params + ", result: " + intresult + ", error: " + error);
             SetIntCommandResponse(ix, requestId, intresult, error);
          }
          else if(returnType == RETURN_TYPE_STRING)
          {
             string stringresult = executeStringCommand(id, paramArray);
-            error = GetLastError();
+            error = getLastErrorPrivate();
             trace ("command: " + name + ", params" + params + ", result: " + stringresult + ", error: " + error);
             SetStringCommandResponse(ix, requestId, stringresult, error);
          }
          else if(returnType == RETURN_TYPE_VOID)
          {
             executeVoidCommand(id, paramArray);
+            error = getLastErrorPrivate();
             trace ("command: " + name + ", params" + params + ", error: " + error);
-            SetVoidCommandResponse(ix, requestId, GetLastError());
+            SetVoidCommandResponse(ix, requestId, error);
          }
          else if(returnType == RETURN_TYPE_LONG)
          {
             long longresult = executeLongCommand(id, paramArray);
-            error = GetLastError();
+            error = getLastErrorPrivate();
             trace ("command: " + name + ", params" + params + ", result: " + longresult + ", error: " + error);
             SetLongCommandResponse(ix, requestId, longresult, error);
          }
          else if(returnType == RETURN_TYPE_DATETIME)
          {
             datetime datetimeresult = executeDateTimeCommand(id, paramArray);
-            error = GetLastError();
+            error = getLastErrorPrivate();
             trace ("command: " + name + ", params" + params + ", result: " + datetimeresult + ", error: " + error);
             SetDateTimeCommandResponse(ix, requestId, datetimeresult, error);
          }
@@ -181,7 +196,7 @@ bool executeCommands(long ix)
          debug("Unlocking");
          CommandUnlock(ix);
          debug("Unlocked");
-      }   
+      }
 
    }
    return false;
@@ -197,10 +212,13 @@ int OnInit()
    info("OnInit() Initializing logging");
    InitLogging();
    
+   chartID = ChartID();
+   info("OnInit() Initializing RestServer ", RestServerAddress);
+   RestServerStart(chartID, RestServerAddress);
+
    // Copy the rates array and pass it to the library
    ArrayCopyRates(rates, NULL, 0);
-   ratesSize = ArraySize(rates);
-   chartID = ChartID();
+   ratesSize = ArraySize(rates);   
    info("OnInit() ExecOnInit: ", chartID, ", ", CSharpFullTypeName);
    ExecOnInit(chartID, CSharpFullTypeName);
    
@@ -211,7 +229,7 @@ int OnInit()
    }
    
    info("OnInit() executeCommands on Init");
-   while(IsExecutingOnInit(chartID))
+   if(IsExecutingOnInit(chartID))
    {
       trace("OnInit() IsExecutingOnInit(chartID)");
       executeCommands(chartID);
@@ -233,8 +251,10 @@ void OnDeinit(const int reason)
    // Call the DLL onDeinit
    ExecOnDeinit(chartID);
    
+   RestServerStop(chartID);
+   
    // execute commands that are waiting
-   while(IsExecutingOnDeinit(chartID))
+   if(IsExecutingOnDeinit(chartID))
    {
       executeCommands(chartID);
    }
@@ -250,7 +270,7 @@ void OnTick()
    ExecOnTick(chartID);
 
    // execute commands that are waiting
-   while(IsExecutingOnTick(chartID))
+   if(IsExecutingOnTick(chartID))
    {
       executeCommands(chartID);
    }
@@ -268,7 +288,7 @@ void OnTimer()
    ExecOnTimer(chartID);
 
    // execute commands that are waiting
-   while(IsExecutingOnTimer(chartID))
+   if(IsExecutingOnTimer(chartID))
    {
       executeCommands(chartID);
    }

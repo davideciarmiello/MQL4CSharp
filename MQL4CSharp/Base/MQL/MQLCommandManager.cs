@@ -25,6 +25,7 @@ using mqlsharp.Util;
 using MQL4CSharp.Base.Enums;
 using MQL4CSharp.Base.Exceptions;
 using System.Globalization;
+using System.Linq;
 using System.Threading.Tasks;
 
 namespace MQL4CSharp.Base.MQL
@@ -55,11 +56,19 @@ namespace MQL4CSharp.Base.MQL
             syncLock = new object();
             commandLock = UNLOCKED;
         }
-
         
+        public object ExecCommandAndGetResult(MQLCommand command, List<Object> parameters, int timeout = 5000)
+        {
+            var tsc = new TaskCompletionSource<object>();
+            int id = ExecCommand(command, parameters, tsc);
+            tsc.Task.Wait(timeout);
+            throwExceptionIfErrorResponse(id);
+            return GetCommandResult(id);
+        }
+
         public int ExecCommand(MQLCommand command, List<Object> parameters, TaskCompletionSource<Object> taskCompletionSource = null)
         {
-            LOG.DebugFormat("ExecCommand: {0}", command.ToString());
+            LOG.DebugFormat("ExecCommand: {0} {1}", command.ToString(), string.Join(", ", (parameters ?? new List<object>()).Select(x => x?.ToString())));
             int id;
             lock (syncLock)
             {
@@ -132,7 +141,7 @@ namespace MQL4CSharp.Base.MQL
         {
             lock (syncLock)
             {
-                LOG.DebugFormat("throwExceptionIfErrorResponse({0})", id, commandRequests[id].Error);
+                LOG.DebugFormat("throwExceptionIfErrorResponse({0}) (Error: {1})", id, commandRequests[id].Error);
                 if (commandRequests[id].Error > 0)
                 {
                     int error = commandRequests[id].Error;

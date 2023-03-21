@@ -1,6 +1,9 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.IO;
+using System.Linq;
 using System.Net;
+using System.Text;
 using Grapevine;
 using Grapevine.Server;
 using log4net;
@@ -3761,6 +3764,7 @@ namespace MQL4CSharp.Base.REST
                 result["result"] = PARSE_ERROR;
                 return result;
             }
+            WriteFileContentIfNeed(payload, mqlCommandManager, "templates", "tpl");
             List<Object> parameters = new List<Object>();
             parameters.Add(payload["chart_id"]);
             parameters.Add(payload["filename"]);
@@ -3775,9 +3779,89 @@ namespace MQL4CSharp.Base.REST
             {
                 result["error"] = MQLExceptions.convertRESTException(e.ToString());
             }
+            finally
+            {
+                EndFileNameProcess(payload, result, false);
+            }
 
             return result;
         }
+
+        private static FileInfo WriteFileContentIfNeed(JObject payload, MQLCommandManager mqlCommandManager, string directory, string extension)
+        {
+            FileInfo fileWrited = null;
+
+            byte[] fileContent = null;
+            var fileContentBase64 = payload.Value<string>("filecontent");
+            if (fileContentBase64 != null)
+                fileContent = Convert.FromBase64String(fileContentBase64);
+            if (fileContent == null)
+            {
+                var fileContentString = payload.Value<string>("filecontentstring") as string;
+                if (fileContentString != null)
+                    fileContent = Encoding.UTF8.GetBytes(fileContentString);
+            }
+
+            if (fileContent != null)
+            {
+                fileWrited = SetFileNameFull(payload, mqlCommandManager, directory, extension);
+                File.WriteAllBytes(fileWrited.FullName, fileContent);
+            }
+
+            return fileWrited;
+        }
+
+        private static FileInfo SetFileNameFull(JObject payload, MQLCommandManager mqlCommandManager, string directory, string fileExtension)
+        {
+            var fileName = payload.Value<string>("filename") as string;
+            var parameters = new List<object>();
+            parameters.Add((int)TERMINAL_INFO_STRING.TERMINAL_DATA_PATH);
+            var dataPath = (string)mqlCommandManager.ExecCommandAndGetResult(MQLCommand.TerminalInfoString_1, parameters);
+            if (string.IsNullOrEmpty(fileName))
+            {
+                payload["filename_todelete"] = true;
+                fileName = $"tmp_{Guid.NewGuid().ToString().Replace("-", "")}";
+            }
+            var extsAllowed = fileExtension.Split(',');
+            if (!extsAllowed.Any(x => fileName.EndsWith($".{x}")))
+                fileName = $"{Path.GetFileNameWithoutExtension(fileName)}.{extsAllowed.First()}";
+            payload["filename"] = fileName;
+            var fileInfo = new FileInfo(Path.Combine(dataPath, directory, fileName));
+            payload["filename_full"] = fileInfo.FullName;
+            return fileInfo;
+        }
+
+        private static void EndFileNameProcess(JObject payload, JObject result, bool returnFileAsOutput = true)
+        {
+            var res = result.Value<bool?>("result");
+            if (res == true && returnFileAsOutput)
+            {
+                var fileName = payload.Value<string>("filename_full");
+                var fileContent = File.ReadAllBytes(fileName);
+                result["result_filecontent"] = Convert.ToBase64String(fileContent);
+            }
+            var toDelete = payload.Value<bool?>("filename_todelete");
+            if (toDelete == true)
+            {
+                var fileName = payload.Value<string>("filename_full");
+                for (int i = 0; i < 5; i++)
+                {
+                    try
+                    {
+                        File.Delete(fileName);
+                        break;
+                    }
+                    catch
+                    {
+                        System.Threading.Thread.Sleep(50);
+                    }
+                }
+                
+            }
+        }
+
+
+
         /// <summary>
         /// <b>Function:</b> ChartSaveTemplate<br>
         /// <b>Description:</b> Saves current chart settings in a template with a specified name. The command is added to chart message queue and executed only after all previous commands have been processed.<br>
@@ -3821,6 +3905,8 @@ namespace MQL4CSharp.Base.REST
                 result["result"] = PARSE_ERROR;
                 return result;
             }
+
+            SetFileNameFull(payload, mqlCommandManager, "templates", "tpl");
             List<Object> parameters = new List<Object>();
             parameters.Add(payload["chart_id"]);
             parameters.Add(payload["filename"]);
@@ -3834,6 +3920,10 @@ namespace MQL4CSharp.Base.REST
             catch (Exception e)
             {
                 result["error"] = MQLExceptions.convertRESTException(e.ToString());
+            }
+            finally
+            {
+                EndFileNameProcess(payload, result, true);
             }
 
             return result;
@@ -5194,6 +5284,8 @@ namespace MQL4CSharp.Base.REST
                 result["result"] = PARSE_ERROR;
                 return result;
             }
+
+            SetFileNameFull(payload, mqlCommandManager, "MQL4\\Files", "png,gif,bmp");
             List<Object> parameters = new List<Object>();
             parameters.Add(payload["chart_id"]);
             parameters.Add(payload["filename"]);
@@ -5210,6 +5302,10 @@ namespace MQL4CSharp.Base.REST
             catch (Exception e)
             {
                 result["error"] = MQLExceptions.convertRESTException(e.ToString());
+            }
+            finally
+            {
+                EndFileNameProcess(payload, result, true);
             }
 
             return result;

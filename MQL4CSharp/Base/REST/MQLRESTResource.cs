@@ -4,6 +4,7 @@ using System.IO;
 using System.Linq;
 using System.Net;
 using System.Text;
+using System.Threading.Tasks;
 using Grapevine;
 using Grapevine.Server;
 using log4net;
@@ -3844,19 +3845,30 @@ namespace MQL4CSharp.Base.REST
             if (toDelete == true)
             {
                 var fileName = payload.Value<string>("filename_full");
-                for (int i = 0; i < 5; i++)
+                Func<bool> fnDeleteFile = () =>
                 {
-                    try
+                    for (int i = 0; i < 5; i++)
                     {
-                        File.Delete(fileName);
-                        break;
+                        try
+                        {
+                            if (File.Exists(fileName))
+                                File.Delete(fileName);
+                            return true;
+                        }
+                        catch
+                        {
+                            System.Threading.Thread.Sleep(50);
+                        }
                     }
-                    catch
+                    return false;
+                };
+                //l'eliminazione la faccio dopo 30 secondi, altrimenti ApplyTemplate non sempre funziona, elimina il file mentre lo sta caricando
+                if (!returnFileAsOutput || !fnDeleteFile())
+                    new Task(() =>
                     {
-                        System.Threading.Thread.Sleep(50);
-                    }
-                }
-                
+                        System.Threading.Thread.Sleep(TimeSpan.FromSeconds(30));
+                        fnDeleteFile();
+                    }).Start();
             }
         }
 

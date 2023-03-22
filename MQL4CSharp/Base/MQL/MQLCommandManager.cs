@@ -100,7 +100,7 @@ namespace MQL4CSharp.Base.MQL
             return DLLObjectWrapper.getInstance().getMQLCommandManager(ix);
         }
 
-        public String getCommandParams(int id)
+        public String getCommandParams(int id, string delimiter = null)
         {
             StringBuilder commandParams = new StringBuilder();
 
@@ -112,19 +112,36 @@ namespace MQL4CSharp.Base.MQL
                     // Convert DateTime to MT4 String
                     param = DateUtil.ToMT4TimeString((DateTime)p);
                 }
-                else if (param is double)
+                else if (param is double || param is decimal)
                 {
                     // Make sure we use a dot as decimal character
-                    param = ((double)p).ToString(CultureInfo.InvariantCulture);
+                    param = Convert.ToDecimal(p).ToString(Decimali99SeparatorePuntoMigliaiaVuoto);
                 }
 
                 if (!commandParams.ToString().Equals(""))
                 {
-                    commandParams.Append(DELIMITER);
+                    commandParams.Append(delimiter ?? $"{DELIMITER}");
                 }
                 commandParams.Append(param);
             }
             return commandParams.ToString();
+        }
+        public static readonly NumberFormatInfo Decimali99SeparatorePuntoMigliaiaVuoto = _GetNewNumberFormat(99, ".", "");
+        public static readonly NumberFormatInfo Decimali99SeparatorePuntoMigliaiaVirgola = _GetNewNumberFormat(99, ".", ",");
+        public static readonly NumberFormatInfo Decimali99SeparatoreVirgolaMigliaiaVuoto = _GetNewNumberFormat(99, ",", "");
+        public static readonly NumberFormatInfo Decimali99SeparatoreVirgolaMigliaiaPunto = _GetNewNumberFormat(99, ",", ".");
+        internal static NumberFormatInfo _GetNewNumberFormat(int numeroDecimali, string separatoreDecimali, string separatoreMigliaia)
+        {
+            var format = CultureInfo.InvariantCulture.NumberFormat.Clone() as NumberFormatInfo;
+            format.NumberDecimalDigits = numeroDecimali;
+            format.NumberDecimalSeparator = separatoreDecimali;
+            format.NumberGroupSeparator = separatoreMigliaia;
+
+            format.CurrencyDecimalDigits = numeroDecimali;
+            format.CurrencyDecimalSeparator = separatoreDecimali;
+            format.CurrencyGroupSeparator = separatoreMigliaia;
+
+            return format;
         }
 
 
@@ -146,9 +163,9 @@ namespace MQL4CSharp.Base.MQL
                 {
                     int error = commandRequests[id].Error;
                     String command = commandRequests[id].Command.ToString();
-                    String parameters = getCommandParams(id);
+                    String parameters = getCommandParams(id, ", ");
                     commandRequests.Remove(id);
-                    MQLExceptions.throwMQLException(error, String.Format("{0}({1})", command, parameters));
+                    MQLExceptions.throwMQLException(error, $"{command}({parameters})");
                 }
             }
         }

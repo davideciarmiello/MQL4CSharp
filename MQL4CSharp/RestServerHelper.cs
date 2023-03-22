@@ -17,8 +17,8 @@ namespace MQL4CSharp
     {
         private static readonly ILog LOG = LogManager.GetLogger(typeof(RestServerHelper));
 
-        private static RESTServer _restServer;
-        private static Int64 _restServerOwner;
+        internal static RestServer _restServer;
+        internal static Int64 _restServerOwner;
 
         [DllExport("RestServerStart", CallingConvention = CallingConvention.StdCall)]
         public static void RestServerStart(Int64 ix, [MarshalAs(UnmanagedType.LPWStr)] string listenAddress)
@@ -27,12 +27,14 @@ namespace MQL4CSharp
             {
                 if (_restServer?.IsListening == true)
                     return;
-                _restServer = new RESTServer();
+                
+                _restServer = new RestServer();
                 var hostAndPort = (listenAddress ?? "").Split(':');
                 if (!string.IsNullOrEmpty(hostAndPort.First()))
                     _restServer.Host = hostAndPort.First().Trim();
                 if (hostAndPort.Length == 2 && !string.IsNullOrEmpty(hostAndPort.Last()))
                     _restServer.Port = hostAndPort.Last().Trim();
+                _restServer.Router.ScanAssemblies();
                 _restServer.Start();
                 _restServerOwner = ix;
                 LOG.Info($"RestServer started {listenAddress}");

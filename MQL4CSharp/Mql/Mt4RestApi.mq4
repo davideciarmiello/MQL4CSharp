@@ -18,6 +18,7 @@ limitations under the License.
 
 #import "MQL4CSharp.dll"
 void InitLogging();
+void UnloadAll(long);
 int ExecOnInit(long, string);
 void RestServerStart(long, string);
 void RestServerStop(long);
@@ -203,6 +204,11 @@ bool executeCommands(long ix)
 
 int OnInit()
 {
+   if(!IsDllsAllowed())
+   {
+      info("Require DLL imports.");
+      return(INIT_FAILED);
+   }
    EventSetMillisecondTimer(EVENT_TIMER_MILLIS);
 
    // Initialize log4net
@@ -245,6 +251,7 @@ int OnInit()
  
 void OnDeinit(const int reason)
 {
+   info("OnDeinit()");
    // Call the DLL onDeinit
    ExecOnDeinit(chartID);
    
@@ -258,6 +265,8 @@ void OnDeinit(const int reason)
    
    // execute default REST commands
    executeCommands(DEFAULT_CHART_ID);
+
+   UnloadAll(chartID);
 }
 
  

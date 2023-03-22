@@ -27,7 +27,7 @@ namespace MQL4CSharp.Base.MQL
     /// <summary>
     /// This class will be used to keep object refs so DLL calls are made to the correct object
     /// </summary>
-    public class DLLObjectWrapper
+    public class DLLObjectWrapper : IDisposable
     {
         public static int DEFAULT_CHART_ID = 0;
 
@@ -49,6 +49,18 @@ namespace MQL4CSharp.Base.MQL
                 }
             }
             return dllObjectWrapper;
+        }
+
+        public static void DisposeStatic()
+        {
+            lock (syncLock)
+            {
+                if (dllObjectWrapper != null)
+                {
+                    dllObjectWrapper.Dispose();
+                    dllObjectWrapper = null;
+                }
+            }
         }
 
         private Dictionary<Int64, MQLCommandManager> mqlCommandManagers;
@@ -154,5 +166,14 @@ namespace MQL4CSharp.Base.MQL
             }
         }
 
+        public void Dispose()
+        {
+            mqlCommandManagers?.Clear();
+            mqlCommandManagers = null;
+            mqlExperts?.Clear();
+            mqlExperts = null;
+            mqlThreadPools?.Clear();
+            mqlThreadPools = null;
+        }
     }
 }

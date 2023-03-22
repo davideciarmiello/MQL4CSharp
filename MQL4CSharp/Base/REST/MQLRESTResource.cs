@@ -6,23 +6,24 @@ using System.Net;
 using System.Text;
 using System.Threading.Tasks;
 using Grapevine;
+using Grapevine.Interfaces.Server;
 using Grapevine.Server;
 using log4net;
 using MQL4CSharp.Base.Enums;
 using MQL4CSharp.Base.MQL;
 using Newtonsoft.Json.Linq;
 using MQL4CSharp.Base.Exceptions;
+using Grapevine.Server.Attributes;
+using Grapevine.Shared;
+using Newtonsoft.Json;
 
 namespace MQL4CSharp.Base.REST
 {
-    public sealed class MQLRESTResource : RESTResource
+    [RestResource]
+    public sealed class MQLRESTResource : MQLRESTBase
     {
         private static readonly ILog LOG = LogManager.GetLogger(typeof(MQLRESTResource));
 
-        int DEFAULT_CHART_ID = 0;
-
-        private String PARSE_ERROR = "JSON Parse Error. Check the input format";
-
         /// <summary>
         /// <b>Function:</b> Alert<br>
         /// <b>Description:</b> Displays a message in a separate window.<br>
@@ -32,11 +33,10 @@ namespace MQL4CSharp.Base.REST
         /// <li><b>argument</b> :  </li>
         /// </ul>
         /// </summary>
-        [RESTRoute(Method = HttpMethod.POST, PathInfo = @"^/[0-9]+/alert")]
-        public void Handle_Alert_1(HttpListenerContext context)
+        [RestRoute(HttpMethod = HttpMethod.POST, PathInfo = @"^/[0-9]+/alert$")]
+        public IHttpContext Handle_Alert_1(IHttpContext context)
         {
-            long chartid = Int64.Parse(context.Request.Url.Segments[1].Replace("/", ""));
-            this.SendJsonResponse(context, Alert_1(context, chartid));
+            return SendJsonResponse(context, GetChartId(context), Alert_1);
         }
 
         /// <summary>
@@ -48,35 +48,23 @@ namespace MQL4CSharp.Base.REST
         /// <li><b>argument</b> :  </li>
         /// </ul>
         /// </summary>
-        [RESTRoute(Method = HttpMethod.POST, PathInfo = @"^/alert")]
-        public void Handle_Alert_1_Default(HttpListenerContext context)
+        [RestRoute(HttpMethod = HttpMethod.POST, PathInfo = @"^/alert$")]
+        public IHttpContext Handle_Alert_1_Default(IHttpContext context)
         {
-            this.SendJsonResponse(context, Alert_1(context, DEFAULT_CHART_ID));
+            return SendJsonResponse(context, Alert_1);
         }
 
-        private JObject Alert_1(HttpListenerContext context, long chartId)
+        private async Task<JObject> Alert_1(MQLRestContext context)
         {
-            MQLCommandManager mqlCommandManager = DLLObjectWrapper.getInstance().getMQLCommandManager(chartId);
-            JObject payload = this.GetJsonPayload(context.Request);
-            JObject result = new JObject();
-            if (payload == null)
-            {
-                result["result"] = PARSE_ERROR;
-                return result;
-            }
+            var payload = context.JsonPayload;
+            var result = context.Result;
+            if (PayloadNotValid(context))
+                return context.Result;
             List<Object> parameters = new List<Object>();
-            parameters.Add(payload["argument"]);
-            int id = mqlCommandManager.ExecCommand(MQLCommand.Alert_1, parameters); // MQLCommand ENUM = 1
-            while (mqlCommandManager.IsCommandRunning(id)) ; // block while command is running
-            try
-            {
-                mqlCommandManager.throwExceptionIfErrorResponse(id);
-                result["result"] = "";
-            }
-            catch (Exception e)
-            {
-                result["error"] = MQLExceptions.convertRESTException(e.ToString());
-            }
+            ParamAdd(context, parameters, "argument");
+            await ExecCommandAsync(context, MQLCommand.Alert_1, parameters); // MQLCommand ENUM = 1
+
+            result["result"] = "";
 
             return result;
         }
@@ -89,11 +77,10 @@ namespace MQL4CSharp.Base.REST
         /// <li><b>argument</b> :  [in] Any values, separated by commas. To delimit output information into several lines, a line break symbol "\n" or "\r\n" is used. Number of parameters cannot exceed 64. Total length of the input comment (including invisible symbols) cannot exceed 2045 characters (excess symbols will be cut out during output).</li>
         /// </ul>
         /// </summary>
-        [RESTRoute(Method = HttpMethod.POST, PathInfo = @"^/[0-9]+/comment")]
-        public void Handle_Comment_1(HttpListenerContext context)
+        [RestRoute(HttpMethod = HttpMethod.POST, PathInfo = @"^/[0-9]+/comment$")]
+        public IHttpContext Handle_Comment_1(IHttpContext context)
         {
-            long chartid = Int64.Parse(context.Request.Url.Segments[1].Replace("/", ""));
-            this.SendJsonResponse(context, Comment_1(context, chartid));
+            return SendJsonResponse(context, GetChartId(context), Comment_1);
         }
 
         /// <summary>
@@ -105,35 +92,23 @@ namespace MQL4CSharp.Base.REST
         /// <li><b>argument</b> :  [in] Any values, separated by commas. To delimit output information into several lines, a line break symbol "\n" or "\r\n" is used. Number of parameters cannot exceed 64. Total length of the input comment (including invisible symbols) cannot exceed 2045 characters (excess symbols will be cut out during output).</li>
         /// </ul>
         /// </summary>
-        [RESTRoute(Method = HttpMethod.POST, PathInfo = @"^/comment")]
-        public void Handle_Comment_1_Default(HttpListenerContext context)
+        [RestRoute(HttpMethod = HttpMethod.POST, PathInfo = @"^/comment$")]
+        public IHttpContext Handle_Comment_1_Default(IHttpContext context)
         {
-            this.SendJsonResponse(context, Comment_1(context, DEFAULT_CHART_ID));
+            return SendJsonResponse(context, Comment_1);
         }
 
-        private JObject Comment_1(HttpListenerContext context, long chartId)
+        private async Task<JObject> Comment_1(MQLRestContext context)
         {
-            MQLCommandManager mqlCommandManager = DLLObjectWrapper.getInstance().getMQLCommandManager(chartId);
-            JObject payload = this.GetJsonPayload(context.Request);
-            JObject result = new JObject();
-            if (payload == null)
-            {
-                result["result"] = PARSE_ERROR;
-                return result;
-            }
+            var payload = context.JsonPayload;
+            var result = context.Result;
+            if (PayloadNotValid(context))
+                return context.Result;
             List<Object> parameters = new List<Object>();
-            parameters.Add(payload["argument"]);
-            int id = mqlCommandManager.ExecCommand(MQLCommand.Comment_1, parameters); // MQLCommand ENUM = 2
-            while (mqlCommandManager.IsCommandRunning(id)) ; // block while command is running
-            try
-            {
-                mqlCommandManager.throwExceptionIfErrorResponse(id);
-                result["result"] = "";
-            }
-            catch (Exception e)
-            {
-                result["error"] = MQLExceptions.convertRESTException(e.ToString());
-            }
+            ParamAdd(context, parameters, "argument");
+            await ExecCommandAsync(context, MQLCommand.Comment_1, parameters); // MQLCommand ENUM = 2
+
+            result["result"] = "";
 
             return result;
         }
@@ -147,11 +122,10 @@ namespace MQL4CSharp.Base.REST
         /// <li><b>ftp_path</b> :  [in] FTP catalog. If a directory is not specified, directory described in settings is used.</li>
         /// </ul>
         /// </summary>
-        [RESTRoute(Method = HttpMethod.POST, PathInfo = @"^/[0-9]+/sendftp")]
-        public void Handle_SendFTP_1(HttpListenerContext context)
+        [RestRoute(HttpMethod = HttpMethod.POST, PathInfo = @"^/[0-9]+/sendftp$")]
+        public IHttpContext Handle_SendFTP_1(IHttpContext context)
         {
-            long chartid = Int64.Parse(context.Request.Url.Segments[1].Replace("/", ""));
-            this.SendJsonResponse(context, SendFTP_1(context, chartid));
+            return SendJsonResponse(context, GetChartId(context), SendFTP_1);
         }
 
         /// <summary>
@@ -164,36 +138,24 @@ namespace MQL4CSharp.Base.REST
         /// <li><b>ftp_path</b> :  [in] FTP catalog. If a directory is not specified, directory described in settings is used.</li>
         /// </ul>
         /// </summary>
-        [RESTRoute(Method = HttpMethod.POST, PathInfo = @"^/sendftp")]
-        public void Handle_SendFTP_1_Default(HttpListenerContext context)
+        [RestRoute(HttpMethod = HttpMethod.POST, PathInfo = @"^/sendftp$")]
+        public IHttpContext Handle_SendFTP_1_Default(IHttpContext context)
         {
-            this.SendJsonResponse(context, SendFTP_1(context, DEFAULT_CHART_ID));
+            return SendJsonResponse(context, SendFTP_1);
         }
 
-        private JObject SendFTP_1(HttpListenerContext context, long chartId)
+        private async Task<JObject> SendFTP_1(MQLRestContext context)
         {
-            MQLCommandManager mqlCommandManager = DLLObjectWrapper.getInstance().getMQLCommandManager(chartId);
-            JObject payload = this.GetJsonPayload(context.Request);
-            JObject result = new JObject();
-            if (payload == null)
-            {
-                result["result"] = PARSE_ERROR;
-                return result;
-            }
+            var payload = context.JsonPayload;
+            var result = context.Result;
+            if (PayloadNotValid(context))
+                return context.Result;
             List<Object> parameters = new List<Object>();
-            parameters.Add(payload["filename"]);
-            parameters.Add(payload["ftp_path"]);
-            int id = mqlCommandManager.ExecCommand(MQLCommand.SendFTP_1, parameters); // MQLCommand ENUM = 3
-            while (mqlCommandManager.IsCommandRunning(id)) ; // block while command is running
-            try
-            {
-                mqlCommandManager.throwExceptionIfErrorResponse(id);
-                result["result"] = (bool)mqlCommandManager.GetCommandResult(id);
-            }
-            catch (Exception e)
-            {
-                result["error"] = MQLExceptions.convertRESTException(e.ToString());
-            }
+            ParamAdd(context, parameters, "filename");
+            ParamAdd(context, parameters, "ftp_path");
+            await ExecCommandAsync(context, MQLCommand.SendFTP_1, parameters); // MQLCommand ENUM = 3
+
+            result["result"] = (bool)GetCommandResult(context);
 
             return result;
         }
@@ -206,11 +168,10 @@ namespace MQL4CSharp.Base.REST
         /// <li><b>text</b> :  [in] The text of the notification. The message length should not exceed 255 characters.</li>
         /// </ul>
         /// </summary>
-        [RESTRoute(Method = HttpMethod.POST, PathInfo = @"^/[0-9]+/sendnotification")]
-        public void Handle_SendNotification_1(HttpListenerContext context)
+        [RestRoute(HttpMethod = HttpMethod.POST, PathInfo = @"^/[0-9]+/sendnotification$")]
+        public IHttpContext Handle_SendNotification_1(IHttpContext context)
         {
-            long chartid = Int64.Parse(context.Request.Url.Segments[1].Replace("/", ""));
-            this.SendJsonResponse(context, SendNotification_1(context, chartid));
+            return SendJsonResponse(context, GetChartId(context), SendNotification_1);
         }
 
         /// <summary>
@@ -222,35 +183,23 @@ namespace MQL4CSharp.Base.REST
         /// <li><b>text</b> :  [in] The text of the notification. The message length should not exceed 255 characters.</li>
         /// </ul>
         /// </summary>
-        [RESTRoute(Method = HttpMethod.POST, PathInfo = @"^/sendnotification")]
-        public void Handle_SendNotification_1_Default(HttpListenerContext context)
+        [RestRoute(HttpMethod = HttpMethod.POST, PathInfo = @"^/sendnotification$")]
+        public IHttpContext Handle_SendNotification_1_Default(IHttpContext context)
         {
-            this.SendJsonResponse(context, SendNotification_1(context, DEFAULT_CHART_ID));
+            return SendJsonResponse(context, SendNotification_1);
         }
 
-        private JObject SendNotification_1(HttpListenerContext context, long chartId)
+        private async Task<JObject> SendNotification_1(MQLRestContext context)
         {
-            MQLCommandManager mqlCommandManager = DLLObjectWrapper.getInstance().getMQLCommandManager(chartId);
-            JObject payload = this.GetJsonPayload(context.Request);
-            JObject result = new JObject();
-            if (payload == null)
-            {
-                result["result"] = PARSE_ERROR;
-                return result;
-            }
+            var payload = context.JsonPayload;
+            var result = context.Result;
+            if (PayloadNotValid(context))
+                return context.Result;
             List<Object> parameters = new List<Object>();
-            parameters.Add(payload["text"]);
-            int id = mqlCommandManager.ExecCommand(MQLCommand.SendNotification_1, parameters); // MQLCommand ENUM = 4
-            while (mqlCommandManager.IsCommandRunning(id)) ; // block while command is running
-            try
-            {
-                mqlCommandManager.throwExceptionIfErrorResponse(id);
-                result["result"] = (bool)mqlCommandManager.GetCommandResult(id);
-            }
-            catch (Exception e)
-            {
-                result["error"] = MQLExceptions.convertRESTException(e.ToString());
-            }
+            ParamAdd(context, parameters, "text");
+            await ExecCommandAsync(context, MQLCommand.SendNotification_1, parameters); // MQLCommand ENUM = 4
+
+            result["result"] = (bool)GetCommandResult(context);
 
             return result;
         }
@@ -264,11 +213,10 @@ namespace MQL4CSharp.Base.REST
         /// <li><b>some_text</b> :  [in] Email body.</li>
         /// </ul>
         /// </summary>
-        [RESTRoute(Method = HttpMethod.POST, PathInfo = @"^/[0-9]+/sendmail")]
-        public void Handle_SendMail_1(HttpListenerContext context)
+        [RestRoute(HttpMethod = HttpMethod.POST, PathInfo = @"^/[0-9]+/sendmail$")]
+        public IHttpContext Handle_SendMail_1(IHttpContext context)
         {
-            long chartid = Int64.Parse(context.Request.Url.Segments[1].Replace("/", ""));
-            this.SendJsonResponse(context, SendMail_1(context, chartid));
+            return SendJsonResponse(context, GetChartId(context), SendMail_1);
         }
 
         /// <summary>
@@ -281,36 +229,24 @@ namespace MQL4CSharp.Base.REST
         /// <li><b>some_text</b> :  [in] Email body.</li>
         /// </ul>
         /// </summary>
-        [RESTRoute(Method = HttpMethod.POST, PathInfo = @"^/sendmail")]
-        public void Handle_SendMail_1_Default(HttpListenerContext context)
+        [RestRoute(HttpMethod = HttpMethod.POST, PathInfo = @"^/sendmail$")]
+        public IHttpContext Handle_SendMail_1_Default(IHttpContext context)
         {
-            this.SendJsonResponse(context, SendMail_1(context, DEFAULT_CHART_ID));
+            return SendJsonResponse(context, SendMail_1);
         }
 
-        private JObject SendMail_1(HttpListenerContext context, long chartId)
+        private async Task<JObject> SendMail_1(MQLRestContext context)
         {
-            MQLCommandManager mqlCommandManager = DLLObjectWrapper.getInstance().getMQLCommandManager(chartId);
-            JObject payload = this.GetJsonPayload(context.Request);
-            JObject result = new JObject();
-            if (payload == null)
-            {
-                result["result"] = PARSE_ERROR;
-                return result;
-            }
+            var payload = context.JsonPayload;
+            var result = context.Result;
+            if (PayloadNotValid(context))
+                return context.Result;
             List<Object> parameters = new List<Object>();
-            parameters.Add(payload["subject"]);
-            parameters.Add(payload["some_text"]);
-            int id = mqlCommandManager.ExecCommand(MQLCommand.SendMail_1, parameters); // MQLCommand ENUM = 5
-            while (mqlCommandManager.IsCommandRunning(id)) ; // block while command is running
-            try
-            {
-                mqlCommandManager.throwExceptionIfErrorResponse(id);
-                result["result"] = (bool)mqlCommandManager.GetCommandResult(id);
-            }
-            catch (Exception e)
-            {
-                result["error"] = MQLExceptions.convertRESTException(e.ToString());
-            }
+            ParamAdd(context, parameters, "subject");
+            ParamAdd(context, parameters, "some_text");
+            await ExecCommandAsync(context, MQLCommand.SendMail_1, parameters); // MQLCommand ENUM = 5
+
+            result["result"] = (bool)GetCommandResult(context);
 
             return result;
         }
@@ -323,11 +259,10 @@ namespace MQL4CSharp.Base.REST
         /// <li><b>property_id</b> :  [in] Identifier of the property. The value can be one of the values of .</li>
         /// </ul>
         /// </summary>
-        [RESTRoute(Method = HttpMethod.POST, PathInfo = @"^/[0-9]+/accountinfodouble")]
-        public void Handle_AccountInfoDouble_1(HttpListenerContext context)
+        [RestRoute(HttpMethod = HttpMethod.POST, PathInfo = @"^/[0-9]+/accountinfodouble$")]
+        public IHttpContext Handle_AccountInfoDouble_1(IHttpContext context)
         {
-            long chartid = Int64.Parse(context.Request.Url.Segments[1].Replace("/", ""));
-            this.SendJsonResponse(context, AccountInfoDouble_1(context, chartid));
+            return SendJsonResponse(context, GetChartId(context), AccountInfoDouble_1);
         }
 
         /// <summary>
@@ -339,35 +274,23 @@ namespace MQL4CSharp.Base.REST
         /// <li><b>property_id</b> :  [in] Identifier of the property. The value can be one of the values of .</li>
         /// </ul>
         /// </summary>
-        [RESTRoute(Method = HttpMethod.POST, PathInfo = @"^/accountinfodouble")]
-        public void Handle_AccountInfoDouble_1_Default(HttpListenerContext context)
+        [RestRoute(HttpMethod = HttpMethod.POST, PathInfo = @"^/accountinfodouble$")]
+        public IHttpContext Handle_AccountInfoDouble_1_Default(IHttpContext context)
         {
-            this.SendJsonResponse(context, AccountInfoDouble_1(context, DEFAULT_CHART_ID));
+            return SendJsonResponse(context, AccountInfoDouble_1);
         }
 
-        private JObject AccountInfoDouble_1(HttpListenerContext context, long chartId)
+        private async Task<JObject> AccountInfoDouble_1(MQLRestContext context)
         {
-            MQLCommandManager mqlCommandManager = DLLObjectWrapper.getInstance().getMQLCommandManager(chartId);
-            JObject payload = this.GetJsonPayload(context.Request);
-            JObject result = new JObject();
-            if (payload == null)
-            {
-                result["result"] = PARSE_ERROR;
-                return result;
-            }
+            var payload = context.JsonPayload;
+            var result = context.Result;
+            if (PayloadNotValid(context))
+                return context.Result;
             List<Object> parameters = new List<Object>();
-            parameters.Add(payload["property_id"]);
-            int id = mqlCommandManager.ExecCommand(MQLCommand.AccountInfoDouble_1, parameters); // MQLCommand ENUM = 6
-            while (mqlCommandManager.IsCommandRunning(id)) ; // block while command is running
-            try
-            {
-                mqlCommandManager.throwExceptionIfErrorResponse(id);
-                result["result"] = Convert.ToDecimal(mqlCommandManager.GetCommandResult(id));
-            }
-            catch (Exception e)
-            {
-                result["error"] = MQLExceptions.convertRESTException(e.ToString());
-            }
+            ParamAdd(context, parameters, "property_id");
+            await ExecCommandAsync(context, MQLCommand.AccountInfoDouble_1, parameters); // MQLCommand ENUM = 6
+
+            result["result"] = Convert.ToDecimal(GetCommandResult(context));
 
             return result;
         }
@@ -380,11 +303,10 @@ namespace MQL4CSharp.Base.REST
         /// <li><b>property_id</b> :  [in] Identifier of the property. The value can be one of the values of .</li>
         /// </ul>
         /// </summary>
-        [RESTRoute(Method = HttpMethod.POST, PathInfo = @"^/[0-9]+/accountinfointeger")]
-        public void Handle_AccountInfoInteger_1(HttpListenerContext context)
+        [RestRoute(HttpMethod = HttpMethod.POST, PathInfo = @"^/[0-9]+/accountinfointeger$")]
+        public IHttpContext Handle_AccountInfoInteger_1(IHttpContext context)
         {
-            long chartid = Int64.Parse(context.Request.Url.Segments[1].Replace("/", ""));
-            this.SendJsonResponse(context, AccountInfoInteger_1(context, chartid));
+            return SendJsonResponse(context, GetChartId(context), AccountInfoInteger_1);
         }
 
         /// <summary>
@@ -396,35 +318,23 @@ namespace MQL4CSharp.Base.REST
         /// <li><b>property_id</b> :  [in] Identifier of the property. The value can be one of the values of .</li>
         /// </ul>
         /// </summary>
-        [RESTRoute(Method = HttpMethod.POST, PathInfo = @"^/accountinfointeger")]
-        public void Handle_AccountInfoInteger_1_Default(HttpListenerContext context)
+        [RestRoute(HttpMethod = HttpMethod.POST, PathInfo = @"^/accountinfointeger$")]
+        public IHttpContext Handle_AccountInfoInteger_1_Default(IHttpContext context)
         {
-            this.SendJsonResponse(context, AccountInfoInteger_1(context, DEFAULT_CHART_ID));
+            return SendJsonResponse(context, AccountInfoInteger_1);
         }
 
-        private JObject AccountInfoInteger_1(HttpListenerContext context, long chartId)
+        private async Task<JObject> AccountInfoInteger_1(MQLRestContext context)
         {
-            MQLCommandManager mqlCommandManager = DLLObjectWrapper.getInstance().getMQLCommandManager(chartId);
-            JObject payload = this.GetJsonPayload(context.Request);
-            JObject result = new JObject();
-            if (payload == null)
-            {
-                result["result"] = PARSE_ERROR;
-                return result;
-            }
+            var payload = context.JsonPayload;
+            var result = context.Result;
+            if (PayloadNotValid(context))
+                return context.Result;
             List<Object> parameters = new List<Object>();
-            parameters.Add(payload["property_id"]);
-            int id = mqlCommandManager.ExecCommand(MQLCommand.AccountInfoInteger_1, parameters); // MQLCommand ENUM = 7
-            while (mqlCommandManager.IsCommandRunning(id)) ; // block while command is running
-            try
-            {
-                mqlCommandManager.throwExceptionIfErrorResponse(id);
-                result["result"] = Convert.ToInt64(mqlCommandManager.GetCommandResult(id));
-            }
-            catch (Exception e)
-            {
-                result["error"] = MQLExceptions.convertRESTException(e.ToString());
-            }
+            ParamAdd(context, parameters, "property_id");
+            await ExecCommandAsync(context, MQLCommand.AccountInfoInteger_1, parameters); // MQLCommand ENUM = 7
+
+            result["result"] = Convert.ToInt64(GetCommandResult(context));
 
             return result;
         }
@@ -437,11 +347,10 @@ namespace MQL4CSharp.Base.REST
         /// <li><b>property_id</b> :  [in] Identifier of the property. The value can be one of the values of .</li>
         /// </ul>
         /// </summary>
-        [RESTRoute(Method = HttpMethod.POST, PathInfo = @"^/[0-9]+/accountinfostring")]
-        public void Handle_AccountInfoString_1(HttpListenerContext context)
+        [RestRoute(HttpMethod = HttpMethod.POST, PathInfo = @"^/[0-9]+/accountinfostring$")]
+        public IHttpContext Handle_AccountInfoString_1(IHttpContext context)
         {
-            long chartid = Int64.Parse(context.Request.Url.Segments[1].Replace("/", ""));
-            this.SendJsonResponse(context, AccountInfoString_1(context, chartid));
+            return SendJsonResponse(context, GetChartId(context), AccountInfoString_1);
         }
 
         /// <summary>
@@ -453,35 +362,23 @@ namespace MQL4CSharp.Base.REST
         /// <li><b>property_id</b> :  [in] Identifier of the property. The value can be one of the values of .</li>
         /// </ul>
         /// </summary>
-        [RESTRoute(Method = HttpMethod.POST, PathInfo = @"^/accountinfostring")]
-        public void Handle_AccountInfoString_1_Default(HttpListenerContext context)
+        [RestRoute(HttpMethod = HttpMethod.POST, PathInfo = @"^/accountinfostring$")]
+        public IHttpContext Handle_AccountInfoString_1_Default(IHttpContext context)
         {
-            this.SendJsonResponse(context, AccountInfoString_1(context, DEFAULT_CHART_ID));
+            return SendJsonResponse(context, AccountInfoString_1);
         }
 
-        private JObject AccountInfoString_1(HttpListenerContext context, long chartId)
+        private async Task<JObject> AccountInfoString_1(MQLRestContext context)
         {
-            MQLCommandManager mqlCommandManager = DLLObjectWrapper.getInstance().getMQLCommandManager(chartId);
-            JObject payload = this.GetJsonPayload(context.Request);
-            JObject result = new JObject();
-            if (payload == null)
-            {
-                result["result"] = PARSE_ERROR;
-                return result;
-            }
+            var payload = context.JsonPayload;
+            var result = context.Result;
+            if (PayloadNotValid(context))
+                return context.Result;
             List<Object> parameters = new List<Object>();
-            parameters.Add(payload["property_id"]);
-            int id = mqlCommandManager.ExecCommand(MQLCommand.AccountInfoString_1, parameters); // MQLCommand ENUM = 8
-            while (mqlCommandManager.IsCommandRunning(id)) ; // block while command is running
-            try
-            {
-                mqlCommandManager.throwExceptionIfErrorResponse(id);
-                result["result"] = (string)mqlCommandManager.GetCommandResult(id);
-            }
-            catch (Exception e)
-            {
-                result["error"] = MQLExceptions.convertRESTException(e.ToString());
-            }
+            ParamAdd(context, parameters, "property_id");
+            await ExecCommandAsync(context, MQLCommand.AccountInfoString_1, parameters); // MQLCommand ENUM = 8
+
+            result["result"] = (string)GetCommandResult(context);
 
             return result;
         }
@@ -493,11 +390,10 @@ namespace MQL4CSharp.Base.REST
         /// <ul>
         /// </ul>
         /// </summary>
-        [RESTRoute(Method = HttpMethod.POST, PathInfo = @"^/[0-9]+/accountbalance")]
-        public void Handle_AccountBalance_1(HttpListenerContext context)
+        [RestRoute(HttpMethod = HttpMethod.POST, PathInfo = @"^/[0-9]+/accountbalance$")]
+        public IHttpContext Handle_AccountBalance_1(IHttpContext context)
         {
-            long chartid = Int64.Parse(context.Request.Url.Segments[1].Replace("/", ""));
-            this.SendJsonResponse(context, AccountBalance_1(context, chartid));
+            return SendJsonResponse(context, GetChartId(context), AccountBalance_1);
         }
 
         /// <summary>
@@ -508,29 +404,20 @@ namespace MQL4CSharp.Base.REST
         /// <ul>
         /// </ul>
         /// </summary>
-        [RESTRoute(Method = HttpMethod.POST, PathInfo = @"^/accountbalance")]
-        public void Handle_AccountBalance_1_Default(HttpListenerContext context)
+        [RestRoute(HttpMethod = HttpMethod.POST, PathInfo = @"^/accountbalance$")]
+        public IHttpContext Handle_AccountBalance_1_Default(IHttpContext context)
         {
-            this.SendJsonResponse(context, AccountBalance_1(context, DEFAULT_CHART_ID));
+            return SendJsonResponse(context, AccountBalance_1);
         }
 
-        private JObject AccountBalance_1(HttpListenerContext context, long chartId)
+        private async Task<JObject> AccountBalance_1(MQLRestContext context)
         {
-            MQLCommandManager mqlCommandManager = DLLObjectWrapper.getInstance().getMQLCommandManager(chartId);
-            JObject payload = this.GetJsonPayload(context.Request);
-            JObject result = new JObject();
+            var payload = context.JsonPayload;
+            var result = context.Result;
             List<Object> parameters = new List<Object>();
-            int id = mqlCommandManager.ExecCommand(MQLCommand.AccountBalance_1, parameters); // MQLCommand ENUM = 9
-            while (mqlCommandManager.IsCommandRunning(id)) ; // block while command is running
-            try
-            {
-                mqlCommandManager.throwExceptionIfErrorResponse(id);
-                result["result"] = Convert.ToDecimal(mqlCommandManager.GetCommandResult(id));
-            }
-            catch (Exception e)
-            {
-                result["error"] = MQLExceptions.convertRESTException(e.ToString());
-            }
+            await ExecCommandAsync(context, MQLCommand.AccountBalance_1, parameters); // MQLCommand ENUM = 9
+
+            result["result"] = Convert.ToDecimal(GetCommandResult(context));
 
             return result;
         }
@@ -542,11 +429,10 @@ namespace MQL4CSharp.Base.REST
         /// <ul>
         /// </ul>
         /// </summary>
-        [RESTRoute(Method = HttpMethod.POST, PathInfo = @"^/[0-9]+/accountcredit")]
-        public void Handle_AccountCredit_1(HttpListenerContext context)
+        [RestRoute(HttpMethod = HttpMethod.POST, PathInfo = @"^/[0-9]+/accountcredit$")]
+        public IHttpContext Handle_AccountCredit_1(IHttpContext context)
         {
-            long chartid = Int64.Parse(context.Request.Url.Segments[1].Replace("/", ""));
-            this.SendJsonResponse(context, AccountCredit_1(context, chartid));
+            return SendJsonResponse(context, GetChartId(context), AccountCredit_1);
         }
 
         /// <summary>
@@ -557,29 +443,20 @@ namespace MQL4CSharp.Base.REST
         /// <ul>
         /// </ul>
         /// </summary>
-        [RESTRoute(Method = HttpMethod.POST, PathInfo = @"^/accountcredit")]
-        public void Handle_AccountCredit_1_Default(HttpListenerContext context)
+        [RestRoute(HttpMethod = HttpMethod.POST, PathInfo = @"^/accountcredit$")]
+        public IHttpContext Handle_AccountCredit_1_Default(IHttpContext context)
         {
-            this.SendJsonResponse(context, AccountCredit_1(context, DEFAULT_CHART_ID));
+            return SendJsonResponse(context, AccountCredit_1);
         }
 
-        private JObject AccountCredit_1(HttpListenerContext context, long chartId)
+        private async Task<JObject> AccountCredit_1(MQLRestContext context)
         {
-            MQLCommandManager mqlCommandManager = DLLObjectWrapper.getInstance().getMQLCommandManager(chartId);
-            JObject payload = this.GetJsonPayload(context.Request);
-            JObject result = new JObject();
+            var payload = context.JsonPayload;
+            var result = context.Result;
             List<Object> parameters = new List<Object>();
-            int id = mqlCommandManager.ExecCommand(MQLCommand.AccountCredit_1, parameters); // MQLCommand ENUM = 10
-            while (mqlCommandManager.IsCommandRunning(id)) ; // block while command is running
-            try
-            {
-                mqlCommandManager.throwExceptionIfErrorResponse(id);
-                result["result"] = Convert.ToDecimal(mqlCommandManager.GetCommandResult(id));
-            }
-            catch (Exception e)
-            {
-                result["error"] = MQLExceptions.convertRESTException(e.ToString());
-            }
+            await ExecCommandAsync(context, MQLCommand.AccountCredit_1, parameters); // MQLCommand ENUM = 10
+
+            result["result"] = Convert.ToDecimal(GetCommandResult(context));
 
             return result;
         }
@@ -591,11 +468,10 @@ namespace MQL4CSharp.Base.REST
         /// <ul>
         /// </ul>
         /// </summary>
-        [RESTRoute(Method = HttpMethod.POST, PathInfo = @"^/[0-9]+/accountcompany")]
-        public void Handle_AccountCompany_1(HttpListenerContext context)
+        [RestRoute(HttpMethod = HttpMethod.POST, PathInfo = @"^/[0-9]+/accountcompany$")]
+        public IHttpContext Handle_AccountCompany_1(IHttpContext context)
         {
-            long chartid = Int64.Parse(context.Request.Url.Segments[1].Replace("/", ""));
-            this.SendJsonResponse(context, AccountCompany_1(context, chartid));
+            return SendJsonResponse(context, GetChartId(context), AccountCompany_1);
         }
 
         /// <summary>
@@ -606,29 +482,20 @@ namespace MQL4CSharp.Base.REST
         /// <ul>
         /// </ul>
         /// </summary>
-        [RESTRoute(Method = HttpMethod.POST, PathInfo = @"^/accountcompany")]
-        public void Handle_AccountCompany_1_Default(HttpListenerContext context)
+        [RestRoute(HttpMethod = HttpMethod.POST, PathInfo = @"^/accountcompany$")]
+        public IHttpContext Handle_AccountCompany_1_Default(IHttpContext context)
         {
-            this.SendJsonResponse(context, AccountCompany_1(context, DEFAULT_CHART_ID));
+            return SendJsonResponse(context, AccountCompany_1);
         }
 
-        private JObject AccountCompany_1(HttpListenerContext context, long chartId)
+        private async Task<JObject> AccountCompany_1(MQLRestContext context)
         {
-            MQLCommandManager mqlCommandManager = DLLObjectWrapper.getInstance().getMQLCommandManager(chartId);
-            JObject payload = this.GetJsonPayload(context.Request);
-            JObject result = new JObject();
+            var payload = context.JsonPayload;
+            var result = context.Result;
             List<Object> parameters = new List<Object>();
-            int id = mqlCommandManager.ExecCommand(MQLCommand.AccountCompany_1, parameters); // MQLCommand ENUM = 11
-            while (mqlCommandManager.IsCommandRunning(id)) ; // block while command is running
-            try
-            {
-                mqlCommandManager.throwExceptionIfErrorResponse(id);
-                result["result"] = (string)mqlCommandManager.GetCommandResult(id);
-            }
-            catch (Exception e)
-            {
-                result["error"] = MQLExceptions.convertRESTException(e.ToString());
-            }
+            await ExecCommandAsync(context, MQLCommand.AccountCompany_1, parameters); // MQLCommand ENUM = 11
+
+            result["result"] = (string)GetCommandResult(context);
 
             return result;
         }
@@ -640,11 +507,10 @@ namespace MQL4CSharp.Base.REST
         /// <ul>
         /// </ul>
         /// </summary>
-        [RESTRoute(Method = HttpMethod.POST, PathInfo = @"^/[0-9]+/accountcurrency")]
-        public void Handle_AccountCurrency_1(HttpListenerContext context)
+        [RestRoute(HttpMethod = HttpMethod.POST, PathInfo = @"^/[0-9]+/accountcurrency$")]
+        public IHttpContext Handle_AccountCurrency_1(IHttpContext context)
         {
-            long chartid = Int64.Parse(context.Request.Url.Segments[1].Replace("/", ""));
-            this.SendJsonResponse(context, AccountCurrency_1(context, chartid));
+            return SendJsonResponse(context, GetChartId(context), AccountCurrency_1);
         }
 
         /// <summary>
@@ -655,29 +521,20 @@ namespace MQL4CSharp.Base.REST
         /// <ul>
         /// </ul>
         /// </summary>
-        [RESTRoute(Method = HttpMethod.POST, PathInfo = @"^/accountcurrency")]
-        public void Handle_AccountCurrency_1_Default(HttpListenerContext context)
+        [RestRoute(HttpMethod = HttpMethod.POST, PathInfo = @"^/accountcurrency$")]
+        public IHttpContext Handle_AccountCurrency_1_Default(IHttpContext context)
         {
-            this.SendJsonResponse(context, AccountCurrency_1(context, DEFAULT_CHART_ID));
+            return SendJsonResponse(context, AccountCurrency_1);
         }
 
-        private JObject AccountCurrency_1(HttpListenerContext context, long chartId)
+        private async Task<JObject> AccountCurrency_1(MQLRestContext context)
         {
-            MQLCommandManager mqlCommandManager = DLLObjectWrapper.getInstance().getMQLCommandManager(chartId);
-            JObject payload = this.GetJsonPayload(context.Request);
-            JObject result = new JObject();
+            var payload = context.JsonPayload;
+            var result = context.Result;
             List<Object> parameters = new List<Object>();
-            int id = mqlCommandManager.ExecCommand(MQLCommand.AccountCurrency_1, parameters); // MQLCommand ENUM = 12
-            while (mqlCommandManager.IsCommandRunning(id)) ; // block while command is running
-            try
-            {
-                mqlCommandManager.throwExceptionIfErrorResponse(id);
-                result["result"] = (string)mqlCommandManager.GetCommandResult(id);
-            }
-            catch (Exception e)
-            {
-                result["error"] = MQLExceptions.convertRESTException(e.ToString());
-            }
+            await ExecCommandAsync(context, MQLCommand.AccountCurrency_1, parameters); // MQLCommand ENUM = 12
+
+            result["result"] = (string)GetCommandResult(context);
 
             return result;
         }
@@ -689,11 +546,10 @@ namespace MQL4CSharp.Base.REST
         /// <ul>
         /// </ul>
         /// </summary>
-        [RESTRoute(Method = HttpMethod.POST, PathInfo = @"^/[0-9]+/accountequity")]
-        public void Handle_AccountEquity_1(HttpListenerContext context)
+        [RestRoute(HttpMethod = HttpMethod.POST, PathInfo = @"^/[0-9]+/accountequity$")]
+        public IHttpContext Handle_AccountEquity_1(IHttpContext context)
         {
-            long chartid = Int64.Parse(context.Request.Url.Segments[1].Replace("/", ""));
-            this.SendJsonResponse(context, AccountEquity_1(context, chartid));
+            return SendJsonResponse(context, GetChartId(context), AccountEquity_1);
         }
 
         /// <summary>
@@ -704,29 +560,20 @@ namespace MQL4CSharp.Base.REST
         /// <ul>
         /// </ul>
         /// </summary>
-        [RESTRoute(Method = HttpMethod.POST, PathInfo = @"^/accountequity")]
-        public void Handle_AccountEquity_1_Default(HttpListenerContext context)
+        [RestRoute(HttpMethod = HttpMethod.POST, PathInfo = @"^/accountequity$")]
+        public IHttpContext Handle_AccountEquity_1_Default(IHttpContext context)
         {
-            this.SendJsonResponse(context, AccountEquity_1(context, DEFAULT_CHART_ID));
+            return SendJsonResponse(context, AccountEquity_1);
         }
 
-        private JObject AccountEquity_1(HttpListenerContext context, long chartId)
+        private async Task<JObject> AccountEquity_1(MQLRestContext context)
         {
-            MQLCommandManager mqlCommandManager = DLLObjectWrapper.getInstance().getMQLCommandManager(chartId);
-            JObject payload = this.GetJsonPayload(context.Request);
-            JObject result = new JObject();
+            var payload = context.JsonPayload;
+            var result = context.Result;
             List<Object> parameters = new List<Object>();
-            int id = mqlCommandManager.ExecCommand(MQLCommand.AccountEquity_1, parameters); // MQLCommand ENUM = 13
-            while (mqlCommandManager.IsCommandRunning(id)) ; // block while command is running
-            try
-            {
-                mqlCommandManager.throwExceptionIfErrorResponse(id);
-                result["result"] = Convert.ToDecimal(mqlCommandManager.GetCommandResult(id));
-            }
-            catch (Exception e)
-            {
-                result["error"] = MQLExceptions.convertRESTException(e.ToString());
-            }
+            await ExecCommandAsync(context, MQLCommand.AccountEquity_1, parameters); // MQLCommand ENUM = 13
+
+            result["result"] = Convert.ToDecimal(GetCommandResult(context));
 
             return result;
         }
@@ -738,11 +585,10 @@ namespace MQL4CSharp.Base.REST
         /// <ul>
         /// </ul>
         /// </summary>
-        [RESTRoute(Method = HttpMethod.POST, PathInfo = @"^/[0-9]+/accountfreemargin")]
-        public void Handle_AccountFreeMargin_1(HttpListenerContext context)
+        [RestRoute(HttpMethod = HttpMethod.POST, PathInfo = @"^/[0-9]+/accountfreemargin$")]
+        public IHttpContext Handle_AccountFreeMargin_1(IHttpContext context)
         {
-            long chartid = Int64.Parse(context.Request.Url.Segments[1].Replace("/", ""));
-            this.SendJsonResponse(context, AccountFreeMargin_1(context, chartid));
+            return SendJsonResponse(context, GetChartId(context), AccountFreeMargin_1);
         }
 
         /// <summary>
@@ -753,29 +599,20 @@ namespace MQL4CSharp.Base.REST
         /// <ul>
         /// </ul>
         /// </summary>
-        [RESTRoute(Method = HttpMethod.POST, PathInfo = @"^/accountfreemargin")]
-        public void Handle_AccountFreeMargin_1_Default(HttpListenerContext context)
+        [RestRoute(HttpMethod = HttpMethod.POST, PathInfo = @"^/accountfreemargin$")]
+        public IHttpContext Handle_AccountFreeMargin_1_Default(IHttpContext context)
         {
-            this.SendJsonResponse(context, AccountFreeMargin_1(context, DEFAULT_CHART_ID));
+            return SendJsonResponse(context, AccountFreeMargin_1);
         }
 
-        private JObject AccountFreeMargin_1(HttpListenerContext context, long chartId)
+        private async Task<JObject> AccountFreeMargin_1(MQLRestContext context)
         {
-            MQLCommandManager mqlCommandManager = DLLObjectWrapper.getInstance().getMQLCommandManager(chartId);
-            JObject payload = this.GetJsonPayload(context.Request);
-            JObject result = new JObject();
+            var payload = context.JsonPayload;
+            var result = context.Result;
             List<Object> parameters = new List<Object>();
-            int id = mqlCommandManager.ExecCommand(MQLCommand.AccountFreeMargin_1, parameters); // MQLCommand ENUM = 14
-            while (mqlCommandManager.IsCommandRunning(id)) ; // block while command is running
-            try
-            {
-                mqlCommandManager.throwExceptionIfErrorResponse(id);
-                result["result"] = Convert.ToDecimal(mqlCommandManager.GetCommandResult(id));
-            }
-            catch (Exception e)
-            {
-                result["error"] = MQLExceptions.convertRESTException(e.ToString());
-            }
+            await ExecCommandAsync(context, MQLCommand.AccountFreeMargin_1, parameters); // MQLCommand ENUM = 14
+
+            result["result"] = Convert.ToDecimal(GetCommandResult(context));
 
             return result;
         }
@@ -790,11 +627,10 @@ namespace MQL4CSharp.Base.REST
         /// <li><b>volume</b> :  [in] Number of lots.</li>
         /// </ul>
         /// </summary>
-        [RESTRoute(Method = HttpMethod.POST, PathInfo = @"^/[0-9]+/accountfreemargincheck")]
-        public void Handle_AccountFreeMarginCheck_1(HttpListenerContext context)
+        [RestRoute(HttpMethod = HttpMethod.POST, PathInfo = @"^/[0-9]+/accountfreemargincheck$")]
+        public IHttpContext Handle_AccountFreeMarginCheck_1(IHttpContext context)
         {
-            long chartid = Int64.Parse(context.Request.Url.Segments[1].Replace("/", ""));
-            this.SendJsonResponse(context, AccountFreeMarginCheck_1(context, chartid));
+            return SendJsonResponse(context, GetChartId(context), AccountFreeMarginCheck_1);
         }
 
         /// <summary>
@@ -808,37 +644,25 @@ namespace MQL4CSharp.Base.REST
         /// <li><b>volume</b> :  [in] Number of lots.</li>
         /// </ul>
         /// </summary>
-        [RESTRoute(Method = HttpMethod.POST, PathInfo = @"^/accountfreemargincheck")]
-        public void Handle_AccountFreeMarginCheck_1_Default(HttpListenerContext context)
+        [RestRoute(HttpMethod = HttpMethod.POST, PathInfo = @"^/accountfreemargincheck$")]
+        public IHttpContext Handle_AccountFreeMarginCheck_1_Default(IHttpContext context)
         {
-            this.SendJsonResponse(context, AccountFreeMarginCheck_1(context, DEFAULT_CHART_ID));
+            return SendJsonResponse(context, AccountFreeMarginCheck_1);
         }
 
-        private JObject AccountFreeMarginCheck_1(HttpListenerContext context, long chartId)
+        private async Task<JObject> AccountFreeMarginCheck_1(MQLRestContext context)
         {
-            MQLCommandManager mqlCommandManager = DLLObjectWrapper.getInstance().getMQLCommandManager(chartId);
-            JObject payload = this.GetJsonPayload(context.Request);
-            JObject result = new JObject();
-            if (payload == null)
-            {
-                result["result"] = PARSE_ERROR;
-                return result;
-            }
+            var payload = context.JsonPayload;
+            var result = context.Result;
+            if (PayloadNotValid(context))
+                return context.Result;
             List<Object> parameters = new List<Object>();
-            parameters.Add(payload["symbol"]);
-            parameters.Add(payload["cmd"]);
-            parameters.Add(payload["volume"]);
-            int id = mqlCommandManager.ExecCommand(MQLCommand.AccountFreeMarginCheck_1, parameters); // MQLCommand ENUM = 15
-            while (mqlCommandManager.IsCommandRunning(id)) ; // block while command is running
-            try
-            {
-                mqlCommandManager.throwExceptionIfErrorResponse(id);
-                result["result"] = Convert.ToDecimal(mqlCommandManager.GetCommandResult(id));
-            }
-            catch (Exception e)
-            {
-                result["error"] = MQLExceptions.convertRESTException(e.ToString());
-            }
+            ParamAdd(context, parameters, "symbol");
+            ParamAdd(context, parameters, "cmd");
+            ParamAdd(context, parameters, "volume");
+            await ExecCommandAsync(context, MQLCommand.AccountFreeMarginCheck_1, parameters); // MQLCommand ENUM = 15
+
+            result["result"] = Convert.ToDecimal(GetCommandResult(context));
 
             return result;
         }
@@ -850,11 +674,10 @@ namespace MQL4CSharp.Base.REST
         /// <ul>
         /// </ul>
         /// </summary>
-        [RESTRoute(Method = HttpMethod.POST, PathInfo = @"^/[0-9]+/accountfreemarginmode")]
-        public void Handle_AccountFreeMarginMode_1(HttpListenerContext context)
+        [RestRoute(HttpMethod = HttpMethod.POST, PathInfo = @"^/[0-9]+/accountfreemarginmode$")]
+        public IHttpContext Handle_AccountFreeMarginMode_1(IHttpContext context)
         {
-            long chartid = Int64.Parse(context.Request.Url.Segments[1].Replace("/", ""));
-            this.SendJsonResponse(context, AccountFreeMarginMode_1(context, chartid));
+            return SendJsonResponse(context, GetChartId(context), AccountFreeMarginMode_1);
         }
 
         /// <summary>
@@ -865,29 +688,20 @@ namespace MQL4CSharp.Base.REST
         /// <ul>
         /// </ul>
         /// </summary>
-        [RESTRoute(Method = HttpMethod.POST, PathInfo = @"^/accountfreemarginmode")]
-        public void Handle_AccountFreeMarginMode_1_Default(HttpListenerContext context)
+        [RestRoute(HttpMethod = HttpMethod.POST, PathInfo = @"^/accountfreemarginmode$")]
+        public IHttpContext Handle_AccountFreeMarginMode_1_Default(IHttpContext context)
         {
-            this.SendJsonResponse(context, AccountFreeMarginMode_1(context, DEFAULT_CHART_ID));
+            return SendJsonResponse(context, AccountFreeMarginMode_1);
         }
 
-        private JObject AccountFreeMarginMode_1(HttpListenerContext context, long chartId)
+        private async Task<JObject> AccountFreeMarginMode_1(MQLRestContext context)
         {
-            MQLCommandManager mqlCommandManager = DLLObjectWrapper.getInstance().getMQLCommandManager(chartId);
-            JObject payload = this.GetJsonPayload(context.Request);
-            JObject result = new JObject();
+            var payload = context.JsonPayload;
+            var result = context.Result;
             List<Object> parameters = new List<Object>();
-            int id = mqlCommandManager.ExecCommand(MQLCommand.AccountFreeMarginMode_1, parameters); // MQLCommand ENUM = 16
-            while (mqlCommandManager.IsCommandRunning(id)) ; // block while command is running
-            try
-            {
-                mqlCommandManager.throwExceptionIfErrorResponse(id);
-                result["result"] = Convert.ToDecimal(mqlCommandManager.GetCommandResult(id));
-            }
-            catch (Exception e)
-            {
-                result["error"] = MQLExceptions.convertRESTException(e.ToString());
-            }
+            await ExecCommandAsync(context, MQLCommand.AccountFreeMarginMode_1, parameters); // MQLCommand ENUM = 16
+
+            result["result"] = Convert.ToDecimal(GetCommandResult(context));
 
             return result;
         }
@@ -899,11 +713,10 @@ namespace MQL4CSharp.Base.REST
         /// <ul>
         /// </ul>
         /// </summary>
-        [RESTRoute(Method = HttpMethod.POST, PathInfo = @"^/[0-9]+/accountleverage")]
-        public void Handle_AccountLeverage_1(HttpListenerContext context)
+        [RestRoute(HttpMethod = HttpMethod.POST, PathInfo = @"^/[0-9]+/accountleverage$")]
+        public IHttpContext Handle_AccountLeverage_1(IHttpContext context)
         {
-            long chartid = Int64.Parse(context.Request.Url.Segments[1].Replace("/", ""));
-            this.SendJsonResponse(context, AccountLeverage_1(context, chartid));
+            return SendJsonResponse(context, GetChartId(context), AccountLeverage_1);
         }
 
         /// <summary>
@@ -914,29 +727,20 @@ namespace MQL4CSharp.Base.REST
         /// <ul>
         /// </ul>
         /// </summary>
-        [RESTRoute(Method = HttpMethod.POST, PathInfo = @"^/accountleverage")]
-        public void Handle_AccountLeverage_1_Default(HttpListenerContext context)
+        [RestRoute(HttpMethod = HttpMethod.POST, PathInfo = @"^/accountleverage$")]
+        public IHttpContext Handle_AccountLeverage_1_Default(IHttpContext context)
         {
-            this.SendJsonResponse(context, AccountLeverage_1(context, DEFAULT_CHART_ID));
+            return SendJsonResponse(context, AccountLeverage_1);
         }
 
-        private JObject AccountLeverage_1(HttpListenerContext context, long chartId)
+        private async Task<JObject> AccountLeverage_1(MQLRestContext context)
         {
-            MQLCommandManager mqlCommandManager = DLLObjectWrapper.getInstance().getMQLCommandManager(chartId);
-            JObject payload = this.GetJsonPayload(context.Request);
-            JObject result = new JObject();
+            var payload = context.JsonPayload;
+            var result = context.Result;
             List<Object> parameters = new List<Object>();
-            int id = mqlCommandManager.ExecCommand(MQLCommand.AccountLeverage_1, parameters); // MQLCommand ENUM = 17
-            while (mqlCommandManager.IsCommandRunning(id)) ; // block while command is running
-            try
-            {
-                mqlCommandManager.throwExceptionIfErrorResponse(id);
-                result["result"] = Convert.ToInt32(mqlCommandManager.GetCommandResult(id));
-            }
-            catch (Exception e)
-            {
-                result["error"] = MQLExceptions.convertRESTException(e.ToString());
-            }
+            await ExecCommandAsync(context, MQLCommand.AccountLeverage_1, parameters); // MQLCommand ENUM = 17
+
+            result["result"] = Convert.ToInt32(GetCommandResult(context));
 
             return result;
         }
@@ -948,11 +752,10 @@ namespace MQL4CSharp.Base.REST
         /// <ul>
         /// </ul>
         /// </summary>
-        [RESTRoute(Method = HttpMethod.POST, PathInfo = @"^/[0-9]+/accountmargin")]
-        public void Handle_AccountMargin_1(HttpListenerContext context)
+        [RestRoute(HttpMethod = HttpMethod.POST, PathInfo = @"^/[0-9]+/accountmargin$")]
+        public IHttpContext Handle_AccountMargin_1(IHttpContext context)
         {
-            long chartid = Int64.Parse(context.Request.Url.Segments[1].Replace("/", ""));
-            this.SendJsonResponse(context, AccountMargin_1(context, chartid));
+            return SendJsonResponse(context, GetChartId(context), AccountMargin_1);
         }
 
         /// <summary>
@@ -963,29 +766,20 @@ namespace MQL4CSharp.Base.REST
         /// <ul>
         /// </ul>
         /// </summary>
-        [RESTRoute(Method = HttpMethod.POST, PathInfo = @"^/accountmargin")]
-        public void Handle_AccountMargin_1_Default(HttpListenerContext context)
+        [RestRoute(HttpMethod = HttpMethod.POST, PathInfo = @"^/accountmargin$")]
+        public IHttpContext Handle_AccountMargin_1_Default(IHttpContext context)
         {
-            this.SendJsonResponse(context, AccountMargin_1(context, DEFAULT_CHART_ID));
+            return SendJsonResponse(context, AccountMargin_1);
         }
 
-        private JObject AccountMargin_1(HttpListenerContext context, long chartId)
+        private async Task<JObject> AccountMargin_1(MQLRestContext context)
         {
-            MQLCommandManager mqlCommandManager = DLLObjectWrapper.getInstance().getMQLCommandManager(chartId);
-            JObject payload = this.GetJsonPayload(context.Request);
-            JObject result = new JObject();
+            var payload = context.JsonPayload;
+            var result = context.Result;
             List<Object> parameters = new List<Object>();
-            int id = mqlCommandManager.ExecCommand(MQLCommand.AccountMargin_1, parameters); // MQLCommand ENUM = 18
-            while (mqlCommandManager.IsCommandRunning(id)) ; // block while command is running
-            try
-            {
-                mqlCommandManager.throwExceptionIfErrorResponse(id);
-                result["result"] = Convert.ToDecimal(mqlCommandManager.GetCommandResult(id));
-            }
-            catch (Exception e)
-            {
-                result["error"] = MQLExceptions.convertRESTException(e.ToString());
-            }
+            await ExecCommandAsync(context, MQLCommand.AccountMargin_1, parameters); // MQLCommand ENUM = 18
+
+            result["result"] = Convert.ToDecimal(GetCommandResult(context));
 
             return result;
         }
@@ -997,11 +791,10 @@ namespace MQL4CSharp.Base.REST
         /// <ul>
         /// </ul>
         /// </summary>
-        [RESTRoute(Method = HttpMethod.POST, PathInfo = @"^/[0-9]+/accountname")]
-        public void Handle_AccountName_1(HttpListenerContext context)
+        [RestRoute(HttpMethod = HttpMethod.POST, PathInfo = @"^/[0-9]+/accountname$")]
+        public IHttpContext Handle_AccountName_1(IHttpContext context)
         {
-            long chartid = Int64.Parse(context.Request.Url.Segments[1].Replace("/", ""));
-            this.SendJsonResponse(context, AccountName_1(context, chartid));
+            return SendJsonResponse(context, GetChartId(context), AccountName_1);
         }
 
         /// <summary>
@@ -1012,29 +805,20 @@ namespace MQL4CSharp.Base.REST
         /// <ul>
         /// </ul>
         /// </summary>
-        [RESTRoute(Method = HttpMethod.POST, PathInfo = @"^/accountname")]
-        public void Handle_AccountName_1_Default(HttpListenerContext context)
+        [RestRoute(HttpMethod = HttpMethod.POST, PathInfo = @"^/accountname$")]
+        public IHttpContext Handle_AccountName_1_Default(IHttpContext context)
         {
-            this.SendJsonResponse(context, AccountName_1(context, DEFAULT_CHART_ID));
+            return SendJsonResponse(context, AccountName_1);
         }
 
-        private JObject AccountName_1(HttpListenerContext context, long chartId)
+        private async Task<JObject> AccountName_1(MQLRestContext context)
         {
-            MQLCommandManager mqlCommandManager = DLLObjectWrapper.getInstance().getMQLCommandManager(chartId);
-            JObject payload = this.GetJsonPayload(context.Request);
-            JObject result = new JObject();
+            var payload = context.JsonPayload;
+            var result = context.Result;
             List<Object> parameters = new List<Object>();
-            int id = mqlCommandManager.ExecCommand(MQLCommand.AccountName_1, parameters); // MQLCommand ENUM = 19
-            while (mqlCommandManager.IsCommandRunning(id)) ; // block while command is running
-            try
-            {
-                mqlCommandManager.throwExceptionIfErrorResponse(id);
-                result["result"] = (string)mqlCommandManager.GetCommandResult(id);
-            }
-            catch (Exception e)
-            {
-                result["error"] = MQLExceptions.convertRESTException(e.ToString());
-            }
+            await ExecCommandAsync(context, MQLCommand.AccountName_1, parameters); // MQLCommand ENUM = 19
+
+            result["result"] = (string)GetCommandResult(context);
 
             return result;
         }
@@ -1046,11 +830,10 @@ namespace MQL4CSharp.Base.REST
         /// <ul>
         /// </ul>
         /// </summary>
-        [RESTRoute(Method = HttpMethod.POST, PathInfo = @"^/[0-9]+/accountnumber")]
-        public void Handle_AccountNumber_1(HttpListenerContext context)
+        [RestRoute(HttpMethod = HttpMethod.POST, PathInfo = @"^/[0-9]+/accountnumber$")]
+        public IHttpContext Handle_AccountNumber_1(IHttpContext context)
         {
-            long chartid = Int64.Parse(context.Request.Url.Segments[1].Replace("/", ""));
-            this.SendJsonResponse(context, AccountNumber_1(context, chartid));
+            return SendJsonResponse(context, GetChartId(context), AccountNumber_1);
         }
 
         /// <summary>
@@ -1061,29 +844,20 @@ namespace MQL4CSharp.Base.REST
         /// <ul>
         /// </ul>
         /// </summary>
-        [RESTRoute(Method = HttpMethod.POST, PathInfo = @"^/accountnumber")]
-        public void Handle_AccountNumber_1_Default(HttpListenerContext context)
+        [RestRoute(HttpMethod = HttpMethod.POST, PathInfo = @"^/accountnumber$")]
+        public IHttpContext Handle_AccountNumber_1_Default(IHttpContext context)
         {
-            this.SendJsonResponse(context, AccountNumber_1(context, DEFAULT_CHART_ID));
+            return SendJsonResponse(context, AccountNumber_1);
         }
 
-        private JObject AccountNumber_1(HttpListenerContext context, long chartId)
+        private async Task<JObject> AccountNumber_1(MQLRestContext context)
         {
-            MQLCommandManager mqlCommandManager = DLLObjectWrapper.getInstance().getMQLCommandManager(chartId);
-            JObject payload = this.GetJsonPayload(context.Request);
-            JObject result = new JObject();
+            var payload = context.JsonPayload;
+            var result = context.Result;
             List<Object> parameters = new List<Object>();
-            int id = mqlCommandManager.ExecCommand(MQLCommand.AccountNumber_1, parameters); // MQLCommand ENUM = 20
-            while (mqlCommandManager.IsCommandRunning(id)) ; // block while command is running
-            try
-            {
-                mqlCommandManager.throwExceptionIfErrorResponse(id);
-                result["result"] = Convert.ToInt32(mqlCommandManager.GetCommandResult(id));
-            }
-            catch (Exception e)
-            {
-                result["error"] = MQLExceptions.convertRESTException(e.ToString());
-            }
+            await ExecCommandAsync(context, MQLCommand.AccountNumber_1, parameters); // MQLCommand ENUM = 20
+
+            result["result"] = Convert.ToInt32(GetCommandResult(context));
 
             return result;
         }
@@ -1095,11 +869,10 @@ namespace MQL4CSharp.Base.REST
         /// <ul>
         /// </ul>
         /// </summary>
-        [RESTRoute(Method = HttpMethod.POST, PathInfo = @"^/[0-9]+/accountprofit")]
-        public void Handle_AccountProfit_1(HttpListenerContext context)
+        [RestRoute(HttpMethod = HttpMethod.POST, PathInfo = @"^/[0-9]+/accountprofit$")]
+        public IHttpContext Handle_AccountProfit_1(IHttpContext context)
         {
-            long chartid = Int64.Parse(context.Request.Url.Segments[1].Replace("/", ""));
-            this.SendJsonResponse(context, AccountProfit_1(context, chartid));
+            return SendJsonResponse(context, GetChartId(context), AccountProfit_1);
         }
 
         /// <summary>
@@ -1110,29 +883,20 @@ namespace MQL4CSharp.Base.REST
         /// <ul>
         /// </ul>
         /// </summary>
-        [RESTRoute(Method = HttpMethod.POST, PathInfo = @"^/accountprofit")]
-        public void Handle_AccountProfit_1_Default(HttpListenerContext context)
+        [RestRoute(HttpMethod = HttpMethod.POST, PathInfo = @"^/accountprofit$")]
+        public IHttpContext Handle_AccountProfit_1_Default(IHttpContext context)
         {
-            this.SendJsonResponse(context, AccountProfit_1(context, DEFAULT_CHART_ID));
+            return SendJsonResponse(context, AccountProfit_1);
         }
 
-        private JObject AccountProfit_1(HttpListenerContext context, long chartId)
+        private async Task<JObject> AccountProfit_1(MQLRestContext context)
         {
-            MQLCommandManager mqlCommandManager = DLLObjectWrapper.getInstance().getMQLCommandManager(chartId);
-            JObject payload = this.GetJsonPayload(context.Request);
-            JObject result = new JObject();
+            var payload = context.JsonPayload;
+            var result = context.Result;
             List<Object> parameters = new List<Object>();
-            int id = mqlCommandManager.ExecCommand(MQLCommand.AccountProfit_1, parameters); // MQLCommand ENUM = 21
-            while (mqlCommandManager.IsCommandRunning(id)) ; // block while command is running
-            try
-            {
-                mqlCommandManager.throwExceptionIfErrorResponse(id);
-                result["result"] = Convert.ToDecimal(mqlCommandManager.GetCommandResult(id));
-            }
-            catch (Exception e)
-            {
-                result["error"] = MQLExceptions.convertRESTException(e.ToString());
-            }
+            await ExecCommandAsync(context, MQLCommand.AccountProfit_1, parameters); // MQLCommand ENUM = 21
+
+            result["result"] = Convert.ToDecimal(GetCommandResult(context));
 
             return result;
         }
@@ -1144,11 +908,10 @@ namespace MQL4CSharp.Base.REST
         /// <ul>
         /// </ul>
         /// </summary>
-        [RESTRoute(Method = HttpMethod.POST, PathInfo = @"^/[0-9]+/accountserver")]
-        public void Handle_AccountServer_1(HttpListenerContext context)
+        [RestRoute(HttpMethod = HttpMethod.POST, PathInfo = @"^/[0-9]+/accountserver$")]
+        public IHttpContext Handle_AccountServer_1(IHttpContext context)
         {
-            long chartid = Int64.Parse(context.Request.Url.Segments[1].Replace("/", ""));
-            this.SendJsonResponse(context, AccountServer_1(context, chartid));
+            return SendJsonResponse(context, GetChartId(context), AccountServer_1);
         }
 
         /// <summary>
@@ -1159,29 +922,20 @@ namespace MQL4CSharp.Base.REST
         /// <ul>
         /// </ul>
         /// </summary>
-        [RESTRoute(Method = HttpMethod.POST, PathInfo = @"^/accountserver")]
-        public void Handle_AccountServer_1_Default(HttpListenerContext context)
+        [RestRoute(HttpMethod = HttpMethod.POST, PathInfo = @"^/accountserver$")]
+        public IHttpContext Handle_AccountServer_1_Default(IHttpContext context)
         {
-            this.SendJsonResponse(context, AccountServer_1(context, DEFAULT_CHART_ID));
+            return SendJsonResponse(context, AccountServer_1);
         }
 
-        private JObject AccountServer_1(HttpListenerContext context, long chartId)
+        private async Task<JObject> AccountServer_1(MQLRestContext context)
         {
-            MQLCommandManager mqlCommandManager = DLLObjectWrapper.getInstance().getMQLCommandManager(chartId);
-            JObject payload = this.GetJsonPayload(context.Request);
-            JObject result = new JObject();
+            var payload = context.JsonPayload;
+            var result = context.Result;
             List<Object> parameters = new List<Object>();
-            int id = mqlCommandManager.ExecCommand(MQLCommand.AccountServer_1, parameters); // MQLCommand ENUM = 22
-            while (mqlCommandManager.IsCommandRunning(id)) ; // block while command is running
-            try
-            {
-                mqlCommandManager.throwExceptionIfErrorResponse(id);
-                result["result"] = (string)mqlCommandManager.GetCommandResult(id);
-            }
-            catch (Exception e)
-            {
-                result["error"] = MQLExceptions.convertRESTException(e.ToString());
-            }
+            await ExecCommandAsync(context, MQLCommand.AccountServer_1, parameters); // MQLCommand ENUM = 22
+
+            result["result"] = (string)GetCommandResult(context);
 
             return result;
         }
@@ -1193,11 +947,10 @@ namespace MQL4CSharp.Base.REST
         /// <ul>
         /// </ul>
         /// </summary>
-        [RESTRoute(Method = HttpMethod.POST, PathInfo = @"^/[0-9]+/accountstopoutlevel")]
-        public void Handle_AccountStopoutLevel_1(HttpListenerContext context)
+        [RestRoute(HttpMethod = HttpMethod.POST, PathInfo = @"^/[0-9]+/accountstopoutlevel$")]
+        public IHttpContext Handle_AccountStopoutLevel_1(IHttpContext context)
         {
-            long chartid = Int64.Parse(context.Request.Url.Segments[1].Replace("/", ""));
-            this.SendJsonResponse(context, AccountStopoutLevel_1(context, chartid));
+            return SendJsonResponse(context, GetChartId(context), AccountStopoutLevel_1);
         }
 
         /// <summary>
@@ -1208,29 +961,20 @@ namespace MQL4CSharp.Base.REST
         /// <ul>
         /// </ul>
         /// </summary>
-        [RESTRoute(Method = HttpMethod.POST, PathInfo = @"^/accountstopoutlevel")]
-        public void Handle_AccountStopoutLevel_1_Default(HttpListenerContext context)
+        [RestRoute(HttpMethod = HttpMethod.POST, PathInfo = @"^/accountstopoutlevel$")]
+        public IHttpContext Handle_AccountStopoutLevel_1_Default(IHttpContext context)
         {
-            this.SendJsonResponse(context, AccountStopoutLevel_1(context, DEFAULT_CHART_ID));
+            return SendJsonResponse(context, AccountStopoutLevel_1);
         }
 
-        private JObject AccountStopoutLevel_1(HttpListenerContext context, long chartId)
+        private async Task<JObject> AccountStopoutLevel_1(MQLRestContext context)
         {
-            MQLCommandManager mqlCommandManager = DLLObjectWrapper.getInstance().getMQLCommandManager(chartId);
-            JObject payload = this.GetJsonPayload(context.Request);
-            JObject result = new JObject();
+            var payload = context.JsonPayload;
+            var result = context.Result;
             List<Object> parameters = new List<Object>();
-            int id = mqlCommandManager.ExecCommand(MQLCommand.AccountStopoutLevel_1, parameters); // MQLCommand ENUM = 23
-            while (mqlCommandManager.IsCommandRunning(id)) ; // block while command is running
-            try
-            {
-                mqlCommandManager.throwExceptionIfErrorResponse(id);
-                result["result"] = Convert.ToInt32(mqlCommandManager.GetCommandResult(id));
-            }
-            catch (Exception e)
-            {
-                result["error"] = MQLExceptions.convertRESTException(e.ToString());
-            }
+            await ExecCommandAsync(context, MQLCommand.AccountStopoutLevel_1, parameters); // MQLCommand ENUM = 23
+
+            result["result"] = Convert.ToInt32(GetCommandResult(context));
 
             return result;
         }
@@ -1242,11 +986,10 @@ namespace MQL4CSharp.Base.REST
         /// <ul>
         /// </ul>
         /// </summary>
-        [RESTRoute(Method = HttpMethod.POST, PathInfo = @"^/[0-9]+/accountstopoutmode")]
-        public void Handle_AccountStopoutMode_1(HttpListenerContext context)
+        [RestRoute(HttpMethod = HttpMethod.POST, PathInfo = @"^/[0-9]+/accountstopoutmode$")]
+        public IHttpContext Handle_AccountStopoutMode_1(IHttpContext context)
         {
-            long chartid = Int64.Parse(context.Request.Url.Segments[1].Replace("/", ""));
-            this.SendJsonResponse(context, AccountStopoutMode_1(context, chartid));
+            return SendJsonResponse(context, GetChartId(context), AccountStopoutMode_1);
         }
 
         /// <summary>
@@ -1257,29 +1000,20 @@ namespace MQL4CSharp.Base.REST
         /// <ul>
         /// </ul>
         /// </summary>
-        [RESTRoute(Method = HttpMethod.POST, PathInfo = @"^/accountstopoutmode")]
-        public void Handle_AccountStopoutMode_1_Default(HttpListenerContext context)
+        [RestRoute(HttpMethod = HttpMethod.POST, PathInfo = @"^/accountstopoutmode$")]
+        public IHttpContext Handle_AccountStopoutMode_1_Default(IHttpContext context)
         {
-            this.SendJsonResponse(context, AccountStopoutMode_1(context, DEFAULT_CHART_ID));
+            return SendJsonResponse(context, AccountStopoutMode_1);
         }
 
-        private JObject AccountStopoutMode_1(HttpListenerContext context, long chartId)
+        private async Task<JObject> AccountStopoutMode_1(MQLRestContext context)
         {
-            MQLCommandManager mqlCommandManager = DLLObjectWrapper.getInstance().getMQLCommandManager(chartId);
-            JObject payload = this.GetJsonPayload(context.Request);
-            JObject result = new JObject();
+            var payload = context.JsonPayload;
+            var result = context.Result;
             List<Object> parameters = new List<Object>();
-            int id = mqlCommandManager.ExecCommand(MQLCommand.AccountStopoutMode_1, parameters); // MQLCommand ENUM = 24
-            while (mqlCommandManager.IsCommandRunning(id)) ; // block while command is running
-            try
-            {
-                mqlCommandManager.throwExceptionIfErrorResponse(id);
-                result["result"] = Convert.ToInt32(mqlCommandManager.GetCommandResult(id));
-            }
-            catch (Exception e)
-            {
-                result["error"] = MQLExceptions.convertRESTException(e.ToString());
-            }
+            await ExecCommandAsync(context, MQLCommand.AccountStopoutMode_1, parameters); // MQLCommand ENUM = 24
+
+            result["result"] = Convert.ToInt32(GetCommandResult(context));
 
             return result;
         }
@@ -1291,11 +1025,10 @@ namespace MQL4CSharp.Base.REST
         /// <ul>
         /// </ul>
         /// </summary>
-        [RESTRoute(Method = HttpMethod.POST, PathInfo = @"^/[0-9]+/getlasterror")]
-        public void Handle_GetLastError_1(HttpListenerContext context)
+        [RestRoute(HttpMethod = HttpMethod.POST, PathInfo = @"^/[0-9]+/getlasterror$")]
+        public IHttpContext Handle_GetLastError_1(IHttpContext context)
         {
-            long chartid = Int64.Parse(context.Request.Url.Segments[1].Replace("/", ""));
-            this.SendJsonResponse(context, GetLastError_1(context, chartid));
+            return SendJsonResponse(context, GetChartId(context), GetLastError_1);
         }
 
         /// <summary>
@@ -1306,29 +1039,20 @@ namespace MQL4CSharp.Base.REST
         /// <ul>
         /// </ul>
         /// </summary>
-        [RESTRoute(Method = HttpMethod.POST, PathInfo = @"^/getlasterror")]
-        public void Handle_GetLastError_1_Default(HttpListenerContext context)
+        [RestRoute(HttpMethod = HttpMethod.POST, PathInfo = @"^/getlasterror$")]
+        public IHttpContext Handle_GetLastError_1_Default(IHttpContext context)
         {
-            this.SendJsonResponse(context, GetLastError_1(context, DEFAULT_CHART_ID));
+            return SendJsonResponse(context, GetLastError_1);
         }
 
-        private JObject GetLastError_1(HttpListenerContext context, long chartId)
+        private async Task<JObject> GetLastError_1(MQLRestContext context)
         {
-            MQLCommandManager mqlCommandManager = DLLObjectWrapper.getInstance().getMQLCommandManager(chartId);
-            JObject payload = this.GetJsonPayload(context.Request);
-            JObject result = new JObject();
+            var payload = context.JsonPayload;
+            var result = context.Result;
             List<Object> parameters = new List<Object>();
-            int id = mqlCommandManager.ExecCommand(MQLCommand.GetLastError_1, parameters); // MQLCommand ENUM = 25
-            while (mqlCommandManager.IsCommandRunning(id)) ; // block while command is running
-            try
-            {
-                mqlCommandManager.throwExceptionIfErrorResponse(id);
-                result["result"] = Convert.ToInt32(mqlCommandManager.GetCommandResult(id));
-            }
-            catch (Exception e)
-            {
-                result["error"] = MQLExceptions.convertRESTException(e.ToString());
-            }
+            await ExecCommandAsync(context, MQLCommand.GetLastError_1, parameters); // MQLCommand ENUM = 25
+
+            result["result"] = Convert.ToInt32(GetCommandResult(context));
 
             return result;
         }
@@ -1340,11 +1064,10 @@ namespace MQL4CSharp.Base.REST
         /// <ul>
         /// </ul>
         /// </summary>
-        [RESTRoute(Method = HttpMethod.POST, PathInfo = @"^/[0-9]+/isstopped")]
-        public void Handle_IsStopped_1(HttpListenerContext context)
+        [RestRoute(HttpMethod = HttpMethod.POST, PathInfo = @"^/[0-9]+/isstopped$")]
+        public IHttpContext Handle_IsStopped_1(IHttpContext context)
         {
-            long chartid = Int64.Parse(context.Request.Url.Segments[1].Replace("/", ""));
-            this.SendJsonResponse(context, IsStopped_1(context, chartid));
+            return SendJsonResponse(context, GetChartId(context), IsStopped_1);
         }
 
         /// <summary>
@@ -1355,29 +1078,20 @@ namespace MQL4CSharp.Base.REST
         /// <ul>
         /// </ul>
         /// </summary>
-        [RESTRoute(Method = HttpMethod.POST, PathInfo = @"^/isstopped")]
-        public void Handle_IsStopped_1_Default(HttpListenerContext context)
+        [RestRoute(HttpMethod = HttpMethod.POST, PathInfo = @"^/isstopped$")]
+        public IHttpContext Handle_IsStopped_1_Default(IHttpContext context)
         {
-            this.SendJsonResponse(context, IsStopped_1(context, DEFAULT_CHART_ID));
+            return SendJsonResponse(context, IsStopped_1);
         }
 
-        private JObject IsStopped_1(HttpListenerContext context, long chartId)
+        private async Task<JObject> IsStopped_1(MQLRestContext context)
         {
-            MQLCommandManager mqlCommandManager = DLLObjectWrapper.getInstance().getMQLCommandManager(chartId);
-            JObject payload = this.GetJsonPayload(context.Request);
-            JObject result = new JObject();
+            var payload = context.JsonPayload;
+            var result = context.Result;
             List<Object> parameters = new List<Object>();
-            int id = mqlCommandManager.ExecCommand(MQLCommand.IsStopped_1, parameters); // MQLCommand ENUM = 26
-            while (mqlCommandManager.IsCommandRunning(id)) ; // block while command is running
-            try
-            {
-                mqlCommandManager.throwExceptionIfErrorResponse(id);
-                result["result"] = (bool)mqlCommandManager.GetCommandResult(id);
-            }
-            catch (Exception e)
-            {
-                result["error"] = MQLExceptions.convertRESTException(e.ToString());
-            }
+            await ExecCommandAsync(context, MQLCommand.IsStopped_1, parameters); // MQLCommand ENUM = 26
+
+            result["result"] = (bool)GetCommandResult(context);
 
             return result;
         }
@@ -1389,11 +1103,10 @@ namespace MQL4CSharp.Base.REST
         /// <ul>
         /// </ul>
         /// </summary>
-        [RESTRoute(Method = HttpMethod.POST, PathInfo = @"^/[0-9]+/uninitializereason")]
-        public void Handle_UninitializeReason_1(HttpListenerContext context)
+        [RestRoute(HttpMethod = HttpMethod.POST, PathInfo = @"^/[0-9]+/uninitializereason$")]
+        public IHttpContext Handle_UninitializeReason_1(IHttpContext context)
         {
-            long chartid = Int64.Parse(context.Request.Url.Segments[1].Replace("/", ""));
-            this.SendJsonResponse(context, UninitializeReason_1(context, chartid));
+            return SendJsonResponse(context, GetChartId(context), UninitializeReason_1);
         }
 
         /// <summary>
@@ -1404,29 +1117,20 @@ namespace MQL4CSharp.Base.REST
         /// <ul>
         /// </ul>
         /// </summary>
-        [RESTRoute(Method = HttpMethod.POST, PathInfo = @"^/uninitializereason")]
-        public void Handle_UninitializeReason_1_Default(HttpListenerContext context)
+        [RestRoute(HttpMethod = HttpMethod.POST, PathInfo = @"^/uninitializereason$")]
+        public IHttpContext Handle_UninitializeReason_1_Default(IHttpContext context)
         {
-            this.SendJsonResponse(context, UninitializeReason_1(context, DEFAULT_CHART_ID));
+            return SendJsonResponse(context, UninitializeReason_1);
         }
 
-        private JObject UninitializeReason_1(HttpListenerContext context, long chartId)
+        private async Task<JObject> UninitializeReason_1(MQLRestContext context)
         {
-            MQLCommandManager mqlCommandManager = DLLObjectWrapper.getInstance().getMQLCommandManager(chartId);
-            JObject payload = this.GetJsonPayload(context.Request);
-            JObject result = new JObject();
+            var payload = context.JsonPayload;
+            var result = context.Result;
             List<Object> parameters = new List<Object>();
-            int id = mqlCommandManager.ExecCommand(MQLCommand.UninitializeReason_1, parameters); // MQLCommand ENUM = 27
-            while (mqlCommandManager.IsCommandRunning(id)) ; // block while command is running
-            try
-            {
-                mqlCommandManager.throwExceptionIfErrorResponse(id);
-                result["result"] = Convert.ToInt32(mqlCommandManager.GetCommandResult(id));
-            }
-            catch (Exception e)
-            {
-                result["error"] = MQLExceptions.convertRESTException(e.ToString());
-            }
+            await ExecCommandAsync(context, MQLCommand.UninitializeReason_1, parameters); // MQLCommand ENUM = 27
+
+            result["result"] = Convert.ToInt32(GetCommandResult(context));
 
             return result;
         }
@@ -1439,11 +1143,10 @@ namespace MQL4CSharp.Base.REST
         /// <li><b>property_id</b> :  [in] Identifier of a property. Can be one of values of the enumeration.</li>
         /// </ul>
         /// </summary>
-        [RESTRoute(Method = HttpMethod.POST, PathInfo = @"^/[0-9]+/mqlinfointeger")]
-        public void Handle_MQLInfoInteger_1(HttpListenerContext context)
+        [RestRoute(HttpMethod = HttpMethod.POST, PathInfo = @"^/[0-9]+/mqlinfointeger$")]
+        public IHttpContext Handle_MQLInfoInteger_1(IHttpContext context)
         {
-            long chartid = Int64.Parse(context.Request.Url.Segments[1].Replace("/", ""));
-            this.SendJsonResponse(context, MQLInfoInteger_1(context, chartid));
+            return SendJsonResponse(context, GetChartId(context), MQLInfoInteger_1);
         }
 
         /// <summary>
@@ -1455,35 +1158,23 @@ namespace MQL4CSharp.Base.REST
         /// <li><b>property_id</b> :  [in] Identifier of a property. Can be one of values of the enumeration.</li>
         /// </ul>
         /// </summary>
-        [RESTRoute(Method = HttpMethod.POST, PathInfo = @"^/mqlinfointeger")]
-        public void Handle_MQLInfoInteger_1_Default(HttpListenerContext context)
+        [RestRoute(HttpMethod = HttpMethod.POST, PathInfo = @"^/mqlinfointeger$")]
+        public IHttpContext Handle_MQLInfoInteger_1_Default(IHttpContext context)
         {
-            this.SendJsonResponse(context, MQLInfoInteger_1(context, DEFAULT_CHART_ID));
+            return SendJsonResponse(context, MQLInfoInteger_1);
         }
 
-        private JObject MQLInfoInteger_1(HttpListenerContext context, long chartId)
+        private async Task<JObject> MQLInfoInteger_1(MQLRestContext context)
         {
-            MQLCommandManager mqlCommandManager = DLLObjectWrapper.getInstance().getMQLCommandManager(chartId);
-            JObject payload = this.GetJsonPayload(context.Request);
-            JObject result = new JObject();
-            if (payload == null)
-            {
-                result["result"] = PARSE_ERROR;
-                return result;
-            }
+            var payload = context.JsonPayload;
+            var result = context.Result;
+            if (PayloadNotValid(context))
+                return context.Result;
             List<Object> parameters = new List<Object>();
-            parameters.Add(payload["property_id"]);
-            int id = mqlCommandManager.ExecCommand(MQLCommand.MQLInfoInteger_1, parameters); // MQLCommand ENUM = 28
-            while (mqlCommandManager.IsCommandRunning(id)) ; // block while command is running
-            try
-            {
-                mqlCommandManager.throwExceptionIfErrorResponse(id);
-                result["result"] = Convert.ToInt32(mqlCommandManager.GetCommandResult(id));
-            }
-            catch (Exception e)
-            {
-                result["error"] = MQLExceptions.convertRESTException(e.ToString());
-            }
+            ParamAdd(context, parameters, "property_id");
+            await ExecCommandAsync(context, MQLCommand.MQLInfoInteger_1, parameters); // MQLCommand ENUM = 28
+
+            result["result"] = Convert.ToInt32(GetCommandResult(context));
 
             return result;
         }
@@ -1496,11 +1187,10 @@ namespace MQL4CSharp.Base.REST
         /// <li><b>property_id</b> :  [in] Identifier of a property. Can be one of the enumeration.</li>
         /// </ul>
         /// </summary>
-        [RESTRoute(Method = HttpMethod.POST, PathInfo = @"^/[0-9]+/mqlinfostring")]
-        public void Handle_MQLInfoString_1(HttpListenerContext context)
+        [RestRoute(HttpMethod = HttpMethod.POST, PathInfo = @"^/[0-9]+/mqlinfostring$")]
+        public IHttpContext Handle_MQLInfoString_1(IHttpContext context)
         {
-            long chartid = Int64.Parse(context.Request.Url.Segments[1].Replace("/", ""));
-            this.SendJsonResponse(context, MQLInfoString_1(context, chartid));
+            return SendJsonResponse(context, GetChartId(context), MQLInfoString_1);
         }
 
         /// <summary>
@@ -1512,35 +1202,23 @@ namespace MQL4CSharp.Base.REST
         /// <li><b>property_id</b> :  [in] Identifier of a property. Can be one of the enumeration.</li>
         /// </ul>
         /// </summary>
-        [RESTRoute(Method = HttpMethod.POST, PathInfo = @"^/mqlinfostring")]
-        public void Handle_MQLInfoString_1_Default(HttpListenerContext context)
+        [RestRoute(HttpMethod = HttpMethod.POST, PathInfo = @"^/mqlinfostring$")]
+        public IHttpContext Handle_MQLInfoString_1_Default(IHttpContext context)
         {
-            this.SendJsonResponse(context, MQLInfoString_1(context, DEFAULT_CHART_ID));
+            return SendJsonResponse(context, MQLInfoString_1);
         }
 
-        private JObject MQLInfoString_1(HttpListenerContext context, long chartId)
+        private async Task<JObject> MQLInfoString_1(MQLRestContext context)
         {
-            MQLCommandManager mqlCommandManager = DLLObjectWrapper.getInstance().getMQLCommandManager(chartId);
-            JObject payload = this.GetJsonPayload(context.Request);
-            JObject result = new JObject();
-            if (payload == null)
-            {
-                result["result"] = PARSE_ERROR;
-                return result;
-            }
+            var payload = context.JsonPayload;
+            var result = context.Result;
+            if (PayloadNotValid(context))
+                return context.Result;
             List<Object> parameters = new List<Object>();
-            parameters.Add(payload["property_id"]);
-            int id = mqlCommandManager.ExecCommand(MQLCommand.MQLInfoString_1, parameters); // MQLCommand ENUM = 29
-            while (mqlCommandManager.IsCommandRunning(id)) ; // block while command is running
-            try
-            {
-                mqlCommandManager.throwExceptionIfErrorResponse(id);
-                result["result"] = (string)mqlCommandManager.GetCommandResult(id);
-            }
-            catch (Exception e)
-            {
-                result["error"] = MQLExceptions.convertRESTException(e.ToString());
-            }
+            ParamAdd(context, parameters, "property_id");
+            await ExecCommandAsync(context, MQLCommand.MQLInfoString_1, parameters); // MQLCommand ENUM = 29
+
+            result["result"] = (string)GetCommandResult(context);
 
             return result;
         }
@@ -1554,11 +1232,10 @@ namespace MQL4CSharp.Base.REST
         /// <li><b>property_value</b> :  [in] Value of property. Can be one of the .</li>
         /// </ul>
         /// </summary>
-        [RESTRoute(Method = HttpMethod.POST, PathInfo = @"^/[0-9]+/mqlsetinteger")]
-        public void Handle_MQLSetInteger_1(HttpListenerContext context)
+        [RestRoute(HttpMethod = HttpMethod.POST, PathInfo = @"^/[0-9]+/mqlsetinteger$")]
+        public IHttpContext Handle_MQLSetInteger_1(IHttpContext context)
         {
-            long chartid = Int64.Parse(context.Request.Url.Segments[1].Replace("/", ""));
-            this.SendJsonResponse(context, MQLSetInteger_1(context, chartid));
+            return SendJsonResponse(context, GetChartId(context), MQLSetInteger_1);
         }
 
         /// <summary>
@@ -1571,36 +1248,24 @@ namespace MQL4CSharp.Base.REST
         /// <li><b>property_value</b> :  [in] Value of property. Can be one of the .</li>
         /// </ul>
         /// </summary>
-        [RESTRoute(Method = HttpMethod.POST, PathInfo = @"^/mqlsetinteger")]
-        public void Handle_MQLSetInteger_1_Default(HttpListenerContext context)
+        [RestRoute(HttpMethod = HttpMethod.POST, PathInfo = @"^/mqlsetinteger$")]
+        public IHttpContext Handle_MQLSetInteger_1_Default(IHttpContext context)
         {
-            this.SendJsonResponse(context, MQLSetInteger_1(context, DEFAULT_CHART_ID));
+            return SendJsonResponse(context, MQLSetInteger_1);
         }
 
-        private JObject MQLSetInteger_1(HttpListenerContext context, long chartId)
+        private async Task<JObject> MQLSetInteger_1(MQLRestContext context)
         {
-            MQLCommandManager mqlCommandManager = DLLObjectWrapper.getInstance().getMQLCommandManager(chartId);
-            JObject payload = this.GetJsonPayload(context.Request);
-            JObject result = new JObject();
-            if (payload == null)
-            {
-                result["result"] = PARSE_ERROR;
-                return result;
-            }
+            var payload = context.JsonPayload;
+            var result = context.Result;
+            if (PayloadNotValid(context))
+                return context.Result;
             List<Object> parameters = new List<Object>();
-            parameters.Add(payload["property_id"]);
-            parameters.Add(payload["property_value"]);
-            int id = mqlCommandManager.ExecCommand(MQLCommand.MQLSetInteger_1, parameters); // MQLCommand ENUM = 30
-            while (mqlCommandManager.IsCommandRunning(id)) ; // block while command is running
-            try
-            {
-                mqlCommandManager.throwExceptionIfErrorResponse(id);
-                result["result"] = "";
-            }
-            catch (Exception e)
-            {
-                result["error"] = MQLExceptions.convertRESTException(e.ToString());
-            }
+            ParamAdd(context, parameters, "property_id");
+            ParamAdd(context, parameters, "property_value");
+            await ExecCommandAsync(context, MQLCommand.MQLSetInteger_1, parameters); // MQLCommand ENUM = 30
+
+            result["result"] = "";
 
             return result;
         }
@@ -1613,11 +1278,10 @@ namespace MQL4CSharp.Base.REST
         /// <li><b>property_id</b> :  [in] Identifier of a property. Can be one of the values of the enumeration.</li>
         /// </ul>
         /// </summary>
-        [RESTRoute(Method = HttpMethod.POST, PathInfo = @"^/[0-9]+/terminalinfointeger")]
-        public void Handle_TerminalInfoInteger_1(HttpListenerContext context)
+        [RestRoute(HttpMethod = HttpMethod.POST, PathInfo = @"^/[0-9]+/terminalinfointeger$")]
+        public IHttpContext Handle_TerminalInfoInteger_1(IHttpContext context)
         {
-            long chartid = Int64.Parse(context.Request.Url.Segments[1].Replace("/", ""));
-            this.SendJsonResponse(context, TerminalInfoInteger_1(context, chartid));
+            return SendJsonResponse(context, GetChartId(context), TerminalInfoInteger_1);
         }
 
         /// <summary>
@@ -1629,35 +1293,23 @@ namespace MQL4CSharp.Base.REST
         /// <li><b>property_id</b> :  [in] Identifier of a property. Can be one of the values of the enumeration.</li>
         /// </ul>
         /// </summary>
-        [RESTRoute(Method = HttpMethod.POST, PathInfo = @"^/terminalinfointeger")]
-        public void Handle_TerminalInfoInteger_1_Default(HttpListenerContext context)
+        [RestRoute(HttpMethod = HttpMethod.POST, PathInfo = @"^/terminalinfointeger$")]
+        public IHttpContext Handle_TerminalInfoInteger_1_Default(IHttpContext context)
         {
-            this.SendJsonResponse(context, TerminalInfoInteger_1(context, DEFAULT_CHART_ID));
+            return SendJsonResponse(context, TerminalInfoInteger_1);
         }
 
-        private JObject TerminalInfoInteger_1(HttpListenerContext context, long chartId)
+        private async Task<JObject> TerminalInfoInteger_1(MQLRestContext context)
         {
-            MQLCommandManager mqlCommandManager = DLLObjectWrapper.getInstance().getMQLCommandManager(chartId);
-            JObject payload = this.GetJsonPayload(context.Request);
-            JObject result = new JObject();
-            if (payload == null)
-            {
-                result["result"] = PARSE_ERROR;
-                return result;
-            }
+            var payload = context.JsonPayload;
+            var result = context.Result;
+            if (PayloadNotValid(context))
+                return context.Result;
             List<Object> parameters = new List<Object>();
-            parameters.Add(payload["property_id"]);
-            int id = mqlCommandManager.ExecCommand(MQLCommand.TerminalInfoInteger_1, parameters); // MQLCommand ENUM = 31
-            while (mqlCommandManager.IsCommandRunning(id)) ; // block while command is running
-            try
-            {
-                mqlCommandManager.throwExceptionIfErrorResponse(id);
-                result["result"] = Convert.ToInt32(mqlCommandManager.GetCommandResult(id));
-            }
-            catch (Exception e)
-            {
-                result["error"] = MQLExceptions.convertRESTException(e.ToString());
-            }
+            ParamAdd(context, parameters, "property_id");
+            await ExecCommandAsync(context, MQLCommand.TerminalInfoInteger_1, parameters); // MQLCommand ENUM = 31
+
+            result["result"] = Convert.ToInt32(GetCommandResult(context));
 
             return result;
         }
@@ -1670,11 +1322,10 @@ namespace MQL4CSharp.Base.REST
         /// <li><b>property_id</b> :  [in] Identifier of a property. Can be one of the values of the enumeration.</li>
         /// </ul>
         /// </summary>
-        [RESTRoute(Method = HttpMethod.POST, PathInfo = @"^/[0-9]+/terminalinfodouble")]
-        public void Handle_TerminalInfoDouble_1(HttpListenerContext context)
+        [RestRoute(HttpMethod = HttpMethod.POST, PathInfo = @"^/[0-9]+/terminalinfodouble$")]
+        public IHttpContext Handle_TerminalInfoDouble_1(IHttpContext context)
         {
-            long chartid = Int64.Parse(context.Request.Url.Segments[1].Replace("/", ""));
-            this.SendJsonResponse(context, TerminalInfoDouble_1(context, chartid));
+            return SendJsonResponse(context, GetChartId(context), TerminalInfoDouble_1);
         }
 
         /// <summary>
@@ -1686,35 +1337,23 @@ namespace MQL4CSharp.Base.REST
         /// <li><b>property_id</b> :  [in] Identifier of a property. Can be one of the values of the enumeration.</li>
         /// </ul>
         /// </summary>
-        [RESTRoute(Method = HttpMethod.POST, PathInfo = @"^/terminalinfodouble")]
-        public void Handle_TerminalInfoDouble_1_Default(HttpListenerContext context)
+        [RestRoute(HttpMethod = HttpMethod.POST, PathInfo = @"^/terminalinfodouble$")]
+        public IHttpContext Handle_TerminalInfoDouble_1_Default(IHttpContext context)
         {
-            this.SendJsonResponse(context, TerminalInfoDouble_1(context, DEFAULT_CHART_ID));
+            return SendJsonResponse(context, TerminalInfoDouble_1);
         }
 
-        private JObject TerminalInfoDouble_1(HttpListenerContext context, long chartId)
+        private async Task<JObject> TerminalInfoDouble_1(MQLRestContext context)
         {
-            MQLCommandManager mqlCommandManager = DLLObjectWrapper.getInstance().getMQLCommandManager(chartId);
-            JObject payload = this.GetJsonPayload(context.Request);
-            JObject result = new JObject();
-            if (payload == null)
-            {
-                result["result"] = PARSE_ERROR;
-                return result;
-            }
+            var payload = context.JsonPayload;
+            var result = context.Result;
+            if (PayloadNotValid(context))
+                return context.Result;
             List<Object> parameters = new List<Object>();
-            parameters.Add(payload["property_id"]);
-            int id = mqlCommandManager.ExecCommand(MQLCommand.TerminalInfoDouble_1, parameters); // MQLCommand ENUM = 32
-            while (mqlCommandManager.IsCommandRunning(id)) ; // block while command is running
-            try
-            {
-                mqlCommandManager.throwExceptionIfErrorResponse(id);
-                result["result"] = Convert.ToDecimal(mqlCommandManager.GetCommandResult(id));
-            }
-            catch (Exception e)
-            {
-                result["error"] = MQLExceptions.convertRESTException(e.ToString());
-            }
+            ParamAdd(context, parameters, "property_id");
+            await ExecCommandAsync(context, MQLCommand.TerminalInfoDouble_1, parameters); // MQLCommand ENUM = 32
+
+            result["result"] = Convert.ToDecimal(GetCommandResult(context));
 
             return result;
         }
@@ -1727,11 +1366,10 @@ namespace MQL4CSharp.Base.REST
         /// <li><b>property_id</b> :  [in] Identifier of a property. Can be one of the values of the enumeration.</li>
         /// </ul>
         /// </summary>
-        [RESTRoute(Method = HttpMethod.POST, PathInfo = @"^/[0-9]+/terminalinfostring")]
-        public void Handle_TerminalInfoString_1(HttpListenerContext context)
+        [RestRoute(HttpMethod = HttpMethod.POST, PathInfo = @"^/[0-9]+/terminalinfostring$")]
+        public IHttpContext Handle_TerminalInfoString_1(IHttpContext context)
         {
-            long chartid = Int64.Parse(context.Request.Url.Segments[1].Replace("/", ""));
-            this.SendJsonResponse(context, TerminalInfoString_1(context, chartid));
+            return SendJsonResponse(context, GetChartId(context), TerminalInfoString_1);
         }
 
         /// <summary>
@@ -1743,35 +1381,23 @@ namespace MQL4CSharp.Base.REST
         /// <li><b>property_id</b> :  [in] Identifier of a property. Can be one of the values of the enumeration.</li>
         /// </ul>
         /// </summary>
-        [RESTRoute(Method = HttpMethod.POST, PathInfo = @"^/terminalinfostring")]
-        public void Handle_TerminalInfoString_1_Default(HttpListenerContext context)
+        [RestRoute(HttpMethod = HttpMethod.POST, PathInfo = @"^/terminalinfostring$")]
+        public IHttpContext Handle_TerminalInfoString_1_Default(IHttpContext context)
         {
-            this.SendJsonResponse(context, TerminalInfoString_1(context, DEFAULT_CHART_ID));
+            return SendJsonResponse(context, TerminalInfoString_1);
         }
 
-        private JObject TerminalInfoString_1(HttpListenerContext context, long chartId)
+        private async Task<JObject> TerminalInfoString_1(MQLRestContext context)
         {
-            MQLCommandManager mqlCommandManager = DLLObjectWrapper.getInstance().getMQLCommandManager(chartId);
-            JObject payload = this.GetJsonPayload(context.Request);
-            JObject result = new JObject();
-            if (payload == null)
-            {
-                result["result"] = PARSE_ERROR;
-                return result;
-            }
+            var payload = context.JsonPayload;
+            var result = context.Result;
+            if (PayloadNotValid(context))
+                return context.Result;
             List<Object> parameters = new List<Object>();
-            parameters.Add(payload["property_id"]);
-            int id = mqlCommandManager.ExecCommand(MQLCommand.TerminalInfoString_1, parameters); // MQLCommand ENUM = 33
-            while (mqlCommandManager.IsCommandRunning(id)) ; // block while command is running
-            try
-            {
-                mqlCommandManager.throwExceptionIfErrorResponse(id);
-                result["result"] = (string)mqlCommandManager.GetCommandResult(id);
-            }
-            catch (Exception e)
-            {
-                result["error"] = MQLExceptions.convertRESTException(e.ToString());
-            }
+            ParamAdd(context, parameters, "property_id");
+            await ExecCommandAsync(context, MQLCommand.TerminalInfoString_1, parameters); // MQLCommand ENUM = 33
+
+            result["result"] = (string)GetCommandResult(context);
 
             return result;
         }
@@ -1783,11 +1409,10 @@ namespace MQL4CSharp.Base.REST
         /// <ul>
         /// </ul>
         /// </summary>
-        [RESTRoute(Method = HttpMethod.POST, PathInfo = @"^/[0-9]+/symbol")]
-        public void Handle_Symbol_1(HttpListenerContext context)
+        [RestRoute(HttpMethod = HttpMethod.POST, PathInfo = @"^/[0-9]+/symbol$")]
+        public IHttpContext Handle_Symbol_1(IHttpContext context)
         {
-            long chartid = Int64.Parse(context.Request.Url.Segments[1].Replace("/", ""));
-            this.SendJsonResponse(context, Symbol_1(context, chartid));
+            return SendJsonResponse(context, GetChartId(context), Symbol_1);
         }
 
         /// <summary>
@@ -1798,29 +1423,20 @@ namespace MQL4CSharp.Base.REST
         /// <ul>
         /// </ul>
         /// </summary>
-        [RESTRoute(Method = HttpMethod.POST, PathInfo = @"^/symbol")]
-        public void Handle_Symbol_1_Default(HttpListenerContext context)
+        [RestRoute(HttpMethod = HttpMethod.POST, PathInfo = @"^/symbol$")]
+        public IHttpContext Handle_Symbol_1_Default(IHttpContext context)
         {
-            this.SendJsonResponse(context, Symbol_1(context, DEFAULT_CHART_ID));
+            return SendJsonResponse(context, Symbol_1);
         }
 
-        private JObject Symbol_1(HttpListenerContext context, long chartId)
+        private async Task<JObject> Symbol_1(MQLRestContext context)
         {
-            MQLCommandManager mqlCommandManager = DLLObjectWrapper.getInstance().getMQLCommandManager(chartId);
-            JObject payload = this.GetJsonPayload(context.Request);
-            JObject result = new JObject();
+            var payload = context.JsonPayload;
+            var result = context.Result;
             List<Object> parameters = new List<Object>();
-            int id = mqlCommandManager.ExecCommand(MQLCommand.Symbol_1, parameters); // MQLCommand ENUM = 34
-            while (mqlCommandManager.IsCommandRunning(id)) ; // block while command is running
-            try
-            {
-                mqlCommandManager.throwExceptionIfErrorResponse(id);
-                result["result"] = (string)mqlCommandManager.GetCommandResult(id);
-            }
-            catch (Exception e)
-            {
-                result["error"] = MQLExceptions.convertRESTException(e.ToString());
-            }
+            await ExecCommandAsync(context, MQLCommand.Symbol_1, parameters); // MQLCommand ENUM = 34
+
+            result["result"] = (string)GetCommandResult(context);
 
             return result;
         }
@@ -1832,11 +1448,10 @@ namespace MQL4CSharp.Base.REST
         /// <ul>
         /// </ul>
         /// </summary>
-        [RESTRoute(Method = HttpMethod.POST, PathInfo = @"^/[0-9]+/period")]
-        public void Handle_Period_1(HttpListenerContext context)
+        [RestRoute(HttpMethod = HttpMethod.POST, PathInfo = @"^/[0-9]+/period$")]
+        public IHttpContext Handle_Period_1(IHttpContext context)
         {
-            long chartid = Int64.Parse(context.Request.Url.Segments[1].Replace("/", ""));
-            this.SendJsonResponse(context, Period_1(context, chartid));
+            return SendJsonResponse(context, GetChartId(context), Period_1);
         }
 
         /// <summary>
@@ -1847,29 +1462,20 @@ namespace MQL4CSharp.Base.REST
         /// <ul>
         /// </ul>
         /// </summary>
-        [RESTRoute(Method = HttpMethod.POST, PathInfo = @"^/period")]
-        public void Handle_Period_1_Default(HttpListenerContext context)
+        [RestRoute(HttpMethod = HttpMethod.POST, PathInfo = @"^/period$")]
+        public IHttpContext Handle_Period_1_Default(IHttpContext context)
         {
-            this.SendJsonResponse(context, Period_1(context, DEFAULT_CHART_ID));
+            return SendJsonResponse(context, Period_1);
         }
 
-        private JObject Period_1(HttpListenerContext context, long chartId)
+        private async Task<JObject> Period_1(MQLRestContext context)
         {
-            MQLCommandManager mqlCommandManager = DLLObjectWrapper.getInstance().getMQLCommandManager(chartId);
-            JObject payload = this.GetJsonPayload(context.Request);
-            JObject result = new JObject();
+            var payload = context.JsonPayload;
+            var result = context.Result;
             List<Object> parameters = new List<Object>();
-            int id = mqlCommandManager.ExecCommand(MQLCommand.Period_1, parameters); // MQLCommand ENUM = 35
-            while (mqlCommandManager.IsCommandRunning(id)) ; // block while command is running
-            try
-            {
-                mqlCommandManager.throwExceptionIfErrorResponse(id);
-                result["result"] = Convert.ToInt32(mqlCommandManager.GetCommandResult(id));
-            }
-            catch (Exception e)
-            {
-                result["error"] = MQLExceptions.convertRESTException(e.ToString());
-            }
+            await ExecCommandAsync(context, MQLCommand.Period_1, parameters); // MQLCommand ENUM = 35
+
+            result["result"] = Convert.ToInt32(GetCommandResult(context));
 
             return result;
         }
@@ -1881,11 +1487,10 @@ namespace MQL4CSharp.Base.REST
         /// <ul>
         /// </ul>
         /// </summary>
-        [RESTRoute(Method = HttpMethod.POST, PathInfo = @"^/[0-9]+/digits")]
-        public void Handle_Digits_1(HttpListenerContext context)
+        [RestRoute(HttpMethod = HttpMethod.POST, PathInfo = @"^/[0-9]+/digits$")]
+        public IHttpContext Handle_Digits_1(IHttpContext context)
         {
-            long chartid = Int64.Parse(context.Request.Url.Segments[1].Replace("/", ""));
-            this.SendJsonResponse(context, Digits_1(context, chartid));
+            return SendJsonResponse(context, GetChartId(context), Digits_1);
         }
 
         /// <summary>
@@ -1896,29 +1501,20 @@ namespace MQL4CSharp.Base.REST
         /// <ul>
         /// </ul>
         /// </summary>
-        [RESTRoute(Method = HttpMethod.POST, PathInfo = @"^/digits")]
-        public void Handle_Digits_1_Default(HttpListenerContext context)
+        [RestRoute(HttpMethod = HttpMethod.POST, PathInfo = @"^/digits$")]
+        public IHttpContext Handle_Digits_1_Default(IHttpContext context)
         {
-            this.SendJsonResponse(context, Digits_1(context, DEFAULT_CHART_ID));
+            return SendJsonResponse(context, Digits_1);
         }
 
-        private JObject Digits_1(HttpListenerContext context, long chartId)
+        private async Task<JObject> Digits_1(MQLRestContext context)
         {
-            MQLCommandManager mqlCommandManager = DLLObjectWrapper.getInstance().getMQLCommandManager(chartId);
-            JObject payload = this.GetJsonPayload(context.Request);
-            JObject result = new JObject();
+            var payload = context.JsonPayload;
+            var result = context.Result;
             List<Object> parameters = new List<Object>();
-            int id = mqlCommandManager.ExecCommand(MQLCommand.Digits_1, parameters); // MQLCommand ENUM = 36
-            while (mqlCommandManager.IsCommandRunning(id)) ; // block while command is running
-            try
-            {
-                mqlCommandManager.throwExceptionIfErrorResponse(id);
-                result["result"] = Convert.ToInt32(mqlCommandManager.GetCommandResult(id));
-            }
-            catch (Exception e)
-            {
-                result["error"] = MQLExceptions.convertRESTException(e.ToString());
-            }
+            await ExecCommandAsync(context, MQLCommand.Digits_1, parameters); // MQLCommand ENUM = 36
+
+            result["result"] = Convert.ToInt32(GetCommandResult(context));
 
             return result;
         }
@@ -1930,11 +1526,10 @@ namespace MQL4CSharp.Base.REST
         /// <ul>
         /// </ul>
         /// </summary>
-        [RESTRoute(Method = HttpMethod.POST, PathInfo = @"^/[0-9]+/point")]
-        public void Handle_Point_1(HttpListenerContext context)
+        [RestRoute(HttpMethod = HttpMethod.POST, PathInfo = @"^/[0-9]+/point$")]
+        public IHttpContext Handle_Point_1(IHttpContext context)
         {
-            long chartid = Int64.Parse(context.Request.Url.Segments[1].Replace("/", ""));
-            this.SendJsonResponse(context, Point_1(context, chartid));
+            return SendJsonResponse(context, GetChartId(context), Point_1);
         }
 
         /// <summary>
@@ -1945,29 +1540,20 @@ namespace MQL4CSharp.Base.REST
         /// <ul>
         /// </ul>
         /// </summary>
-        [RESTRoute(Method = HttpMethod.POST, PathInfo = @"^/point")]
-        public void Handle_Point_1_Default(HttpListenerContext context)
+        [RestRoute(HttpMethod = HttpMethod.POST, PathInfo = @"^/point$")]
+        public IHttpContext Handle_Point_1_Default(IHttpContext context)
         {
-            this.SendJsonResponse(context, Point_1(context, DEFAULT_CHART_ID));
+            return SendJsonResponse(context, Point_1);
         }
 
-        private JObject Point_1(HttpListenerContext context, long chartId)
+        private async Task<JObject> Point_1(MQLRestContext context)
         {
-            MQLCommandManager mqlCommandManager = DLLObjectWrapper.getInstance().getMQLCommandManager(chartId);
-            JObject payload = this.GetJsonPayload(context.Request);
-            JObject result = new JObject();
+            var payload = context.JsonPayload;
+            var result = context.Result;
             List<Object> parameters = new List<Object>();
-            int id = mqlCommandManager.ExecCommand(MQLCommand.Point_1, parameters); // MQLCommand ENUM = 37
-            while (mqlCommandManager.IsCommandRunning(id)) ; // block while command is running
-            try
-            {
-                mqlCommandManager.throwExceptionIfErrorResponse(id);
-                result["result"] = Convert.ToDecimal(mqlCommandManager.GetCommandResult(id));
-            }
-            catch (Exception e)
-            {
-                result["error"] = MQLExceptions.convertRESTException(e.ToString());
-            }
+            await ExecCommandAsync(context, MQLCommand.Point_1, parameters); // MQLCommand ENUM = 37
+
+            result["result"] = Convert.ToDecimal(GetCommandResult(context));
 
             return result;
         }
@@ -1979,11 +1565,10 @@ namespace MQL4CSharp.Base.REST
         /// <ul>
         /// </ul>
         /// </summary>
-        [RESTRoute(Method = HttpMethod.POST, PathInfo = @"^/[0-9]+/isconnected")]
-        public void Handle_IsConnected_1(HttpListenerContext context)
+        [RestRoute(HttpMethod = HttpMethod.POST, PathInfo = @"^/[0-9]+/isconnected$")]
+        public IHttpContext Handle_IsConnected_1(IHttpContext context)
         {
-            long chartid = Int64.Parse(context.Request.Url.Segments[1].Replace("/", ""));
-            this.SendJsonResponse(context, IsConnected_1(context, chartid));
+            return SendJsonResponse(context, GetChartId(context), IsConnected_1);
         }
 
         /// <summary>
@@ -1994,29 +1579,20 @@ namespace MQL4CSharp.Base.REST
         /// <ul>
         /// </ul>
         /// </summary>
-        [RESTRoute(Method = HttpMethod.POST, PathInfo = @"^/isconnected")]
-        public void Handle_IsConnected_1_Default(HttpListenerContext context)
+        [RestRoute(HttpMethod = HttpMethod.POST, PathInfo = @"^/isconnected$")]
+        public IHttpContext Handle_IsConnected_1_Default(IHttpContext context)
         {
-            this.SendJsonResponse(context, IsConnected_1(context, DEFAULT_CHART_ID));
+            return SendJsonResponse(context, IsConnected_1);
         }
 
-        private JObject IsConnected_1(HttpListenerContext context, long chartId)
+        private async Task<JObject> IsConnected_1(MQLRestContext context)
         {
-            MQLCommandManager mqlCommandManager = DLLObjectWrapper.getInstance().getMQLCommandManager(chartId);
-            JObject payload = this.GetJsonPayload(context.Request);
-            JObject result = new JObject();
+            var payload = context.JsonPayload;
+            var result = context.Result;
             List<Object> parameters = new List<Object>();
-            int id = mqlCommandManager.ExecCommand(MQLCommand.IsConnected_1, parameters); // MQLCommand ENUM = 38
-            while (mqlCommandManager.IsCommandRunning(id)) ; // block while command is running
-            try
-            {
-                mqlCommandManager.throwExceptionIfErrorResponse(id);
-                result["result"] = (bool)mqlCommandManager.GetCommandResult(id);
-            }
-            catch (Exception e)
-            {
-                result["error"] = MQLExceptions.convertRESTException(e.ToString());
-            }
+            await ExecCommandAsync(context, MQLCommand.IsConnected_1, parameters); // MQLCommand ENUM = 38
+
+            result["result"] = (bool)GetCommandResult(context);
 
             return result;
         }
@@ -2028,11 +1604,10 @@ namespace MQL4CSharp.Base.REST
         /// <ul>
         /// </ul>
         /// </summary>
-        [RESTRoute(Method = HttpMethod.POST, PathInfo = @"^/[0-9]+/isdemo")]
-        public void Handle_IsDemo_1(HttpListenerContext context)
+        [RestRoute(HttpMethod = HttpMethod.POST, PathInfo = @"^/[0-9]+/isdemo$")]
+        public IHttpContext Handle_IsDemo_1(IHttpContext context)
         {
-            long chartid = Int64.Parse(context.Request.Url.Segments[1].Replace("/", ""));
-            this.SendJsonResponse(context, IsDemo_1(context, chartid));
+            return SendJsonResponse(context, GetChartId(context), IsDemo_1);
         }
 
         /// <summary>
@@ -2043,29 +1618,20 @@ namespace MQL4CSharp.Base.REST
         /// <ul>
         /// </ul>
         /// </summary>
-        [RESTRoute(Method = HttpMethod.POST, PathInfo = @"^/isdemo")]
-        public void Handle_IsDemo_1_Default(HttpListenerContext context)
+        [RestRoute(HttpMethod = HttpMethod.POST, PathInfo = @"^/isdemo$")]
+        public IHttpContext Handle_IsDemo_1_Default(IHttpContext context)
         {
-            this.SendJsonResponse(context, IsDemo_1(context, DEFAULT_CHART_ID));
+            return SendJsonResponse(context, IsDemo_1);
         }
 
-        private JObject IsDemo_1(HttpListenerContext context, long chartId)
+        private async Task<JObject> IsDemo_1(MQLRestContext context)
         {
-            MQLCommandManager mqlCommandManager = DLLObjectWrapper.getInstance().getMQLCommandManager(chartId);
-            JObject payload = this.GetJsonPayload(context.Request);
-            JObject result = new JObject();
+            var payload = context.JsonPayload;
+            var result = context.Result;
             List<Object> parameters = new List<Object>();
-            int id = mqlCommandManager.ExecCommand(MQLCommand.IsDemo_1, parameters); // MQLCommand ENUM = 39
-            while (mqlCommandManager.IsCommandRunning(id)) ; // block while command is running
-            try
-            {
-                mqlCommandManager.throwExceptionIfErrorResponse(id);
-                result["result"] = (bool)mqlCommandManager.GetCommandResult(id);
-            }
-            catch (Exception e)
-            {
-                result["error"] = MQLExceptions.convertRESTException(e.ToString());
-            }
+            await ExecCommandAsync(context, MQLCommand.IsDemo_1, parameters); // MQLCommand ENUM = 39
+
+            result["result"] = (bool)GetCommandResult(context);
 
             return result;
         }
@@ -2077,11 +1643,10 @@ namespace MQL4CSharp.Base.REST
         /// <ul>
         /// </ul>
         /// </summary>
-        [RESTRoute(Method = HttpMethod.POST, PathInfo = @"^/[0-9]+/isdllsallowed")]
-        public void Handle_IsDllsAllowed_1(HttpListenerContext context)
+        [RestRoute(HttpMethod = HttpMethod.POST, PathInfo = @"^/[0-9]+/isdllsallowed$")]
+        public IHttpContext Handle_IsDllsAllowed_1(IHttpContext context)
         {
-            long chartid = Int64.Parse(context.Request.Url.Segments[1].Replace("/", ""));
-            this.SendJsonResponse(context, IsDllsAllowed_1(context, chartid));
+            return SendJsonResponse(context, GetChartId(context), IsDllsAllowed_1);
         }
 
         /// <summary>
@@ -2092,29 +1657,20 @@ namespace MQL4CSharp.Base.REST
         /// <ul>
         /// </ul>
         /// </summary>
-        [RESTRoute(Method = HttpMethod.POST, PathInfo = @"^/isdllsallowed")]
-        public void Handle_IsDllsAllowed_1_Default(HttpListenerContext context)
+        [RestRoute(HttpMethod = HttpMethod.POST, PathInfo = @"^/isdllsallowed$")]
+        public IHttpContext Handle_IsDllsAllowed_1_Default(IHttpContext context)
         {
-            this.SendJsonResponse(context, IsDllsAllowed_1(context, DEFAULT_CHART_ID));
+            return SendJsonResponse(context, IsDllsAllowed_1);
         }
 
-        private JObject IsDllsAllowed_1(HttpListenerContext context, long chartId)
+        private async Task<JObject> IsDllsAllowed_1(MQLRestContext context)
         {
-            MQLCommandManager mqlCommandManager = DLLObjectWrapper.getInstance().getMQLCommandManager(chartId);
-            JObject payload = this.GetJsonPayload(context.Request);
-            JObject result = new JObject();
+            var payload = context.JsonPayload;
+            var result = context.Result;
             List<Object> parameters = new List<Object>();
-            int id = mqlCommandManager.ExecCommand(MQLCommand.IsDllsAllowed_1, parameters); // MQLCommand ENUM = 40
-            while (mqlCommandManager.IsCommandRunning(id)) ; // block while command is running
-            try
-            {
-                mqlCommandManager.throwExceptionIfErrorResponse(id);
-                result["result"] = (bool)mqlCommandManager.GetCommandResult(id);
-            }
-            catch (Exception e)
-            {
-                result["error"] = MQLExceptions.convertRESTException(e.ToString());
-            }
+            await ExecCommandAsync(context, MQLCommand.IsDllsAllowed_1, parameters); // MQLCommand ENUM = 40
+
+            result["result"] = (bool)GetCommandResult(context);
 
             return result;
         }
@@ -2126,11 +1682,10 @@ namespace MQL4CSharp.Base.REST
         /// <ul>
         /// </ul>
         /// </summary>
-        [RESTRoute(Method = HttpMethod.POST, PathInfo = @"^/[0-9]+/isexpertenabled")]
-        public void Handle_IsExpertEnabled_1(HttpListenerContext context)
+        [RestRoute(HttpMethod = HttpMethod.POST, PathInfo = @"^/[0-9]+/isexpertenabled$")]
+        public IHttpContext Handle_IsExpertEnabled_1(IHttpContext context)
         {
-            long chartid = Int64.Parse(context.Request.Url.Segments[1].Replace("/", ""));
-            this.SendJsonResponse(context, IsExpertEnabled_1(context, chartid));
+            return SendJsonResponse(context, GetChartId(context), IsExpertEnabled_1);
         }
 
         /// <summary>
@@ -2141,29 +1696,20 @@ namespace MQL4CSharp.Base.REST
         /// <ul>
         /// </ul>
         /// </summary>
-        [RESTRoute(Method = HttpMethod.POST, PathInfo = @"^/isexpertenabled")]
-        public void Handle_IsExpertEnabled_1_Default(HttpListenerContext context)
+        [RestRoute(HttpMethod = HttpMethod.POST, PathInfo = @"^/isexpertenabled$")]
+        public IHttpContext Handle_IsExpertEnabled_1_Default(IHttpContext context)
         {
-            this.SendJsonResponse(context, IsExpertEnabled_1(context, DEFAULT_CHART_ID));
+            return SendJsonResponse(context, IsExpertEnabled_1);
         }
 
-        private JObject IsExpertEnabled_1(HttpListenerContext context, long chartId)
+        private async Task<JObject> IsExpertEnabled_1(MQLRestContext context)
         {
-            MQLCommandManager mqlCommandManager = DLLObjectWrapper.getInstance().getMQLCommandManager(chartId);
-            JObject payload = this.GetJsonPayload(context.Request);
-            JObject result = new JObject();
+            var payload = context.JsonPayload;
+            var result = context.Result;
             List<Object> parameters = new List<Object>();
-            int id = mqlCommandManager.ExecCommand(MQLCommand.IsExpertEnabled_1, parameters); // MQLCommand ENUM = 41
-            while (mqlCommandManager.IsCommandRunning(id)) ; // block while command is running
-            try
-            {
-                mqlCommandManager.throwExceptionIfErrorResponse(id);
-                result["result"] = (bool)mqlCommandManager.GetCommandResult(id);
-            }
-            catch (Exception e)
-            {
-                result["error"] = MQLExceptions.convertRESTException(e.ToString());
-            }
+            await ExecCommandAsync(context, MQLCommand.IsExpertEnabled_1, parameters); // MQLCommand ENUM = 41
+
+            result["result"] = (bool)GetCommandResult(context);
 
             return result;
         }
@@ -2175,11 +1721,10 @@ namespace MQL4CSharp.Base.REST
         /// <ul>
         /// </ul>
         /// </summary>
-        [RESTRoute(Method = HttpMethod.POST, PathInfo = @"^/[0-9]+/islibrariesallowed")]
-        public void Handle_IsLibrariesAllowed_1(HttpListenerContext context)
+        [RestRoute(HttpMethod = HttpMethod.POST, PathInfo = @"^/[0-9]+/islibrariesallowed$")]
+        public IHttpContext Handle_IsLibrariesAllowed_1(IHttpContext context)
         {
-            long chartid = Int64.Parse(context.Request.Url.Segments[1].Replace("/", ""));
-            this.SendJsonResponse(context, IsLibrariesAllowed_1(context, chartid));
+            return SendJsonResponse(context, GetChartId(context), IsLibrariesAllowed_1);
         }
 
         /// <summary>
@@ -2190,29 +1735,20 @@ namespace MQL4CSharp.Base.REST
         /// <ul>
         /// </ul>
         /// </summary>
-        [RESTRoute(Method = HttpMethod.POST, PathInfo = @"^/islibrariesallowed")]
-        public void Handle_IsLibrariesAllowed_1_Default(HttpListenerContext context)
+        [RestRoute(HttpMethod = HttpMethod.POST, PathInfo = @"^/islibrariesallowed$")]
+        public IHttpContext Handle_IsLibrariesAllowed_1_Default(IHttpContext context)
         {
-            this.SendJsonResponse(context, IsLibrariesAllowed_1(context, DEFAULT_CHART_ID));
+            return SendJsonResponse(context, IsLibrariesAllowed_1);
         }
 
-        private JObject IsLibrariesAllowed_1(HttpListenerContext context, long chartId)
+        private async Task<JObject> IsLibrariesAllowed_1(MQLRestContext context)
         {
-            MQLCommandManager mqlCommandManager = DLLObjectWrapper.getInstance().getMQLCommandManager(chartId);
-            JObject payload = this.GetJsonPayload(context.Request);
-            JObject result = new JObject();
+            var payload = context.JsonPayload;
+            var result = context.Result;
             List<Object> parameters = new List<Object>();
-            int id = mqlCommandManager.ExecCommand(MQLCommand.IsLibrariesAllowed_1, parameters); // MQLCommand ENUM = 42
-            while (mqlCommandManager.IsCommandRunning(id)) ; // block while command is running
-            try
-            {
-                mqlCommandManager.throwExceptionIfErrorResponse(id);
-                result["result"] = (bool)mqlCommandManager.GetCommandResult(id);
-            }
-            catch (Exception e)
-            {
-                result["error"] = MQLExceptions.convertRESTException(e.ToString());
-            }
+            await ExecCommandAsync(context, MQLCommand.IsLibrariesAllowed_1, parameters); // MQLCommand ENUM = 42
+
+            result["result"] = (bool)GetCommandResult(context);
 
             return result;
         }
@@ -2224,11 +1760,10 @@ namespace MQL4CSharp.Base.REST
         /// <ul>
         /// </ul>
         /// </summary>
-        [RESTRoute(Method = HttpMethod.POST, PathInfo = @"^/[0-9]+/isoptimization")]
-        public void Handle_IsOptimization_1(HttpListenerContext context)
+        [RestRoute(HttpMethod = HttpMethod.POST, PathInfo = @"^/[0-9]+/isoptimization$")]
+        public IHttpContext Handle_IsOptimization_1(IHttpContext context)
         {
-            long chartid = Int64.Parse(context.Request.Url.Segments[1].Replace("/", ""));
-            this.SendJsonResponse(context, IsOptimization_1(context, chartid));
+            return SendJsonResponse(context, GetChartId(context), IsOptimization_1);
         }
 
         /// <summary>
@@ -2239,29 +1774,20 @@ namespace MQL4CSharp.Base.REST
         /// <ul>
         /// </ul>
         /// </summary>
-        [RESTRoute(Method = HttpMethod.POST, PathInfo = @"^/isoptimization")]
-        public void Handle_IsOptimization_1_Default(HttpListenerContext context)
+        [RestRoute(HttpMethod = HttpMethod.POST, PathInfo = @"^/isoptimization$")]
+        public IHttpContext Handle_IsOptimization_1_Default(IHttpContext context)
         {
-            this.SendJsonResponse(context, IsOptimization_1(context, DEFAULT_CHART_ID));
+            return SendJsonResponse(context, IsOptimization_1);
         }
 
-        private JObject IsOptimization_1(HttpListenerContext context, long chartId)
+        private async Task<JObject> IsOptimization_1(MQLRestContext context)
         {
-            MQLCommandManager mqlCommandManager = DLLObjectWrapper.getInstance().getMQLCommandManager(chartId);
-            JObject payload = this.GetJsonPayload(context.Request);
-            JObject result = new JObject();
+            var payload = context.JsonPayload;
+            var result = context.Result;
             List<Object> parameters = new List<Object>();
-            int id = mqlCommandManager.ExecCommand(MQLCommand.IsOptimization_1, parameters); // MQLCommand ENUM = 43
-            while (mqlCommandManager.IsCommandRunning(id)) ; // block while command is running
-            try
-            {
-                mqlCommandManager.throwExceptionIfErrorResponse(id);
-                result["result"] = (bool)mqlCommandManager.GetCommandResult(id);
-            }
-            catch (Exception e)
-            {
-                result["error"] = MQLExceptions.convertRESTException(e.ToString());
-            }
+            await ExecCommandAsync(context, MQLCommand.IsOptimization_1, parameters); // MQLCommand ENUM = 43
+
+            result["result"] = (bool)GetCommandResult(context);
 
             return result;
         }
@@ -2273,11 +1799,10 @@ namespace MQL4CSharp.Base.REST
         /// <ul>
         /// </ul>
         /// </summary>
-        [RESTRoute(Method = HttpMethod.POST, PathInfo = @"^/[0-9]+/istesting")]
-        public void Handle_IsTesting_1(HttpListenerContext context)
+        [RestRoute(HttpMethod = HttpMethod.POST, PathInfo = @"^/[0-9]+/istesting$")]
+        public IHttpContext Handle_IsTesting_1(IHttpContext context)
         {
-            long chartid = Int64.Parse(context.Request.Url.Segments[1].Replace("/", ""));
-            this.SendJsonResponse(context, IsTesting_1(context, chartid));
+            return SendJsonResponse(context, GetChartId(context), IsTesting_1);
         }
 
         /// <summary>
@@ -2288,29 +1813,20 @@ namespace MQL4CSharp.Base.REST
         /// <ul>
         /// </ul>
         /// </summary>
-        [RESTRoute(Method = HttpMethod.POST, PathInfo = @"^/istesting")]
-        public void Handle_IsTesting_1_Default(HttpListenerContext context)
+        [RestRoute(HttpMethod = HttpMethod.POST, PathInfo = @"^/istesting$")]
+        public IHttpContext Handle_IsTesting_1_Default(IHttpContext context)
         {
-            this.SendJsonResponse(context, IsTesting_1(context, DEFAULT_CHART_ID));
+            return SendJsonResponse(context, IsTesting_1);
         }
 
-        private JObject IsTesting_1(HttpListenerContext context, long chartId)
+        private async Task<JObject> IsTesting_1(MQLRestContext context)
         {
-            MQLCommandManager mqlCommandManager = DLLObjectWrapper.getInstance().getMQLCommandManager(chartId);
-            JObject payload = this.GetJsonPayload(context.Request);
-            JObject result = new JObject();
+            var payload = context.JsonPayload;
+            var result = context.Result;
             List<Object> parameters = new List<Object>();
-            int id = mqlCommandManager.ExecCommand(MQLCommand.IsTesting_1, parameters); // MQLCommand ENUM = 44
-            while (mqlCommandManager.IsCommandRunning(id)) ; // block while command is running
-            try
-            {
-                mqlCommandManager.throwExceptionIfErrorResponse(id);
-                result["result"] = (bool)mqlCommandManager.GetCommandResult(id);
-            }
-            catch (Exception e)
-            {
-                result["error"] = MQLExceptions.convertRESTException(e.ToString());
-            }
+            await ExecCommandAsync(context, MQLCommand.IsTesting_1, parameters); // MQLCommand ENUM = 44
+
+            result["result"] = (bool)GetCommandResult(context);
 
             return result;
         }
@@ -2322,11 +1838,10 @@ namespace MQL4CSharp.Base.REST
         /// <ul>
         /// </ul>
         /// </summary>
-        [RESTRoute(Method = HttpMethod.POST, PathInfo = @"^/[0-9]+/istradeallowed")]
-        public void Handle_IsTradeAllowed_1(HttpListenerContext context)
+        [RestRoute(HttpMethod = HttpMethod.POST, PathInfo = @"^/[0-9]+/istradeallowed$")]
+        public IHttpContext Handle_IsTradeAllowed_1(IHttpContext context)
         {
-            long chartid = Int64.Parse(context.Request.Url.Segments[1].Replace("/", ""));
-            this.SendJsonResponse(context, IsTradeAllowed_1(context, chartid));
+            return SendJsonResponse(context, GetChartId(context), IsTradeAllowed_1);
         }
 
         /// <summary>
@@ -2337,29 +1852,20 @@ namespace MQL4CSharp.Base.REST
         /// <ul>
         /// </ul>
         /// </summary>
-        [RESTRoute(Method = HttpMethod.POST, PathInfo = @"^/istradeallowed")]
-        public void Handle_IsTradeAllowed_1_Default(HttpListenerContext context)
+        [RestRoute(HttpMethod = HttpMethod.POST, PathInfo = @"^/istradeallowed$")]
+        public IHttpContext Handle_IsTradeAllowed_1_Default(IHttpContext context)
         {
-            this.SendJsonResponse(context, IsTradeAllowed_1(context, DEFAULT_CHART_ID));
+            return SendJsonResponse(context, IsTradeAllowed_1);
         }
 
-        private JObject IsTradeAllowed_1(HttpListenerContext context, long chartId)
+        private async Task<JObject> IsTradeAllowed_1(MQLRestContext context)
         {
-            MQLCommandManager mqlCommandManager = DLLObjectWrapper.getInstance().getMQLCommandManager(chartId);
-            JObject payload = this.GetJsonPayload(context.Request);
-            JObject result = new JObject();
+            var payload = context.JsonPayload;
+            var result = context.Result;
             List<Object> parameters = new List<Object>();
-            int id = mqlCommandManager.ExecCommand(MQLCommand.IsTradeAllowed_1, parameters); // MQLCommand ENUM = 45
-            while (mqlCommandManager.IsCommandRunning(id)) ; // block while command is running
-            try
-            {
-                mqlCommandManager.throwExceptionIfErrorResponse(id);
-                result["result"] = (bool)mqlCommandManager.GetCommandResult(id);
-            }
-            catch (Exception e)
-            {
-                result["error"] = MQLExceptions.convertRESTException(e.ToString());
-            }
+            await ExecCommandAsync(context, MQLCommand.IsTradeAllowed_1, parameters); // MQLCommand ENUM = 45
+
+            result["result"] = (bool)GetCommandResult(context);
 
             return result;
         }
@@ -2373,11 +1879,10 @@ namespace MQL4CSharp.Base.REST
         /// <li><b>tested_time</b> :  [in] Time to check status.</li>
         /// </ul>
         /// </summary>
-        [RESTRoute(Method = HttpMethod.POST, PathInfo = @"^/[0-9]+/istradeallowed")]
-        public void Handle_IsTradeAllowed_2(HttpListenerContext context)
+        [RestRoute(HttpMethod = HttpMethod.POST, PathInfo = @"^/[0-9]+/istradeallowed$")]
+        public IHttpContext Handle_IsTradeAllowed_2(IHttpContext context)
         {
-            long chartid = Int64.Parse(context.Request.Url.Segments[1].Replace("/", ""));
-            this.SendJsonResponse(context, IsTradeAllowed_2(context, chartid));
+            return SendJsonResponse(context, GetChartId(context), IsTradeAllowed_2);
         }
 
         /// <summary>
@@ -2390,36 +1895,24 @@ namespace MQL4CSharp.Base.REST
         /// <li><b>tested_time</b> :  [in] Time to check status.</li>
         /// </ul>
         /// </summary>
-        [RESTRoute(Method = HttpMethod.POST, PathInfo = @"^/istradeallowed")]
-        public void Handle_IsTradeAllowed_2_Default(HttpListenerContext context)
+        [RestRoute(HttpMethod = HttpMethod.POST, PathInfo = @"^/istradeallowed$")]
+        public IHttpContext Handle_IsTradeAllowed_2_Default(IHttpContext context)
         {
-            this.SendJsonResponse(context, IsTradeAllowed_2(context, DEFAULT_CHART_ID));
+            return SendJsonResponse(context, IsTradeAllowed_2);
         }
 
-        private JObject IsTradeAllowed_2(HttpListenerContext context, long chartId)
+        private async Task<JObject> IsTradeAllowed_2(MQLRestContext context)
         {
-            MQLCommandManager mqlCommandManager = DLLObjectWrapper.getInstance().getMQLCommandManager(chartId);
-            JObject payload = this.GetJsonPayload(context.Request);
-            JObject result = new JObject();
-            if (payload == null)
-            {
-                result["result"] = PARSE_ERROR;
-                return result;
-            }
+            var payload = context.JsonPayload;
+            var result = context.Result;
+            if (PayloadNotValid(context))
+                return context.Result;
             List<Object> parameters = new List<Object>();
-            parameters.Add(payload["symbol"]);
-            parameters.Add(payload["tested_time"]);
-            int id = mqlCommandManager.ExecCommand(MQLCommand.IsTradeAllowed_2, parameters); // MQLCommand ENUM = 45
-            while (mqlCommandManager.IsCommandRunning(id)) ; // block while command is running
-            try
-            {
-                mqlCommandManager.throwExceptionIfErrorResponse(id);
-                result["result"] = (bool)mqlCommandManager.GetCommandResult(id);
-            }
-            catch (Exception e)
-            {
-                result["error"] = MQLExceptions.convertRESTException(e.ToString());
-            }
+            ParamAdd(context, parameters, "symbol");
+            ParamAdd(context, parameters, "tested_time");
+            await ExecCommandAsync(context, MQLCommand.IsTradeAllowed_2, parameters); // MQLCommand ENUM = 45
+
+            result["result"] = (bool)GetCommandResult(context);
 
             return result;
         }
@@ -2431,11 +1924,10 @@ namespace MQL4CSharp.Base.REST
         /// <ul>
         /// </ul>
         /// </summary>
-        [RESTRoute(Method = HttpMethod.POST, PathInfo = @"^/[0-9]+/istradecontextbusy")]
-        public void Handle_IsTradeContextBusy_1(HttpListenerContext context)
+        [RestRoute(HttpMethod = HttpMethod.POST, PathInfo = @"^/[0-9]+/istradecontextbusy$")]
+        public IHttpContext Handle_IsTradeContextBusy_1(IHttpContext context)
         {
-            long chartid = Int64.Parse(context.Request.Url.Segments[1].Replace("/", ""));
-            this.SendJsonResponse(context, IsTradeContextBusy_1(context, chartid));
+            return SendJsonResponse(context, GetChartId(context), IsTradeContextBusy_1);
         }
 
         /// <summary>
@@ -2446,29 +1938,20 @@ namespace MQL4CSharp.Base.REST
         /// <ul>
         /// </ul>
         /// </summary>
-        [RESTRoute(Method = HttpMethod.POST, PathInfo = @"^/istradecontextbusy")]
-        public void Handle_IsTradeContextBusy_1_Default(HttpListenerContext context)
+        [RestRoute(HttpMethod = HttpMethod.POST, PathInfo = @"^/istradecontextbusy$")]
+        public IHttpContext Handle_IsTradeContextBusy_1_Default(IHttpContext context)
         {
-            this.SendJsonResponse(context, IsTradeContextBusy_1(context, DEFAULT_CHART_ID));
+            return SendJsonResponse(context, IsTradeContextBusy_1);
         }
 
-        private JObject IsTradeContextBusy_1(HttpListenerContext context, long chartId)
+        private async Task<JObject> IsTradeContextBusy_1(MQLRestContext context)
         {
-            MQLCommandManager mqlCommandManager = DLLObjectWrapper.getInstance().getMQLCommandManager(chartId);
-            JObject payload = this.GetJsonPayload(context.Request);
-            JObject result = new JObject();
+            var payload = context.JsonPayload;
+            var result = context.Result;
             List<Object> parameters = new List<Object>();
-            int id = mqlCommandManager.ExecCommand(MQLCommand.IsTradeContextBusy_1, parameters); // MQLCommand ENUM = 46
-            while (mqlCommandManager.IsCommandRunning(id)) ; // block while command is running
-            try
-            {
-                mqlCommandManager.throwExceptionIfErrorResponse(id);
-                result["result"] = (bool)mqlCommandManager.GetCommandResult(id);
-            }
-            catch (Exception e)
-            {
-                result["error"] = MQLExceptions.convertRESTException(e.ToString());
-            }
+            await ExecCommandAsync(context, MQLCommand.IsTradeContextBusy_1, parameters); // MQLCommand ENUM = 46
+
+            result["result"] = (bool)GetCommandResult(context);
 
             return result;
         }
@@ -2480,11 +1963,10 @@ namespace MQL4CSharp.Base.REST
         /// <ul>
         /// </ul>
         /// </summary>
-        [RESTRoute(Method = HttpMethod.POST, PathInfo = @"^/[0-9]+/isvisualmode")]
-        public void Handle_IsVisualMode_1(HttpListenerContext context)
+        [RestRoute(HttpMethod = HttpMethod.POST, PathInfo = @"^/[0-9]+/isvisualmode$")]
+        public IHttpContext Handle_IsVisualMode_1(IHttpContext context)
         {
-            long chartid = Int64.Parse(context.Request.Url.Segments[1].Replace("/", ""));
-            this.SendJsonResponse(context, IsVisualMode_1(context, chartid));
+            return SendJsonResponse(context, GetChartId(context), IsVisualMode_1);
         }
 
         /// <summary>
@@ -2495,29 +1977,20 @@ namespace MQL4CSharp.Base.REST
         /// <ul>
         /// </ul>
         /// </summary>
-        [RESTRoute(Method = HttpMethod.POST, PathInfo = @"^/isvisualmode")]
-        public void Handle_IsVisualMode_1_Default(HttpListenerContext context)
+        [RestRoute(HttpMethod = HttpMethod.POST, PathInfo = @"^/isvisualmode$")]
+        public IHttpContext Handle_IsVisualMode_1_Default(IHttpContext context)
         {
-            this.SendJsonResponse(context, IsVisualMode_1(context, DEFAULT_CHART_ID));
+            return SendJsonResponse(context, IsVisualMode_1);
         }
 
-        private JObject IsVisualMode_1(HttpListenerContext context, long chartId)
+        private async Task<JObject> IsVisualMode_1(MQLRestContext context)
         {
-            MQLCommandManager mqlCommandManager = DLLObjectWrapper.getInstance().getMQLCommandManager(chartId);
-            JObject payload = this.GetJsonPayload(context.Request);
-            JObject result = new JObject();
+            var payload = context.JsonPayload;
+            var result = context.Result;
             List<Object> parameters = new List<Object>();
-            int id = mqlCommandManager.ExecCommand(MQLCommand.IsVisualMode_1, parameters); // MQLCommand ENUM = 47
-            while (mqlCommandManager.IsCommandRunning(id)) ; // block while command is running
-            try
-            {
-                mqlCommandManager.throwExceptionIfErrorResponse(id);
-                result["result"] = (bool)mqlCommandManager.GetCommandResult(id);
-            }
-            catch (Exception e)
-            {
-                result["error"] = MQLExceptions.convertRESTException(e.ToString());
-            }
+            await ExecCommandAsync(context, MQLCommand.IsVisualMode_1, parameters); // MQLCommand ENUM = 47
+
+            result["result"] = (bool)GetCommandResult(context);
 
             return result;
         }
@@ -2529,11 +2002,10 @@ namespace MQL4CSharp.Base.REST
         /// <ul>
         /// </ul>
         /// </summary>
-        [RESTRoute(Method = HttpMethod.POST, PathInfo = @"^/[0-9]+/terminalcompany")]
-        public void Handle_TerminalCompany_1(HttpListenerContext context)
+        [RestRoute(HttpMethod = HttpMethod.POST, PathInfo = @"^/[0-9]+/terminalcompany$")]
+        public IHttpContext Handle_TerminalCompany_1(IHttpContext context)
         {
-            long chartid = Int64.Parse(context.Request.Url.Segments[1].Replace("/", ""));
-            this.SendJsonResponse(context, TerminalCompany_1(context, chartid));
+            return SendJsonResponse(context, GetChartId(context), TerminalCompany_1);
         }
 
         /// <summary>
@@ -2544,29 +2016,20 @@ namespace MQL4CSharp.Base.REST
         /// <ul>
         /// </ul>
         /// </summary>
-        [RESTRoute(Method = HttpMethod.POST, PathInfo = @"^/terminalcompany")]
-        public void Handle_TerminalCompany_1_Default(HttpListenerContext context)
+        [RestRoute(HttpMethod = HttpMethod.POST, PathInfo = @"^/terminalcompany$")]
+        public IHttpContext Handle_TerminalCompany_1_Default(IHttpContext context)
         {
-            this.SendJsonResponse(context, TerminalCompany_1(context, DEFAULT_CHART_ID));
+            return SendJsonResponse(context, TerminalCompany_1);
         }
 
-        private JObject TerminalCompany_1(HttpListenerContext context, long chartId)
+        private async Task<JObject> TerminalCompany_1(MQLRestContext context)
         {
-            MQLCommandManager mqlCommandManager = DLLObjectWrapper.getInstance().getMQLCommandManager(chartId);
-            JObject payload = this.GetJsonPayload(context.Request);
-            JObject result = new JObject();
+            var payload = context.JsonPayload;
+            var result = context.Result;
             List<Object> parameters = new List<Object>();
-            int id = mqlCommandManager.ExecCommand(MQLCommand.TerminalCompany_1, parameters); // MQLCommand ENUM = 48
-            while (mqlCommandManager.IsCommandRunning(id)) ; // block while command is running
-            try
-            {
-                mqlCommandManager.throwExceptionIfErrorResponse(id);
-                result["result"] = (string)mqlCommandManager.GetCommandResult(id);
-            }
-            catch (Exception e)
-            {
-                result["error"] = MQLExceptions.convertRESTException(e.ToString());
-            }
+            await ExecCommandAsync(context, MQLCommand.TerminalCompany_1, parameters); // MQLCommand ENUM = 48
+
+            result["result"] = (string)GetCommandResult(context);
 
             return result;
         }
@@ -2578,11 +2041,10 @@ namespace MQL4CSharp.Base.REST
         /// <ul>
         /// </ul>
         /// </summary>
-        [RESTRoute(Method = HttpMethod.POST, PathInfo = @"^/[0-9]+/terminalname")]
-        public void Handle_TerminalName_1(HttpListenerContext context)
+        [RestRoute(HttpMethod = HttpMethod.POST, PathInfo = @"^/[0-9]+/terminalname$")]
+        public IHttpContext Handle_TerminalName_1(IHttpContext context)
         {
-            long chartid = Int64.Parse(context.Request.Url.Segments[1].Replace("/", ""));
-            this.SendJsonResponse(context, TerminalName_1(context, chartid));
+            return SendJsonResponse(context, GetChartId(context), TerminalName_1);
         }
 
         /// <summary>
@@ -2593,29 +2055,20 @@ namespace MQL4CSharp.Base.REST
         /// <ul>
         /// </ul>
         /// </summary>
-        [RESTRoute(Method = HttpMethod.POST, PathInfo = @"^/terminalname")]
-        public void Handle_TerminalName_1_Default(HttpListenerContext context)
+        [RestRoute(HttpMethod = HttpMethod.POST, PathInfo = @"^/terminalname$")]
+        public IHttpContext Handle_TerminalName_1_Default(IHttpContext context)
         {
-            this.SendJsonResponse(context, TerminalName_1(context, DEFAULT_CHART_ID));
+            return SendJsonResponse(context, TerminalName_1);
         }
 
-        private JObject TerminalName_1(HttpListenerContext context, long chartId)
+        private async Task<JObject> TerminalName_1(MQLRestContext context)
         {
-            MQLCommandManager mqlCommandManager = DLLObjectWrapper.getInstance().getMQLCommandManager(chartId);
-            JObject payload = this.GetJsonPayload(context.Request);
-            JObject result = new JObject();
+            var payload = context.JsonPayload;
+            var result = context.Result;
             List<Object> parameters = new List<Object>();
-            int id = mqlCommandManager.ExecCommand(MQLCommand.TerminalName_1, parameters); // MQLCommand ENUM = 49
-            while (mqlCommandManager.IsCommandRunning(id)) ; // block while command is running
-            try
-            {
-                mqlCommandManager.throwExceptionIfErrorResponse(id);
-                result["result"] = (string)mqlCommandManager.GetCommandResult(id);
-            }
-            catch (Exception e)
-            {
-                result["error"] = MQLExceptions.convertRESTException(e.ToString());
-            }
+            await ExecCommandAsync(context, MQLCommand.TerminalName_1, parameters); // MQLCommand ENUM = 49
+
+            result["result"] = (string)GetCommandResult(context);
 
             return result;
         }
@@ -2627,11 +2080,10 @@ namespace MQL4CSharp.Base.REST
         /// <ul>
         /// </ul>
         /// </summary>
-        [RESTRoute(Method = HttpMethod.POST, PathInfo = @"^/[0-9]+/terminalpath")]
-        public void Handle_TerminalPath_1(HttpListenerContext context)
+        [RestRoute(HttpMethod = HttpMethod.POST, PathInfo = @"^/[0-9]+/terminalpath$")]
+        public IHttpContext Handle_TerminalPath_1(IHttpContext context)
         {
-            long chartid = Int64.Parse(context.Request.Url.Segments[1].Replace("/", ""));
-            this.SendJsonResponse(context, TerminalPath_1(context, chartid));
+            return SendJsonResponse(context, GetChartId(context), TerminalPath_1);
         }
 
         /// <summary>
@@ -2642,29 +2094,20 @@ namespace MQL4CSharp.Base.REST
         /// <ul>
         /// </ul>
         /// </summary>
-        [RESTRoute(Method = HttpMethod.POST, PathInfo = @"^/terminalpath")]
-        public void Handle_TerminalPath_1_Default(HttpListenerContext context)
+        [RestRoute(HttpMethod = HttpMethod.POST, PathInfo = @"^/terminalpath$")]
+        public IHttpContext Handle_TerminalPath_1_Default(IHttpContext context)
         {
-            this.SendJsonResponse(context, TerminalPath_1(context, DEFAULT_CHART_ID));
+            return SendJsonResponse(context, TerminalPath_1);
         }
 
-        private JObject TerminalPath_1(HttpListenerContext context, long chartId)
+        private async Task<JObject> TerminalPath_1(MQLRestContext context)
         {
-            MQLCommandManager mqlCommandManager = DLLObjectWrapper.getInstance().getMQLCommandManager(chartId);
-            JObject payload = this.GetJsonPayload(context.Request);
-            JObject result = new JObject();
+            var payload = context.JsonPayload;
+            var result = context.Result;
             List<Object> parameters = new List<Object>();
-            int id = mqlCommandManager.ExecCommand(MQLCommand.TerminalPath_1, parameters); // MQLCommand ENUM = 50
-            while (mqlCommandManager.IsCommandRunning(id)) ; // block while command is running
-            try
-            {
-                mqlCommandManager.throwExceptionIfErrorResponse(id);
-                result["result"] = (string)mqlCommandManager.GetCommandResult(id);
-            }
-            catch (Exception e)
-            {
-                result["error"] = MQLExceptions.convertRESTException(e.ToString());
-            }
+            await ExecCommandAsync(context, MQLCommand.TerminalPath_1, parameters); // MQLCommand ENUM = 50
+
+            result["result"] = (string)GetCommandResult(context);
 
             return result;
         }
@@ -2678,11 +2121,10 @@ namespace MQL4CSharp.Base.REST
         /// <li><b>type</b> :  [in] Request of information to be returned. Can be any of values of request identifiers.</li>
         /// </ul>
         /// </summary>
-        [RESTRoute(Method = HttpMethod.POST, PathInfo = @"^/[0-9]+/marketinfo")]
-        public void Handle_MarketInfo_1(HttpListenerContext context)
+        [RestRoute(HttpMethod = HttpMethod.POST, PathInfo = @"^/[0-9]+/marketinfo$")]
+        public IHttpContext Handle_MarketInfo_1(IHttpContext context)
         {
-            long chartid = Int64.Parse(context.Request.Url.Segments[1].Replace("/", ""));
-            this.SendJsonResponse(context, MarketInfo_1(context, chartid));
+            return SendJsonResponse(context, GetChartId(context), MarketInfo_1);
         }
 
         /// <summary>
@@ -2695,36 +2137,24 @@ namespace MQL4CSharp.Base.REST
         /// <li><b>type</b> :  [in] Request of information to be returned. Can be any of values of request identifiers.</li>
         /// </ul>
         /// </summary>
-        [RESTRoute(Method = HttpMethod.POST, PathInfo = @"^/marketinfo")]
-        public void Handle_MarketInfo_1_Default(HttpListenerContext context)
+        [RestRoute(HttpMethod = HttpMethod.POST, PathInfo = @"^/marketinfo$")]
+        public IHttpContext Handle_MarketInfo_1_Default(IHttpContext context)
         {
-            this.SendJsonResponse(context, MarketInfo_1(context, DEFAULT_CHART_ID));
+            return SendJsonResponse(context, MarketInfo_1);
         }
 
-        private JObject MarketInfo_1(HttpListenerContext context, long chartId)
+        private async Task<JObject> MarketInfo_1(MQLRestContext context)
         {
-            MQLCommandManager mqlCommandManager = DLLObjectWrapper.getInstance().getMQLCommandManager(chartId);
-            JObject payload = this.GetJsonPayload(context.Request);
-            JObject result = new JObject();
-            if (payload == null)
-            {
-                result["result"] = PARSE_ERROR;
-                return result;
-            }
+            var payload = context.JsonPayload;
+            var result = context.Result;
+            if (PayloadNotValid(context))
+                return context.Result;
             List<Object> parameters = new List<Object>();
-            parameters.Add(payload["symbol"]);
-            parameters.Add(payload["type"]);
-            int id = mqlCommandManager.ExecCommand(MQLCommand.MarketInfo_1, parameters); // MQLCommand ENUM = 51
-            while (mqlCommandManager.IsCommandRunning(id)) ; // block while command is running
-            try
-            {
-                mqlCommandManager.throwExceptionIfErrorResponse(id);
-                result["result"] = Convert.ToDecimal(mqlCommandManager.GetCommandResult(id));
-            }
-            catch (Exception e)
-            {
-                result["error"] = MQLExceptions.convertRESTException(e.ToString());
-            }
+            ParamAdd(context, parameters, "symbol");
+            ParamAdd(context, parameters, "type");
+            await ExecCommandAsync(context, MQLCommand.MarketInfo_1, parameters); // MQLCommand ENUM = 51
+
+            result["result"] = Convert.ToDecimal(GetCommandResult(context));
 
             return result;
         }
@@ -2737,11 +2167,10 @@ namespace MQL4CSharp.Base.REST
         /// <li><b>selected</b> :  [in] Request mode. Can be true or false.</li>
         /// </ul>
         /// </summary>
-        [RESTRoute(Method = HttpMethod.POST, PathInfo = @"^/[0-9]+/symbolstotal")]
-        public void Handle_SymbolsTotal_1(HttpListenerContext context)
+        [RestRoute(HttpMethod = HttpMethod.POST, PathInfo = @"^/[0-9]+/symbolstotal$")]
+        public IHttpContext Handle_SymbolsTotal_1(IHttpContext context)
         {
-            long chartid = Int64.Parse(context.Request.Url.Segments[1].Replace("/", ""));
-            this.SendJsonResponse(context, SymbolsTotal_1(context, chartid));
+            return SendJsonResponse(context, GetChartId(context), SymbolsTotal_1);
         }
 
         /// <summary>
@@ -2753,35 +2182,23 @@ namespace MQL4CSharp.Base.REST
         /// <li><b>selected</b> :  [in] Request mode. Can be true or false.</li>
         /// </ul>
         /// </summary>
-        [RESTRoute(Method = HttpMethod.POST, PathInfo = @"^/symbolstotal")]
-        public void Handle_SymbolsTotal_1_Default(HttpListenerContext context)
+        [RestRoute(HttpMethod = HttpMethod.POST, PathInfo = @"^/symbolstotal$")]
+        public IHttpContext Handle_SymbolsTotal_1_Default(IHttpContext context)
         {
-            this.SendJsonResponse(context, SymbolsTotal_1(context, DEFAULT_CHART_ID));
+            return SendJsonResponse(context, SymbolsTotal_1);
         }
 
-        private JObject SymbolsTotal_1(HttpListenerContext context, long chartId)
+        private async Task<JObject> SymbolsTotal_1(MQLRestContext context)
         {
-            MQLCommandManager mqlCommandManager = DLLObjectWrapper.getInstance().getMQLCommandManager(chartId);
-            JObject payload = this.GetJsonPayload(context.Request);
-            JObject result = new JObject();
-            if (payload == null)
-            {
-                result["result"] = PARSE_ERROR;
-                return result;
-            }
+            var payload = context.JsonPayload;
+            var result = context.Result;
+            if (PayloadNotValid(context))
+                return context.Result;
             List<Object> parameters = new List<Object>();
-            parameters.Add(payload["selected"]);
-            int id = mqlCommandManager.ExecCommand(MQLCommand.SymbolsTotal_1, parameters); // MQLCommand ENUM = 52
-            while (mqlCommandManager.IsCommandRunning(id)) ; // block while command is running
-            try
-            {
-                mqlCommandManager.throwExceptionIfErrorResponse(id);
-                result["result"] = Convert.ToInt32(mqlCommandManager.GetCommandResult(id));
-            }
-            catch (Exception e)
-            {
-                result["error"] = MQLExceptions.convertRESTException(e.ToString());
-            }
+            ParamAdd(context, parameters, "selected");
+            await ExecCommandAsync(context, MQLCommand.SymbolsTotal_1, parameters); // MQLCommand ENUM = 52
+
+            result["result"] = Convert.ToInt32(GetCommandResult(context));
 
             return result;
         }
@@ -2795,11 +2212,10 @@ namespace MQL4CSharp.Base.REST
         /// <li><b>selected</b> :  [in] Request mode. If the value is true, the symbol is taken from the list of symbols selected in MarketWatch. If the value is false, the symbol is taken from the general list.</li>
         /// </ul>
         /// </summary>
-        [RESTRoute(Method = HttpMethod.POST, PathInfo = @"^/[0-9]+/symbolname")]
-        public void Handle_SymbolName_1(HttpListenerContext context)
+        [RestRoute(HttpMethod = HttpMethod.POST, PathInfo = @"^/[0-9]+/symbolname$")]
+        public IHttpContext Handle_SymbolName_1(IHttpContext context)
         {
-            long chartid = Int64.Parse(context.Request.Url.Segments[1].Replace("/", ""));
-            this.SendJsonResponse(context, SymbolName_1(context, chartid));
+            return SendJsonResponse(context, GetChartId(context), SymbolName_1);
         }
 
         /// <summary>
@@ -2812,36 +2228,24 @@ namespace MQL4CSharp.Base.REST
         /// <li><b>selected</b> :  [in] Request mode. If the value is true, the symbol is taken from the list of symbols selected in MarketWatch. If the value is false, the symbol is taken from the general list.</li>
         /// </ul>
         /// </summary>
-        [RESTRoute(Method = HttpMethod.POST, PathInfo = @"^/symbolname")]
-        public void Handle_SymbolName_1_Default(HttpListenerContext context)
+        [RestRoute(HttpMethod = HttpMethod.POST, PathInfo = @"^/symbolname$")]
+        public IHttpContext Handle_SymbolName_1_Default(IHttpContext context)
         {
-            this.SendJsonResponse(context, SymbolName_1(context, DEFAULT_CHART_ID));
+            return SendJsonResponse(context, SymbolName_1);
         }
 
-        private JObject SymbolName_1(HttpListenerContext context, long chartId)
+        private async Task<JObject> SymbolName_1(MQLRestContext context)
         {
-            MQLCommandManager mqlCommandManager = DLLObjectWrapper.getInstance().getMQLCommandManager(chartId);
-            JObject payload = this.GetJsonPayload(context.Request);
-            JObject result = new JObject();
-            if (payload == null)
-            {
-                result["result"] = PARSE_ERROR;
-                return result;
-            }
+            var payload = context.JsonPayload;
+            var result = context.Result;
+            if (PayloadNotValid(context))
+                return context.Result;
             List<Object> parameters = new List<Object>();
-            parameters.Add(payload["pos"]);
-            parameters.Add(payload["selected"]);
-            int id = mqlCommandManager.ExecCommand(MQLCommand.SymbolName_1, parameters); // MQLCommand ENUM = 53
-            while (mqlCommandManager.IsCommandRunning(id)) ; // block while command is running
-            try
-            {
-                mqlCommandManager.throwExceptionIfErrorResponse(id);
-                result["result"] = (string)mqlCommandManager.GetCommandResult(id);
-            }
-            catch (Exception e)
-            {
-                result["error"] = MQLExceptions.convertRESTException(e.ToString());
-            }
+            ParamAdd(context, parameters, "pos");
+            ParamAdd(context, parameters, "selected");
+            await ExecCommandAsync(context, MQLCommand.SymbolName_1, parameters); // MQLCommand ENUM = 53
+
+            result["result"] = (string)GetCommandResult(context);
 
             return result;
         }
@@ -2855,11 +2259,10 @@ namespace MQL4CSharp.Base.REST
         /// <li><b>select</b> :  [in] Switch. If the value is false, a symbol should be removed from MarketWatch, otherwise a symbol should be selected in this window. A symbol can't be removed if the symbol chart is open, or there are open orders for this symbol.</li>
         /// </ul>
         /// </summary>
-        [RESTRoute(Method = HttpMethod.POST, PathInfo = @"^/[0-9]+/symbolselect")]
-        public void Handle_SymbolSelect_1(HttpListenerContext context)
+        [RestRoute(HttpMethod = HttpMethod.POST, PathInfo = @"^/[0-9]+/symbolselect$")]
+        public IHttpContext Handle_SymbolSelect_1(IHttpContext context)
         {
-            long chartid = Int64.Parse(context.Request.Url.Segments[1].Replace("/", ""));
-            this.SendJsonResponse(context, SymbolSelect_1(context, chartid));
+            return SendJsonResponse(context, GetChartId(context), SymbolSelect_1);
         }
 
         /// <summary>
@@ -2872,36 +2275,24 @@ namespace MQL4CSharp.Base.REST
         /// <li><b>select</b> :  [in] Switch. If the value is false, a symbol should be removed from MarketWatch, otherwise a symbol should be selected in this window. A symbol can't be removed if the symbol chart is open, or there are open orders for this symbol.</li>
         /// </ul>
         /// </summary>
-        [RESTRoute(Method = HttpMethod.POST, PathInfo = @"^/symbolselect")]
-        public void Handle_SymbolSelect_1_Default(HttpListenerContext context)
+        [RestRoute(HttpMethod = HttpMethod.POST, PathInfo = @"^/symbolselect$")]
+        public IHttpContext Handle_SymbolSelect_1_Default(IHttpContext context)
         {
-            this.SendJsonResponse(context, SymbolSelect_1(context, DEFAULT_CHART_ID));
+            return SendJsonResponse(context, SymbolSelect_1);
         }
 
-        private JObject SymbolSelect_1(HttpListenerContext context, long chartId)
+        private async Task<JObject> SymbolSelect_1(MQLRestContext context)
         {
-            MQLCommandManager mqlCommandManager = DLLObjectWrapper.getInstance().getMQLCommandManager(chartId);
-            JObject payload = this.GetJsonPayload(context.Request);
-            JObject result = new JObject();
-            if (payload == null)
-            {
-                result["result"] = PARSE_ERROR;
-                return result;
-            }
+            var payload = context.JsonPayload;
+            var result = context.Result;
+            if (PayloadNotValid(context))
+                return context.Result;
             List<Object> parameters = new List<Object>();
-            parameters.Add(payload["name"]);
-            parameters.Add(payload["select"]);
-            int id = mqlCommandManager.ExecCommand(MQLCommand.SymbolSelect_1, parameters); // MQLCommand ENUM = 54
-            while (mqlCommandManager.IsCommandRunning(id)) ; // block while command is running
-            try
-            {
-                mqlCommandManager.throwExceptionIfErrorResponse(id);
-                result["result"] = (bool)mqlCommandManager.GetCommandResult(id);
-            }
-            catch (Exception e)
-            {
-                result["error"] = MQLExceptions.convertRESTException(e.ToString());
-            }
+            ParamAdd(context, parameters, "name");
+            ParamAdd(context, parameters, "select");
+            await ExecCommandAsync(context, MQLCommand.SymbolSelect_1, parameters); // MQLCommand ENUM = 54
+
+            result["result"] = (bool)GetCommandResult(context);
 
             return result;
         }
@@ -2913,11 +2304,10 @@ namespace MQL4CSharp.Base.REST
         /// <ul>
         /// </ul>
         /// </summary>
-        [RESTRoute(Method = HttpMethod.POST, PathInfo = @"^/[0-9]+/refreshrates")]
-        public void Handle_RefreshRates_1(HttpListenerContext context)
+        [RestRoute(HttpMethod = HttpMethod.POST, PathInfo = @"^/[0-9]+/refreshrates$")]
+        public IHttpContext Handle_RefreshRates_1(IHttpContext context)
         {
-            long chartid = Int64.Parse(context.Request.Url.Segments[1].Replace("/", ""));
-            this.SendJsonResponse(context, RefreshRates_1(context, chartid));
+            return SendJsonResponse(context, GetChartId(context), RefreshRates_1);
         }
 
         /// <summary>
@@ -2928,29 +2318,20 @@ namespace MQL4CSharp.Base.REST
         /// <ul>
         /// </ul>
         /// </summary>
-        [RESTRoute(Method = HttpMethod.POST, PathInfo = @"^/refreshrates")]
-        public void Handle_RefreshRates_1_Default(HttpListenerContext context)
+        [RestRoute(HttpMethod = HttpMethod.POST, PathInfo = @"^/refreshrates$")]
+        public IHttpContext Handle_RefreshRates_1_Default(IHttpContext context)
         {
-            this.SendJsonResponse(context, RefreshRates_1(context, DEFAULT_CHART_ID));
+            return SendJsonResponse(context, RefreshRates_1);
         }
 
-        private JObject RefreshRates_1(HttpListenerContext context, long chartId)
+        private async Task<JObject> RefreshRates_1(MQLRestContext context)
         {
-            MQLCommandManager mqlCommandManager = DLLObjectWrapper.getInstance().getMQLCommandManager(chartId);
-            JObject payload = this.GetJsonPayload(context.Request);
-            JObject result = new JObject();
+            var payload = context.JsonPayload;
+            var result = context.Result;
             List<Object> parameters = new List<Object>();
-            int id = mqlCommandManager.ExecCommand(MQLCommand.RefreshRates_1, parameters); // MQLCommand ENUM = 55
-            while (mqlCommandManager.IsCommandRunning(id)) ; // block while command is running
-            try
-            {
-                mqlCommandManager.throwExceptionIfErrorResponse(id);
-                result["result"] = (bool)mqlCommandManager.GetCommandResult(id);
-            }
-            catch (Exception e)
-            {
-                result["error"] = MQLExceptions.convertRESTException(e.ToString());
-            }
+            await ExecCommandAsync(context, MQLCommand.RefreshRates_1, parameters); // MQLCommand ENUM = 55
+
+            result["result"] = (bool)GetCommandResult(context);
 
             return result;
         }
@@ -2964,11 +2345,10 @@ namespace MQL4CSharp.Base.REST
         /// <li><b>timeframe</b> :  [in] Period.</li>
         /// </ul>
         /// </summary>
-        [RESTRoute(Method = HttpMethod.POST, PathInfo = @"^/[0-9]+/bars")]
-        public void Handle_Bars_1(HttpListenerContext context)
+        [RestRoute(HttpMethod = HttpMethod.POST, PathInfo = @"^/[0-9]+/bars$")]
+        public IHttpContext Handle_Bars_1(IHttpContext context)
         {
-            long chartid = Int64.Parse(context.Request.Url.Segments[1].Replace("/", ""));
-            this.SendJsonResponse(context, Bars_1(context, chartid));
+            return SendJsonResponse(context, GetChartId(context), Bars_1);
         }
 
         /// <summary>
@@ -2981,36 +2361,24 @@ namespace MQL4CSharp.Base.REST
         /// <li><b>timeframe</b> :  [in] Period.</li>
         /// </ul>
         /// </summary>
-        [RESTRoute(Method = HttpMethod.POST, PathInfo = @"^/bars")]
-        public void Handle_Bars_1_Default(HttpListenerContext context)
+        [RestRoute(HttpMethod = HttpMethod.POST, PathInfo = @"^/bars$")]
+        public IHttpContext Handle_Bars_1_Default(IHttpContext context)
         {
-            this.SendJsonResponse(context, Bars_1(context, DEFAULT_CHART_ID));
+            return SendJsonResponse(context, Bars_1);
         }
 
-        private JObject Bars_1(HttpListenerContext context, long chartId)
+        private async Task<JObject> Bars_1(MQLRestContext context)
         {
-            MQLCommandManager mqlCommandManager = DLLObjectWrapper.getInstance().getMQLCommandManager(chartId);
-            JObject payload = this.GetJsonPayload(context.Request);
-            JObject result = new JObject();
-            if (payload == null)
-            {
-                result["result"] = PARSE_ERROR;
-                return result;
-            }
+            var payload = context.JsonPayload;
+            var result = context.Result;
+            if (PayloadNotValid(context))
+                return context.Result;
             List<Object> parameters = new List<Object>();
-            parameters.Add(payload["symbol_name"]);
-            parameters.Add(payload["timeframe"]);
-            int id = mqlCommandManager.ExecCommand(MQLCommand.Bars_1, parameters); // MQLCommand ENUM = 56
-            while (mqlCommandManager.IsCommandRunning(id)) ; // block while command is running
-            try
-            {
-                mqlCommandManager.throwExceptionIfErrorResponse(id);
-                result["result"] = Convert.ToInt32(mqlCommandManager.GetCommandResult(id));
-            }
-            catch (Exception e)
-            {
-                result["error"] = MQLExceptions.convertRESTException(e.ToString());
-            }
+            ParamAdd(context, parameters, "symbol_name");
+            ParamAdd(context, parameters, "timeframe");
+            await ExecCommandAsync(context, MQLCommand.Bars_1, parameters); // MQLCommand ENUM = 56
+
+            result["result"] = Convert.ToInt32(GetCommandResult(context));
 
             return result;
         }
@@ -3026,11 +2394,10 @@ namespace MQL4CSharp.Base.REST
         /// <li><b>stop_time</b> :  [in] Bar time corresponding to the last element.</li>
         /// </ul>
         /// </summary>
-        [RESTRoute(Method = HttpMethod.POST, PathInfo = @"^/[0-9]+/bars")]
-        public void Handle_Bars_2(HttpListenerContext context)
+        [RestRoute(HttpMethod = HttpMethod.POST, PathInfo = @"^/[0-9]+/bars$")]
+        public IHttpContext Handle_Bars_2(IHttpContext context)
         {
-            long chartid = Int64.Parse(context.Request.Url.Segments[1].Replace("/", ""));
-            this.SendJsonResponse(context, Bars_2(context, chartid));
+            return SendJsonResponse(context, GetChartId(context), Bars_2);
         }
 
         /// <summary>
@@ -3045,38 +2412,26 @@ namespace MQL4CSharp.Base.REST
         /// <li><b>stop_time</b> :  [in] Bar time corresponding to the last element.</li>
         /// </ul>
         /// </summary>
-        [RESTRoute(Method = HttpMethod.POST, PathInfo = @"^/bars")]
-        public void Handle_Bars_2_Default(HttpListenerContext context)
+        [RestRoute(HttpMethod = HttpMethod.POST, PathInfo = @"^/bars$")]
+        public IHttpContext Handle_Bars_2_Default(IHttpContext context)
         {
-            this.SendJsonResponse(context, Bars_2(context, DEFAULT_CHART_ID));
+            return SendJsonResponse(context, Bars_2);
         }
 
-        private JObject Bars_2(HttpListenerContext context, long chartId)
+        private async Task<JObject> Bars_2(MQLRestContext context)
         {
-            MQLCommandManager mqlCommandManager = DLLObjectWrapper.getInstance().getMQLCommandManager(chartId);
-            JObject payload = this.GetJsonPayload(context.Request);
-            JObject result = new JObject();
-            if (payload == null)
-            {
-                result["result"] = PARSE_ERROR;
-                return result;
-            }
+            var payload = context.JsonPayload;
+            var result = context.Result;
+            if (PayloadNotValid(context))
+                return context.Result;
             List<Object> parameters = new List<Object>();
-            parameters.Add(payload["symbol_name"]);
-            parameters.Add(payload["timeframe"]);
-            parameters.Add(payload["start_time"]);
-            parameters.Add(payload["stop_time"]);
-            int id = mqlCommandManager.ExecCommand(MQLCommand.Bars_2, parameters); // MQLCommand ENUM = 56
-            while (mqlCommandManager.IsCommandRunning(id)) ; // block while command is running
-            try
-            {
-                mqlCommandManager.throwExceptionIfErrorResponse(id);
-                result["result"] = Convert.ToInt32(mqlCommandManager.GetCommandResult(id));
-            }
-            catch (Exception e)
-            {
-                result["error"] = MQLExceptions.convertRESTException(e.ToString());
-            }
+            ParamAdd(context, parameters, "symbol_name");
+            ParamAdd(context, parameters, "timeframe");
+            ParamAdd(context, parameters, "start_time");
+            ParamAdd(context, parameters, "stop_time");
+            await ExecCommandAsync(context, MQLCommand.Bars_2, parameters); // MQLCommand ENUM = 56
+
+            result["result"] = Convert.ToInt32(GetCommandResult(context));
 
             return result;
         }
@@ -3090,11 +2445,10 @@ namespace MQL4CSharp.Base.REST
         /// <li><b>timeframe</b> :  [in] Timeframe. It can be any of enumeration values. 0 means the current chart timeframe.</li>
         /// </ul>
         /// </summary>
-        [RESTRoute(Method = HttpMethod.POST, PathInfo = @"^/[0-9]+/ibars")]
-        public void Handle_iBars_1(HttpListenerContext context)
+        [RestRoute(HttpMethod = HttpMethod.POST, PathInfo = @"^/[0-9]+/ibars$")]
+        public IHttpContext Handle_iBars_1(IHttpContext context)
         {
-            long chartid = Int64.Parse(context.Request.Url.Segments[1].Replace("/", ""));
-            this.SendJsonResponse(context, iBars_1(context, chartid));
+            return SendJsonResponse(context, GetChartId(context), iBars_1);
         }
 
         /// <summary>
@@ -3107,36 +2461,24 @@ namespace MQL4CSharp.Base.REST
         /// <li><b>timeframe</b> :  [in] Timeframe. It can be any of enumeration values. 0 means the current chart timeframe.</li>
         /// </ul>
         /// </summary>
-        [RESTRoute(Method = HttpMethod.POST, PathInfo = @"^/ibars")]
-        public void Handle_iBars_1_Default(HttpListenerContext context)
+        [RestRoute(HttpMethod = HttpMethod.POST, PathInfo = @"^/ibars$")]
+        public IHttpContext Handle_iBars_1_Default(IHttpContext context)
         {
-            this.SendJsonResponse(context, iBars_1(context, DEFAULT_CHART_ID));
+            return SendJsonResponse(context, iBars_1);
         }
 
-        private JObject iBars_1(HttpListenerContext context, long chartId)
+        private async Task<JObject> iBars_1(MQLRestContext context)
         {
-            MQLCommandManager mqlCommandManager = DLLObjectWrapper.getInstance().getMQLCommandManager(chartId);
-            JObject payload = this.GetJsonPayload(context.Request);
-            JObject result = new JObject();
-            if (payload == null)
-            {
-                result["result"] = PARSE_ERROR;
-                return result;
-            }
+            var payload = context.JsonPayload;
+            var result = context.Result;
+            if (PayloadNotValid(context))
+                return context.Result;
             List<Object> parameters = new List<Object>();
-            parameters.Add(payload["symbol"]);
-            parameters.Add(payload["timeframe"]);
-            int id = mqlCommandManager.ExecCommand(MQLCommand.iBars_1, parameters); // MQLCommand ENUM = 57
-            while (mqlCommandManager.IsCommandRunning(id)) ; // block while command is running
-            try
-            {
-                mqlCommandManager.throwExceptionIfErrorResponse(id);
-                result["result"] = Convert.ToInt32(mqlCommandManager.GetCommandResult(id));
-            }
-            catch (Exception e)
-            {
-                result["error"] = MQLExceptions.convertRESTException(e.ToString());
-            }
+            ParamAdd(context, parameters, "symbol");
+            ParamAdd(context, parameters, "timeframe");
+            await ExecCommandAsync(context, MQLCommand.iBars_1, parameters); // MQLCommand ENUM = 57
+
+            result["result"] = Convert.ToInt32(GetCommandResult(context));
 
             return result;
         }
@@ -3152,11 +2494,10 @@ namespace MQL4CSharp.Base.REST
         /// <li><b>exact</b> :  [in] Return mode when the bar is not found (false - iBarShift returns the nearest, true - iBarShift returns -1).</li>
         /// </ul>
         /// </summary>
-        [RESTRoute(Method = HttpMethod.POST, PathInfo = @"^/[0-9]+/ibarshift")]
-        public void Handle_iBarShift_1(HttpListenerContext context)
+        [RestRoute(HttpMethod = HttpMethod.POST, PathInfo = @"^/[0-9]+/ibarshift$")]
+        public IHttpContext Handle_iBarShift_1(IHttpContext context)
         {
-            long chartid = Int64.Parse(context.Request.Url.Segments[1].Replace("/", ""));
-            this.SendJsonResponse(context, iBarShift_1(context, chartid));
+            return SendJsonResponse(context, GetChartId(context), iBarShift_1);
         }
 
         /// <summary>
@@ -3171,38 +2512,26 @@ namespace MQL4CSharp.Base.REST
         /// <li><b>exact</b> :  [in] Return mode when the bar is not found (false - iBarShift returns the nearest, true - iBarShift returns -1).</li>
         /// </ul>
         /// </summary>
-        [RESTRoute(Method = HttpMethod.POST, PathInfo = @"^/ibarshift")]
-        public void Handle_iBarShift_1_Default(HttpListenerContext context)
+        [RestRoute(HttpMethod = HttpMethod.POST, PathInfo = @"^/ibarshift$")]
+        public IHttpContext Handle_iBarShift_1_Default(IHttpContext context)
         {
-            this.SendJsonResponse(context, iBarShift_1(context, DEFAULT_CHART_ID));
+            return SendJsonResponse(context, iBarShift_1);
         }
 
-        private JObject iBarShift_1(HttpListenerContext context, long chartId)
+        private async Task<JObject> iBarShift_1(MQLRestContext context)
         {
-            MQLCommandManager mqlCommandManager = DLLObjectWrapper.getInstance().getMQLCommandManager(chartId);
-            JObject payload = this.GetJsonPayload(context.Request);
-            JObject result = new JObject();
-            if (payload == null)
-            {
-                result["result"] = PARSE_ERROR;
-                return result;
-            }
+            var payload = context.JsonPayload;
+            var result = context.Result;
+            if (PayloadNotValid(context))
+                return context.Result;
             List<Object> parameters = new List<Object>();
-            parameters.Add(payload["symbol"]);
-            parameters.Add(payload["timeframe"]);
-            parameters.Add(payload["time"]);
-            parameters.Add(payload["exact"]);
-            int id = mqlCommandManager.ExecCommand(MQLCommand.iBarShift_1, parameters); // MQLCommand ENUM = 58
-            while (mqlCommandManager.IsCommandRunning(id)) ; // block while command is running
-            try
-            {
-                mqlCommandManager.throwExceptionIfErrorResponse(id);
-                result["result"] = Convert.ToInt32(mqlCommandManager.GetCommandResult(id));
-            }
-            catch (Exception e)
-            {
-                result["error"] = MQLExceptions.convertRESTException(e.ToString());
-            }
+            ParamAdd(context, parameters, "symbol");
+            ParamAdd(context, parameters, "timeframe");
+            ParamAdd(context, parameters, "time");
+            ParamAdd(context, parameters, "exact");
+            await ExecCommandAsync(context, MQLCommand.iBarShift_1, parameters); // MQLCommand ENUM = 58
+
+            result["result"] = Convert.ToInt32(GetCommandResult(context));
 
             return result;
         }
@@ -3217,11 +2546,10 @@ namespace MQL4CSharp.Base.REST
         /// <li><b>shift</b> :  [in] Index of the value taken from the indicator buffer (shift relative to the current bar the given amount of periods ago).</li>
         /// </ul>
         /// </summary>
-        [RESTRoute(Method = HttpMethod.POST, PathInfo = @"^/[0-9]+/iclose")]
-        public void Handle_iClose_1(HttpListenerContext context)
+        [RestRoute(HttpMethod = HttpMethod.POST, PathInfo = @"^/[0-9]+/iclose$")]
+        public IHttpContext Handle_iClose_1(IHttpContext context)
         {
-            long chartid = Int64.Parse(context.Request.Url.Segments[1].Replace("/", ""));
-            this.SendJsonResponse(context, iClose_1(context, chartid));
+            return SendJsonResponse(context, GetChartId(context), iClose_1);
         }
 
         /// <summary>
@@ -3235,37 +2563,25 @@ namespace MQL4CSharp.Base.REST
         /// <li><b>shift</b> :  [in] Index of the value taken from the indicator buffer (shift relative to the current bar the given amount of periods ago).</li>
         /// </ul>
         /// </summary>
-        [RESTRoute(Method = HttpMethod.POST, PathInfo = @"^/iclose")]
-        public void Handle_iClose_1_Default(HttpListenerContext context)
+        [RestRoute(HttpMethod = HttpMethod.POST, PathInfo = @"^/iclose$")]
+        public IHttpContext Handle_iClose_1_Default(IHttpContext context)
         {
-            this.SendJsonResponse(context, iClose_1(context, DEFAULT_CHART_ID));
+            return SendJsonResponse(context, iClose_1);
         }
 
-        private JObject iClose_1(HttpListenerContext context, long chartId)
+        private async Task<JObject> iClose_1(MQLRestContext context)
         {
-            MQLCommandManager mqlCommandManager = DLLObjectWrapper.getInstance().getMQLCommandManager(chartId);
-            JObject payload = this.GetJsonPayload(context.Request);
-            JObject result = new JObject();
-            if (payload == null)
-            {
-                result["result"] = PARSE_ERROR;
-                return result;
-            }
+            var payload = context.JsonPayload;
+            var result = context.Result;
+            if (PayloadNotValid(context))
+                return context.Result;
             List<Object> parameters = new List<Object>();
-            parameters.Add(payload["symbol"]);
-            parameters.Add(payload["timeframe"]);
-            parameters.Add(payload["shift"]);
-            int id = mqlCommandManager.ExecCommand(MQLCommand.iClose_1, parameters); // MQLCommand ENUM = 59
-            while (mqlCommandManager.IsCommandRunning(id)) ; // block while command is running
-            try
-            {
-                mqlCommandManager.throwExceptionIfErrorResponse(id);
-                result["result"] = Convert.ToDecimal(mqlCommandManager.GetCommandResult(id));
-            }
-            catch (Exception e)
-            {
-                result["error"] = MQLExceptions.convertRESTException(e.ToString());
-            }
+            ParamAdd(context, parameters, "symbol");
+            ParamAdd(context, parameters, "timeframe");
+            ParamAdd(context, parameters, "shift");
+            await ExecCommandAsync(context, MQLCommand.iClose_1, parameters); // MQLCommand ENUM = 59
+
+            result["result"] = Convert.ToDecimal(GetCommandResult(context));
 
             return result;
         }
@@ -3280,11 +2596,10 @@ namespace MQL4CSharp.Base.REST
         /// <li><b>shift</b> :  [in] Index of the value taken from the indicator buffer (shift relative to the current bar the given amount of periods ago).</li>
         /// </ul>
         /// </summary>
-        [RESTRoute(Method = HttpMethod.POST, PathInfo = @"^/[0-9]+/ihigh")]
-        public void Handle_iHigh_1(HttpListenerContext context)
+        [RestRoute(HttpMethod = HttpMethod.POST, PathInfo = @"^/[0-9]+/ihigh$")]
+        public IHttpContext Handle_iHigh_1(IHttpContext context)
         {
-            long chartid = Int64.Parse(context.Request.Url.Segments[1].Replace("/", ""));
-            this.SendJsonResponse(context, iHigh_1(context, chartid));
+            return SendJsonResponse(context, GetChartId(context), iHigh_1);
         }
 
         /// <summary>
@@ -3298,37 +2613,25 @@ namespace MQL4CSharp.Base.REST
         /// <li><b>shift</b> :  [in] Index of the value taken from the indicator buffer (shift relative to the current bar the given amount of periods ago).</li>
         /// </ul>
         /// </summary>
-        [RESTRoute(Method = HttpMethod.POST, PathInfo = @"^/ihigh")]
-        public void Handle_iHigh_1_Default(HttpListenerContext context)
+        [RestRoute(HttpMethod = HttpMethod.POST, PathInfo = @"^/ihigh$")]
+        public IHttpContext Handle_iHigh_1_Default(IHttpContext context)
         {
-            this.SendJsonResponse(context, iHigh_1(context, DEFAULT_CHART_ID));
+            return SendJsonResponse(context, iHigh_1);
         }
 
-        private JObject iHigh_1(HttpListenerContext context, long chartId)
+        private async Task<JObject> iHigh_1(MQLRestContext context)
         {
-            MQLCommandManager mqlCommandManager = DLLObjectWrapper.getInstance().getMQLCommandManager(chartId);
-            JObject payload = this.GetJsonPayload(context.Request);
-            JObject result = new JObject();
-            if (payload == null)
-            {
-                result["result"] = PARSE_ERROR;
-                return result;
-            }
+            var payload = context.JsonPayload;
+            var result = context.Result;
+            if (PayloadNotValid(context))
+                return context.Result;
             List<Object> parameters = new List<Object>();
-            parameters.Add(payload["symbol"]);
-            parameters.Add(payload["timeframe"]);
-            parameters.Add(payload["shift"]);
-            int id = mqlCommandManager.ExecCommand(MQLCommand.iHigh_1, parameters); // MQLCommand ENUM = 60
-            while (mqlCommandManager.IsCommandRunning(id)) ; // block while command is running
-            try
-            {
-                mqlCommandManager.throwExceptionIfErrorResponse(id);
-                result["result"] = Convert.ToDecimal(mqlCommandManager.GetCommandResult(id));
-            }
-            catch (Exception e)
-            {
-                result["error"] = MQLExceptions.convertRESTException(e.ToString());
-            }
+            ParamAdd(context, parameters, "symbol");
+            ParamAdd(context, parameters, "timeframe");
+            ParamAdd(context, parameters, "shift");
+            await ExecCommandAsync(context, MQLCommand.iHigh_1, parameters); // MQLCommand ENUM = 60
+
+            result["result"] = Convert.ToDecimal(GetCommandResult(context));
 
             return result;
         }
@@ -3345,11 +2648,10 @@ namespace MQL4CSharp.Base.REST
         /// <li><b>start</b> :  [in] Shift showing the bar, relative to the current bar, that the data should be taken from.</li>
         /// </ul>
         /// </summary>
-        [RESTRoute(Method = HttpMethod.POST, PathInfo = @"^/[0-9]+/ihighest")]
-        public void Handle_iHighest_1(HttpListenerContext context)
+        [RestRoute(HttpMethod = HttpMethod.POST, PathInfo = @"^/[0-9]+/ihighest$")]
+        public IHttpContext Handle_iHighest_1(IHttpContext context)
         {
-            long chartid = Int64.Parse(context.Request.Url.Segments[1].Replace("/", ""));
-            this.SendJsonResponse(context, iHighest_1(context, chartid));
+            return SendJsonResponse(context, GetChartId(context), iHighest_1);
         }
 
         /// <summary>
@@ -3365,39 +2667,27 @@ namespace MQL4CSharp.Base.REST
         /// <li><b>start</b> :  [in] Shift showing the bar, relative to the current bar, that the data should be taken from.</li>
         /// </ul>
         /// </summary>
-        [RESTRoute(Method = HttpMethod.POST, PathInfo = @"^/ihighest")]
-        public void Handle_iHighest_1_Default(HttpListenerContext context)
+        [RestRoute(HttpMethod = HttpMethod.POST, PathInfo = @"^/ihighest$")]
+        public IHttpContext Handle_iHighest_1_Default(IHttpContext context)
         {
-            this.SendJsonResponse(context, iHighest_1(context, DEFAULT_CHART_ID));
+            return SendJsonResponse(context, iHighest_1);
         }
 
-        private JObject iHighest_1(HttpListenerContext context, long chartId)
+        private async Task<JObject> iHighest_1(MQLRestContext context)
         {
-            MQLCommandManager mqlCommandManager = DLLObjectWrapper.getInstance().getMQLCommandManager(chartId);
-            JObject payload = this.GetJsonPayload(context.Request);
-            JObject result = new JObject();
-            if (payload == null)
-            {
-                result["result"] = PARSE_ERROR;
-                return result;
-            }
+            var payload = context.JsonPayload;
+            var result = context.Result;
+            if (PayloadNotValid(context))
+                return context.Result;
             List<Object> parameters = new List<Object>();
-            parameters.Add(payload["symbol"]);
-            parameters.Add(payload["timeframe"]);
-            parameters.Add(payload["type"]);
-            parameters.Add(payload["count"]);
-            parameters.Add(payload["start"]);
-            int id = mqlCommandManager.ExecCommand(MQLCommand.iHighest_1, parameters); // MQLCommand ENUM = 61
-            while (mqlCommandManager.IsCommandRunning(id)) ; // block while command is running
-            try
-            {
-                mqlCommandManager.throwExceptionIfErrorResponse(id);
-                result["result"] = Convert.ToInt32(mqlCommandManager.GetCommandResult(id));
-            }
-            catch (Exception e)
-            {
-                result["error"] = MQLExceptions.convertRESTException(e.ToString());
-            }
+            ParamAdd(context, parameters, "symbol");
+            ParamAdd(context, parameters, "timeframe");
+            ParamAdd(context, parameters, "type");
+            ParamAdd(context, parameters, "count");
+            ParamAdd(context, parameters, "start");
+            await ExecCommandAsync(context, MQLCommand.iHighest_1, parameters); // MQLCommand ENUM = 61
+
+            result["result"] = Convert.ToInt32(GetCommandResult(context));
 
             return result;
         }
@@ -3412,11 +2702,10 @@ namespace MQL4CSharp.Base.REST
         /// <li><b>shift</b> :  [in] Index of the value taken from the indicator buffer (shift relative to the current bar the given amount of periods ago).</li>
         /// </ul>
         /// </summary>
-        [RESTRoute(Method = HttpMethod.POST, PathInfo = @"^/[0-9]+/ilow")]
-        public void Handle_iLow_1(HttpListenerContext context)
+        [RestRoute(HttpMethod = HttpMethod.POST, PathInfo = @"^/[0-9]+/ilow$")]
+        public IHttpContext Handle_iLow_1(IHttpContext context)
         {
-            long chartid = Int64.Parse(context.Request.Url.Segments[1].Replace("/", ""));
-            this.SendJsonResponse(context, iLow_1(context, chartid));
+            return SendJsonResponse(context, GetChartId(context), iLow_1);
         }
 
         /// <summary>
@@ -3430,37 +2719,25 @@ namespace MQL4CSharp.Base.REST
         /// <li><b>shift</b> :  [in] Index of the value taken from the indicator buffer (shift relative to the current bar the given amount of periods ago).</li>
         /// </ul>
         /// </summary>
-        [RESTRoute(Method = HttpMethod.POST, PathInfo = @"^/ilow")]
-        public void Handle_iLow_1_Default(HttpListenerContext context)
+        [RestRoute(HttpMethod = HttpMethod.POST, PathInfo = @"^/ilow$")]
+        public IHttpContext Handle_iLow_1_Default(IHttpContext context)
         {
-            this.SendJsonResponse(context, iLow_1(context, DEFAULT_CHART_ID));
+            return SendJsonResponse(context, iLow_1);
         }
 
-        private JObject iLow_1(HttpListenerContext context, long chartId)
+        private async Task<JObject> iLow_1(MQLRestContext context)
         {
-            MQLCommandManager mqlCommandManager = DLLObjectWrapper.getInstance().getMQLCommandManager(chartId);
-            JObject payload = this.GetJsonPayload(context.Request);
-            JObject result = new JObject();
-            if (payload == null)
-            {
-                result["result"] = PARSE_ERROR;
-                return result;
-            }
+            var payload = context.JsonPayload;
+            var result = context.Result;
+            if (PayloadNotValid(context))
+                return context.Result;
             List<Object> parameters = new List<Object>();
-            parameters.Add(payload["symbol"]);
-            parameters.Add(payload["timeframe"]);
-            parameters.Add(payload["shift"]);
-            int id = mqlCommandManager.ExecCommand(MQLCommand.iLow_1, parameters); // MQLCommand ENUM = 62
-            while (mqlCommandManager.IsCommandRunning(id)) ; // block while command is running
-            try
-            {
-                mqlCommandManager.throwExceptionIfErrorResponse(id);
-                result["result"] = Convert.ToDecimal(mqlCommandManager.GetCommandResult(id));
-            }
-            catch (Exception e)
-            {
-                result["error"] = MQLExceptions.convertRESTException(e.ToString());
-            }
+            ParamAdd(context, parameters, "symbol");
+            ParamAdd(context, parameters, "timeframe");
+            ParamAdd(context, parameters, "shift");
+            await ExecCommandAsync(context, MQLCommand.iLow_1, parameters); // MQLCommand ENUM = 62
+
+            result["result"] = Convert.ToDecimal(GetCommandResult(context));
 
             return result;
         }
@@ -3477,11 +2754,10 @@ namespace MQL4CSharp.Base.REST
         /// <li><b>start</b> :  [in] Shift showing the bar, relative to the current bar, that the data should be taken from.</li>
         /// </ul>
         /// </summary>
-        [RESTRoute(Method = HttpMethod.POST, PathInfo = @"^/[0-9]+/ilowest")]
-        public void Handle_iLowest_1(HttpListenerContext context)
+        [RestRoute(HttpMethod = HttpMethod.POST, PathInfo = @"^/[0-9]+/ilowest$")]
+        public IHttpContext Handle_iLowest_1(IHttpContext context)
         {
-            long chartid = Int64.Parse(context.Request.Url.Segments[1].Replace("/", ""));
-            this.SendJsonResponse(context, iLowest_1(context, chartid));
+            return SendJsonResponse(context, GetChartId(context), iLowest_1);
         }
 
         /// <summary>
@@ -3497,39 +2773,27 @@ namespace MQL4CSharp.Base.REST
         /// <li><b>start</b> :  [in] Shift showing the bar, relative to the current bar, that the data should be taken from.</li>
         /// </ul>
         /// </summary>
-        [RESTRoute(Method = HttpMethod.POST, PathInfo = @"^/ilowest")]
-        public void Handle_iLowest_1_Default(HttpListenerContext context)
+        [RestRoute(HttpMethod = HttpMethod.POST, PathInfo = @"^/ilowest$")]
+        public IHttpContext Handle_iLowest_1_Default(IHttpContext context)
         {
-            this.SendJsonResponse(context, iLowest_1(context, DEFAULT_CHART_ID));
+            return SendJsonResponse(context, iLowest_1);
         }
 
-        private JObject iLowest_1(HttpListenerContext context, long chartId)
+        private async Task<JObject> iLowest_1(MQLRestContext context)
         {
-            MQLCommandManager mqlCommandManager = DLLObjectWrapper.getInstance().getMQLCommandManager(chartId);
-            JObject payload = this.GetJsonPayload(context.Request);
-            JObject result = new JObject();
-            if (payload == null)
-            {
-                result["result"] = PARSE_ERROR;
-                return result;
-            }
+            var payload = context.JsonPayload;
+            var result = context.Result;
+            if (PayloadNotValid(context))
+                return context.Result;
             List<Object> parameters = new List<Object>();
-            parameters.Add(payload["symbol"]);
-            parameters.Add(payload["timeframe"]);
-            parameters.Add(payload["type"]);
-            parameters.Add(payload["count"]);
-            parameters.Add(payload["start"]);
-            int id = mqlCommandManager.ExecCommand(MQLCommand.iLowest_1, parameters); // MQLCommand ENUM = 63
-            while (mqlCommandManager.IsCommandRunning(id)) ; // block while command is running
-            try
-            {
-                mqlCommandManager.throwExceptionIfErrorResponse(id);
-                result["result"] = Convert.ToInt32(mqlCommandManager.GetCommandResult(id));
-            }
-            catch (Exception e)
-            {
-                result["error"] = MQLExceptions.convertRESTException(e.ToString());
-            }
+            ParamAdd(context, parameters, "symbol");
+            ParamAdd(context, parameters, "timeframe");
+            ParamAdd(context, parameters, "type");
+            ParamAdd(context, parameters, "count");
+            ParamAdd(context, parameters, "start");
+            await ExecCommandAsync(context, MQLCommand.iLowest_1, parameters); // MQLCommand ENUM = 63
+
+            result["result"] = Convert.ToInt32(GetCommandResult(context));
 
             return result;
         }
@@ -3544,11 +2808,10 @@ namespace MQL4CSharp.Base.REST
         /// <li><b>shift</b> :  [in] Index of the value taken from the indicator buffer (shift relative to the current bar the given amount of periods ago).</li>
         /// </ul>
         /// </summary>
-        [RESTRoute(Method = HttpMethod.POST, PathInfo = @"^/[0-9]+/iopen")]
-        public void Handle_iOpen_1(HttpListenerContext context)
+        [RestRoute(HttpMethod = HttpMethod.POST, PathInfo = @"^/[0-9]+/iopen$")]
+        public IHttpContext Handle_iOpen_1(IHttpContext context)
         {
-            long chartid = Int64.Parse(context.Request.Url.Segments[1].Replace("/", ""));
-            this.SendJsonResponse(context, iOpen_1(context, chartid));
+            return SendJsonResponse(context, GetChartId(context), iOpen_1);
         }
 
         /// <summary>
@@ -3562,37 +2825,25 @@ namespace MQL4CSharp.Base.REST
         /// <li><b>shift</b> :  [in] Index of the value taken from the indicator buffer (shift relative to the current bar the given amount of periods ago).</li>
         /// </ul>
         /// </summary>
-        [RESTRoute(Method = HttpMethod.POST, PathInfo = @"^/iopen")]
-        public void Handle_iOpen_1_Default(HttpListenerContext context)
+        [RestRoute(HttpMethod = HttpMethod.POST, PathInfo = @"^/iopen$")]
+        public IHttpContext Handle_iOpen_1_Default(IHttpContext context)
         {
-            this.SendJsonResponse(context, iOpen_1(context, DEFAULT_CHART_ID));
+            return SendJsonResponse(context, iOpen_1);
         }
 
-        private JObject iOpen_1(HttpListenerContext context, long chartId)
+        private async Task<JObject> iOpen_1(MQLRestContext context)
         {
-            MQLCommandManager mqlCommandManager = DLLObjectWrapper.getInstance().getMQLCommandManager(chartId);
-            JObject payload = this.GetJsonPayload(context.Request);
-            JObject result = new JObject();
-            if (payload == null)
-            {
-                result["result"] = PARSE_ERROR;
-                return result;
-            }
+            var payload = context.JsonPayload;
+            var result = context.Result;
+            if (PayloadNotValid(context))
+                return context.Result;
             List<Object> parameters = new List<Object>();
-            parameters.Add(payload["symbol"]);
-            parameters.Add(payload["timeframe"]);
-            parameters.Add(payload["shift"]);
-            int id = mqlCommandManager.ExecCommand(MQLCommand.iOpen_1, parameters); // MQLCommand ENUM = 64
-            while (mqlCommandManager.IsCommandRunning(id)) ; // block while command is running
-            try
-            {
-                mqlCommandManager.throwExceptionIfErrorResponse(id);
-                result["result"] = Convert.ToDecimal(mqlCommandManager.GetCommandResult(id));
-            }
-            catch (Exception e)
-            {
-                result["error"] = MQLExceptions.convertRESTException(e.ToString());
-            }
+            ParamAdd(context, parameters, "symbol");
+            ParamAdd(context, parameters, "timeframe");
+            ParamAdd(context, parameters, "shift");
+            await ExecCommandAsync(context, MQLCommand.iOpen_1, parameters); // MQLCommand ENUM = 64
+
+            result["result"] = Convert.ToDecimal(GetCommandResult(context));
 
             return result;
         }
@@ -3607,11 +2858,10 @@ namespace MQL4CSharp.Base.REST
         /// <li><b>shift</b> :  [in] Index of the value taken from the indicator buffer (shift relative to the current bar the given amount of periods ago).</li>
         /// </ul>
         /// </summary>
-        [RESTRoute(Method = HttpMethod.POST, PathInfo = @"^/[0-9]+/itime")]
-        public void Handle_iTime_1(HttpListenerContext context)
+        [RestRoute(HttpMethod = HttpMethod.POST, PathInfo = @"^/[0-9]+/itime$")]
+        public IHttpContext Handle_iTime_1(IHttpContext context)
         {
-            long chartid = Int64.Parse(context.Request.Url.Segments[1].Replace("/", ""));
-            this.SendJsonResponse(context, iTime_1(context, chartid));
+            return SendJsonResponse(context, GetChartId(context), iTime_1);
         }
 
         /// <summary>
@@ -3625,37 +2875,25 @@ namespace MQL4CSharp.Base.REST
         /// <li><b>shift</b> :  [in] Index of the value taken from the indicator buffer (shift relative to the current bar the given amount of periods ago).</li>
         /// </ul>
         /// </summary>
-        [RESTRoute(Method = HttpMethod.POST, PathInfo = @"^/itime")]
-        public void Handle_iTime_1_Default(HttpListenerContext context)
+        [RestRoute(HttpMethod = HttpMethod.POST, PathInfo = @"^/itime$")]
+        public IHttpContext Handle_iTime_1_Default(IHttpContext context)
         {
-            this.SendJsonResponse(context, iTime_1(context, DEFAULT_CHART_ID));
+            return SendJsonResponse(context, iTime_1);
         }
 
-        private JObject iTime_1(HttpListenerContext context, long chartId)
+        private async Task<JObject> iTime_1(MQLRestContext context)
         {
-            MQLCommandManager mqlCommandManager = DLLObjectWrapper.getInstance().getMQLCommandManager(chartId);
-            JObject payload = this.GetJsonPayload(context.Request);
-            JObject result = new JObject();
-            if (payload == null)
-            {
-                result["result"] = PARSE_ERROR;
-                return result;
-            }
+            var payload = context.JsonPayload;
+            var result = context.Result;
+            if (PayloadNotValid(context))
+                return context.Result;
             List<Object> parameters = new List<Object>();
-            parameters.Add(payload["symbol"]);
-            parameters.Add(payload["timeframe"]);
-            parameters.Add(payload["shift"]);
-            int id = mqlCommandManager.ExecCommand(MQLCommand.iTime_1, parameters); // MQLCommand ENUM = 65
-            while (mqlCommandManager.IsCommandRunning(id)) ; // block while command is running
-            try
-            {
-                mqlCommandManager.throwExceptionIfErrorResponse(id);
-                result["result"] = (DateTime)mqlCommandManager.GetCommandResult(id);
-            }
-            catch (Exception e)
-            {
-                result["error"] = MQLExceptions.convertRESTException(e.ToString());
-            }
+            ParamAdd(context, parameters, "symbol");
+            ParamAdd(context, parameters, "timeframe");
+            ParamAdd(context, parameters, "shift");
+            await ExecCommandAsync(context, MQLCommand.iTime_1, parameters); // MQLCommand ENUM = 65
+
+            result["result"] = (DateTime)GetCommandResult(context);
 
             return result;
         }
@@ -3670,11 +2908,10 @@ namespace MQL4CSharp.Base.REST
         /// <li><b>shift</b> :  [in] Index of the value taken from the indicator buffer (shift relative to the current bar the given amount of periods ago).</li>
         /// </ul>
         /// </summary>
-        [RESTRoute(Method = HttpMethod.POST, PathInfo = @"^/[0-9]+/ivolume")]
-        public void Handle_iVolume_1(HttpListenerContext context)
+        [RestRoute(HttpMethod = HttpMethod.POST, PathInfo = @"^/[0-9]+/ivolume$")]
+        public IHttpContext Handle_iVolume_1(IHttpContext context)
         {
-            long chartid = Int64.Parse(context.Request.Url.Segments[1].Replace("/", ""));
-            this.SendJsonResponse(context, iVolume_1(context, chartid));
+            return SendJsonResponse(context, GetChartId(context), iVolume_1);
         }
 
         /// <summary>
@@ -3688,37 +2925,25 @@ namespace MQL4CSharp.Base.REST
         /// <li><b>shift</b> :  [in] Index of the value taken from the indicator buffer (shift relative to the current bar the given amount of periods ago).</li>
         /// </ul>
         /// </summary>
-        [RESTRoute(Method = HttpMethod.POST, PathInfo = @"^/ivolume")]
-        public void Handle_iVolume_1_Default(HttpListenerContext context)
+        [RestRoute(HttpMethod = HttpMethod.POST, PathInfo = @"^/ivolume$")]
+        public IHttpContext Handle_iVolume_1_Default(IHttpContext context)
         {
-            this.SendJsonResponse(context, iVolume_1(context, DEFAULT_CHART_ID));
+            return SendJsonResponse(context, iVolume_1);
         }
 
-        private JObject iVolume_1(HttpListenerContext context, long chartId)
+        private async Task<JObject> iVolume_1(MQLRestContext context)
         {
-            MQLCommandManager mqlCommandManager = DLLObjectWrapper.getInstance().getMQLCommandManager(chartId);
-            JObject payload = this.GetJsonPayload(context.Request);
-            JObject result = new JObject();
-            if (payload == null)
-            {
-                result["result"] = PARSE_ERROR;
-                return result;
-            }
+            var payload = context.JsonPayload;
+            var result = context.Result;
+            if (PayloadNotValid(context))
+                return context.Result;
             List<Object> parameters = new List<Object>();
-            parameters.Add(payload["symbol"]);
-            parameters.Add(payload["timeframe"]);
-            parameters.Add(payload["shift"]);
-            int id = mqlCommandManager.ExecCommand(MQLCommand.iVolume_1, parameters); // MQLCommand ENUM = 66
-            while (mqlCommandManager.IsCommandRunning(id)) ; // block while command is running
-            try
-            {
-                mqlCommandManager.throwExceptionIfErrorResponse(id);
-                result["result"] = Convert.ToInt64(mqlCommandManager.GetCommandResult(id));
-            }
-            catch (Exception e)
-            {
-                result["error"] = MQLExceptions.convertRESTException(e.ToString());
-            }
+            ParamAdd(context, parameters, "symbol");
+            ParamAdd(context, parameters, "timeframe");
+            ParamAdd(context, parameters, "shift");
+            await ExecCommandAsync(context, MQLCommand.iVolume_1, parameters); // MQLCommand ENUM = 66
+
+            result["result"] = Convert.ToInt64(GetCommandResult(context));
 
             return result;
         }
@@ -3732,11 +2957,10 @@ namespace MQL4CSharp.Base.REST
         /// <li><b>filename</b> :  [in] The name of the file containing the template.</li>
         /// </ul>
         /// </summary>
-        [RESTRoute(Method = HttpMethod.POST, PathInfo = @"^/[0-9]+/chartapplytemplate")]
-        public void Handle_ChartApplyTemplate_1(HttpListenerContext context)
+        [RestRoute(HttpMethod = HttpMethod.POST, PathInfo = @"^/[0-9]+/chartapplytemplate$")]
+        public IHttpContext Handle_ChartApplyTemplate_1(IHttpContext context)
         {
-            long chartid = Int64.Parse(context.Request.Url.Segments[1].Replace("/", ""));
-            this.SendJsonResponse(context, ChartApplyTemplate_1(context, chartid));
+            return SendJsonResponse(context, GetChartId(context), ChartApplyTemplate_1);
         }
 
         /// <summary>
@@ -3749,128 +2973,29 @@ namespace MQL4CSharp.Base.REST
         /// <li><b>filename</b> :  [in] The name of the file containing the template.</li>
         /// </ul>
         /// </summary>
-        [RESTRoute(Method = HttpMethod.POST, PathInfo = @"^/chartapplytemplate")]
-        public void Handle_ChartApplyTemplate_1_Default(HttpListenerContext context)
+        [RestRoute(HttpMethod = HttpMethod.POST, PathInfo = @"^/chartapplytemplate$")]
+        public IHttpContext Handle_ChartApplyTemplate_1_Default(IHttpContext context)
         {
-            this.SendJsonResponse(context, ChartApplyTemplate_1(context, DEFAULT_CHART_ID));
+            return SendJsonResponse(context, ChartApplyTemplate_1);
         }
 
-        private JObject ChartApplyTemplate_1(HttpListenerContext context, long chartId)
+        private async Task<JObject> ChartApplyTemplate_1(MQLRestContext context)
         {
-            MQLCommandManager mqlCommandManager = DLLObjectWrapper.getInstance().getMQLCommandManager(chartId);
-            JObject payload = this.GetJsonPayload(context.Request);
-            JObject result = new JObject();
-            if (payload == null)
-            {
-                result["result"] = PARSE_ERROR;
-                return result;
-            }
-            WriteFileContentIfNeed(payload, mqlCommandManager, "templates", "tpl");
+            var payload = context.JsonPayload;
+            var result = context.Result;
+            if (PayloadNotValid(context))
+                return context.Result;
+            await SetFileNameInfoAsInput(context, "templates", "tpl");
             List<Object> parameters = new List<Object>();
-            parameters.Add(payload["chart_id"]);
-            parameters.Add(payload["filename"]);
-            int id = mqlCommandManager.ExecCommand(MQLCommand.ChartApplyTemplate_1, parameters); // MQLCommand ENUM = 67
-            while (mqlCommandManager.IsCommandRunning(id)) ; // block while command is running
-            try
-            {
-                mqlCommandManager.throwExceptionIfErrorResponse(id);
-                result["result"] = (bool)mqlCommandManager.GetCommandResult(id);
-            }
-            catch (Exception e)
-            {
-                result["error"] = MQLExceptions.convertRESTException(e.ToString());
-            }
-            finally
-            {
-                EndFileNameProcess(payload, result, false);
-            }
+            ParamAdd(context, parameters, "chart_id");
+            ParamAdd(context, parameters, "filename");
+            await ExecCommandAsync(context, MQLCommand.ChartApplyTemplate_1, parameters); // MQLCommand ENUM = 67
+
+            result["result"] = (bool)GetCommandResult(context);
 
             return result;
         }
 
-        private static FileInfo WriteFileContentIfNeed(JObject payload, MQLCommandManager mqlCommandManager, string directory, string extension)
-        {
-            FileInfo fileWrited = null;
-
-            byte[] fileContent = null;
-            var fileContentBase64 = payload.Value<string>("filecontent");
-            if (fileContentBase64 != null)
-                fileContent = Convert.FromBase64String(fileContentBase64);
-            if (fileContent == null)
-            {
-                var fileContentString = payload.Value<string>("filecontentstring") as string;
-                if (fileContentString != null)
-                    fileContent = Encoding.UTF8.GetBytes(fileContentString);
-            }
-
-            if (fileContent != null)
-            {
-                fileWrited = SetFileNameFull(payload, mqlCommandManager, directory, extension);
-                File.WriteAllBytes(fileWrited.FullName, fileContent);
-            }
-
-            return fileWrited;
-        }
-
-        private static FileInfo SetFileNameFull(JObject payload, MQLCommandManager mqlCommandManager, string directory, string fileExtension)
-        {
-            var fileName = payload.Value<string>("filename") as string;
-            var parameters = new List<object>();
-            parameters.Add((int)TERMINAL_INFO_STRING.TERMINAL_DATA_PATH);
-            var dataPath = (string)mqlCommandManager.ExecCommandAndGetResult(MQLCommand.TerminalInfoString_1, parameters);
-            if (string.IsNullOrEmpty(fileName))
-            {
-                payload["filename_todelete"] = true;
-                fileName = $"tmp_{Guid.NewGuid().ToString().Replace("-", "")}";
-            }
-            var extsAllowed = fileExtension.Split(',');
-            if (!extsAllowed.Any(x => fileName.EndsWith($".{x}")))
-                fileName = $"{Path.GetFileNameWithoutExtension(fileName)}.{extsAllowed.First()}";
-            payload["filename"] = fileName;
-            var fileInfo = new FileInfo(Path.Combine(dataPath, directory, fileName));
-            payload["filename_full"] = fileInfo.FullName;
-            return fileInfo;
-        }
-
-        private static void EndFileNameProcess(JObject payload, JObject result, bool returnFileAsOutput = true)
-        {
-            var res = result.Value<bool?>("result");
-            if (res == true && returnFileAsOutput)
-            {
-                var fileName = payload.Value<string>("filename_full");
-                var fileContent = File.ReadAllBytes(fileName);
-                result["result_filecontent"] = Convert.ToBase64String(fileContent);
-            }
-            var toDelete = payload.Value<bool?>("filename_todelete");
-            if (toDelete == true)
-            {
-                var fileName = payload.Value<string>("filename_full");
-                Func<bool> fnDeleteFile = () =>
-                {
-                    for (int i = 0; i < 5; i++)
-                    {
-                        try
-                        {
-                            if (File.Exists(fileName))
-                                File.Delete(fileName);
-                            return true;
-                        }
-                        catch
-                        {
-                            System.Threading.Thread.Sleep(50);
-                        }
-                    }
-                    return false;
-                };
-                //l'eliminazione la faccio dopo 30 secondi, altrimenti ApplyTemplate non sempre funziona, elimina il file mentre lo sta caricando
-                if (!returnFileAsOutput || !fnDeleteFile())
-                    new Task(() =>
-                    {
-                        System.Threading.Thread.Sleep(TimeSpan.FromSeconds(30));
-                        fnDeleteFile();
-                    }).Start();
-            }
-        }
 
 
 
@@ -3884,11 +3009,10 @@ namespace MQL4CSharp.Base.REST
         /// <li><b>filename</b> :  [in] The filename to save the template. The ".tpl" extension will be added to the filename automatically; there is no need to specify it. The template is saved in terminal_directory\Profiles\Templates\ and can be used for manual application in the terminal. If a template with the same filename already exists, the contents of this file will be overwritten.</li>
         /// </ul>
         /// </summary>
-        [RESTRoute(Method = HttpMethod.POST, PathInfo = @"^/[0-9]+/chartsavetemplate")]
-        public void Handle_ChartSaveTemplate_1(HttpListenerContext context)
+        [RestRoute(HttpMethod = HttpMethod.POST, PathInfo = @"^/[0-9]+/chartsavetemplate$")]
+        public IHttpContext Handle_ChartSaveTemplate_1(IHttpContext context)
         {
-            long chartid = Int64.Parse(context.Request.Url.Segments[1].Replace("/", ""));
-            this.SendJsonResponse(context, ChartSaveTemplate_1(context, chartid));
+            return SendJsonResponse(context, GetChartId(context), ChartSaveTemplate_1);
         }
 
         /// <summary>
@@ -3901,42 +3025,26 @@ namespace MQL4CSharp.Base.REST
         /// <li><b>filename</b> :  [in] The filename to save the template. The ".tpl" extension will be added to the filename automatically; there is no need to specify it. The template is saved in terminal_directory\Profiles\Templates\ and can be used for manual application in the terminal. If a template with the same filename already exists, the contents of this file will be overwritten.</li>
         /// </ul>
         /// </summary>
-        [RESTRoute(Method = HttpMethod.POST, PathInfo = @"^/chartsavetemplate")]
-        public void Handle_ChartSaveTemplate_1_Default(HttpListenerContext context)
+        [RestRoute(HttpMethod = HttpMethod.POST, PathInfo = @"^/chartsavetemplate$")]
+        public IHttpContext Handle_ChartSaveTemplate_1_Default(IHttpContext context)
         {
-            this.SendJsonResponse(context, ChartSaveTemplate_1(context, DEFAULT_CHART_ID));
+            return SendJsonResponse(context, ChartSaveTemplate_1);
         }
 
-        private JObject ChartSaveTemplate_1(HttpListenerContext context, long chartId)
+        private async Task<JObject> ChartSaveTemplate_1(MQLRestContext context)
         {
-            MQLCommandManager mqlCommandManager = DLLObjectWrapper.getInstance().getMQLCommandManager(chartId);
-            JObject payload = this.GetJsonPayload(context.Request);
-            JObject result = new JObject();
-            if (payload == null)
-            {
-                result["result"] = PARSE_ERROR;
-                return result;
-            }
+            var payload = context.JsonPayload;
+            var result = context.Result;
+            if (PayloadNotValid(context))
+                return context.Result;
 
-            SetFileNameFull(payload, mqlCommandManager, "templates", "tpl");
+            await SetFileNameInfoAsOutput(context, "templates", "tpl");
             List<Object> parameters = new List<Object>();
-            parameters.Add(payload["chart_id"]);
-            parameters.Add(payload["filename"]);
-            int id = mqlCommandManager.ExecCommand(MQLCommand.ChartSaveTemplate_1, parameters); // MQLCommand ENUM = 68
-            while (mqlCommandManager.IsCommandRunning(id)) ; // block while command is running
-            try
-            {
-                mqlCommandManager.throwExceptionIfErrorResponse(id);
-                result["result"] = (bool)mqlCommandManager.GetCommandResult(id);
-            }
-            catch (Exception e)
-            {
-                result["error"] = MQLExceptions.convertRESTException(e.ToString());
-            }
-            finally
-            {
-                EndFileNameProcess(payload, result, true);
-            }
+            ParamAdd(context, parameters, "chart_id");
+            ParamAdd(context, parameters, "filename");
+            await ExecCommandAsync(context, MQLCommand.ChartSaveTemplate_1, parameters); // MQLCommand ENUM = 68
+
+            result["result"] = (bool)GetCommandResult(context);
 
             return result;
         }
@@ -3950,11 +3058,10 @@ namespace MQL4CSharp.Base.REST
         /// <li><b>indicator_shortname</b> :  [in] Short name of the indicator.</li>
         /// </ul>
         /// </summary>
-        [RESTRoute(Method = HttpMethod.POST, PathInfo = @"^/[0-9]+/chartwindowfind")]
-        public void Handle_ChartWindowFind_1(HttpListenerContext context)
+        [RestRoute(HttpMethod = HttpMethod.POST, PathInfo = @"^/[0-9]+/chartwindowfind$")]
+        public IHttpContext Handle_ChartWindowFind_1(IHttpContext context)
         {
-            long chartid = Int64.Parse(context.Request.Url.Segments[1].Replace("/", ""));
-            this.SendJsonResponse(context, ChartWindowFind_1(context, chartid));
+            return SendJsonResponse(context, GetChartId(context), ChartWindowFind_1);
         }
 
         /// <summary>
@@ -3967,36 +3074,24 @@ namespace MQL4CSharp.Base.REST
         /// <li><b>indicator_shortname</b> :  [in] Short name of the indicator.</li>
         /// </ul>
         /// </summary>
-        [RESTRoute(Method = HttpMethod.POST, PathInfo = @"^/chartwindowfind")]
-        public void Handle_ChartWindowFind_1_Default(HttpListenerContext context)
+        [RestRoute(HttpMethod = HttpMethod.POST, PathInfo = @"^/chartwindowfind$")]
+        public IHttpContext Handle_ChartWindowFind_1_Default(IHttpContext context)
         {
-            this.SendJsonResponse(context, ChartWindowFind_1(context, DEFAULT_CHART_ID));
+            return SendJsonResponse(context, ChartWindowFind_1);
         }
 
-        private JObject ChartWindowFind_1(HttpListenerContext context, long chartId)
+        private async Task<JObject> ChartWindowFind_1(MQLRestContext context)
         {
-            MQLCommandManager mqlCommandManager = DLLObjectWrapper.getInstance().getMQLCommandManager(chartId);
-            JObject payload = this.GetJsonPayload(context.Request);
-            JObject result = new JObject();
-            if (payload == null)
-            {
-                result["result"] = PARSE_ERROR;
-                return result;
-            }
+            var payload = context.JsonPayload;
+            var result = context.Result;
+            if (PayloadNotValid(context))
+                return context.Result;
             List<Object> parameters = new List<Object>();
-            parameters.Add(payload["chart_id"]);
-            parameters.Add(payload["indicator_shortname"]);
-            int id = mqlCommandManager.ExecCommand(MQLCommand.ChartWindowFind_1, parameters); // MQLCommand ENUM = 69
-            while (mqlCommandManager.IsCommandRunning(id)) ; // block while command is running
-            try
-            {
-                mqlCommandManager.throwExceptionIfErrorResponse(id);
-                result["result"] = Convert.ToInt32(mqlCommandManager.GetCommandResult(id));
-            }
-            catch (Exception e)
-            {
-                result["error"] = MQLExceptions.convertRESTException(e.ToString());
-            }
+            ParamAdd(context, parameters, "chart_id");
+            ParamAdd(context, parameters, "indicator_shortname");
+            await ExecCommandAsync(context, MQLCommand.ChartWindowFind_1, parameters); // MQLCommand ENUM = 69
+
+            result["result"] = Convert.ToInt32(GetCommandResult(context));
 
             return result;
         }
@@ -4008,11 +3103,10 @@ namespace MQL4CSharp.Base.REST
         /// <ul>
         /// </ul>
         /// </summary>
-        [RESTRoute(Method = HttpMethod.POST, PathInfo = @"^/[0-9]+/chartwindowfind")]
-        public void Handle_ChartWindowFind_2(HttpListenerContext context)
+        [RestRoute(HttpMethod = HttpMethod.POST, PathInfo = @"^/[0-9]+/chartwindowfind$")]
+        public IHttpContext Handle_ChartWindowFind_2(IHttpContext context)
         {
-            long chartid = Int64.Parse(context.Request.Url.Segments[1].Replace("/", ""));
-            this.SendJsonResponse(context, ChartWindowFind_2(context, chartid));
+            return SendJsonResponse(context, GetChartId(context), ChartWindowFind_2);
         }
 
         /// <summary>
@@ -4023,29 +3117,20 @@ namespace MQL4CSharp.Base.REST
         /// <ul>
         /// </ul>
         /// </summary>
-        [RESTRoute(Method = HttpMethod.POST, PathInfo = @"^/chartwindowfind")]
-        public void Handle_ChartWindowFind_2_Default(HttpListenerContext context)
+        [RestRoute(HttpMethod = HttpMethod.POST, PathInfo = @"^/chartwindowfind$")]
+        public IHttpContext Handle_ChartWindowFind_2_Default(IHttpContext context)
         {
-            this.SendJsonResponse(context, ChartWindowFind_2(context, DEFAULT_CHART_ID));
+            return SendJsonResponse(context, ChartWindowFind_2);
         }
 
-        private JObject ChartWindowFind_2(HttpListenerContext context, long chartId)
+        private async Task<JObject> ChartWindowFind_2(MQLRestContext context)
         {
-            MQLCommandManager mqlCommandManager = DLLObjectWrapper.getInstance().getMQLCommandManager(chartId);
-            JObject payload = this.GetJsonPayload(context.Request);
-            JObject result = new JObject();
+            var payload = context.JsonPayload;
+            var result = context.Result;
             List<Object> parameters = new List<Object>();
-            int id = mqlCommandManager.ExecCommand(MQLCommand.ChartWindowFind_2, parameters); // MQLCommand ENUM = 69
-            while (mqlCommandManager.IsCommandRunning(id)) ; // block while command is running
-            try
-            {
-                mqlCommandManager.throwExceptionIfErrorResponse(id);
-                result["result"] = Convert.ToInt32(mqlCommandManager.GetCommandResult(id));
-            }
-            catch (Exception e)
-            {
-                result["error"] = MQLExceptions.convertRESTException(e.ToString());
-            }
+            await ExecCommandAsync(context, MQLCommand.ChartWindowFind_2, parameters); // MQLCommand ENUM = 69
+
+            result["result"] = Convert.ToInt32(GetCommandResult(context));
 
             return result;
         }
@@ -4059,11 +3144,10 @@ namespace MQL4CSharp.Base.REST
         /// <li><b>period</b> :  [in] Chart period (timeframe). Can be one of the values. 0 means the current chart period.</li>
         /// </ul>
         /// </summary>
-        [RESTRoute(Method = HttpMethod.POST, PathInfo = @"^/[0-9]+/chartopen")]
-        public void Handle_ChartOpen_1(HttpListenerContext context)
+        [RestRoute(HttpMethod = HttpMethod.POST, PathInfo = @"^/[0-9]+/chartopen$")]
+        public IHttpContext Handle_ChartOpen_1(IHttpContext context)
         {
-            long chartid = Int64.Parse(context.Request.Url.Segments[1].Replace("/", ""));
-            this.SendJsonResponse(context, ChartOpen_1(context, chartid));
+            return SendJsonResponse(context, GetChartId(context), ChartOpen_1);
         }
 
         /// <summary>
@@ -4076,36 +3160,24 @@ namespace MQL4CSharp.Base.REST
         /// <li><b>period</b> :  [in] Chart period (timeframe). Can be one of the values. 0 means the current chart period.</li>
         /// </ul>
         /// </summary>
-        [RESTRoute(Method = HttpMethod.POST, PathInfo = @"^/chartopen")]
-        public void Handle_ChartOpen_1_Default(HttpListenerContext context)
+        [RestRoute(HttpMethod = HttpMethod.POST, PathInfo = @"^/chartopen$")]
+        public IHttpContext Handle_ChartOpen_1_Default(IHttpContext context)
         {
-            this.SendJsonResponse(context, ChartOpen_1(context, DEFAULT_CHART_ID));
+            return SendJsonResponse(context, ChartOpen_1);
         }
 
-        private JObject ChartOpen_1(HttpListenerContext context, long chartId)
+        private async Task<JObject> ChartOpen_1(MQLRestContext context)
         {
-            MQLCommandManager mqlCommandManager = DLLObjectWrapper.getInstance().getMQLCommandManager(chartId);
-            JObject payload = this.GetJsonPayload(context.Request);
-            JObject result = new JObject();
-            if (payload == null)
-            {
-                result["result"] = PARSE_ERROR;
-                return result;
-            }
+            var payload = context.JsonPayload;
+            var result = context.Result;
+            if (PayloadNotValid(context))
+                return context.Result;
             List<Object> parameters = new List<Object>();
-            parameters.Add(payload["symbol"]);
-            parameters.Add(payload["period"]);
-            int id = mqlCommandManager.ExecCommand(MQLCommand.ChartOpen_1, parameters); // MQLCommand ENUM = 70
-            while (mqlCommandManager.IsCommandRunning(id)) ; // block while command is running
-            try
-            {
-                mqlCommandManager.throwExceptionIfErrorResponse(id);
-                result["result"] = Convert.ToInt64(mqlCommandManager.GetCommandResult(id));
-            }
-            catch (Exception e)
-            {
-                result["error"] = MQLExceptions.convertRESTException(e.ToString());
-            }
+            ParamAdd(context, parameters, "symbol");
+            ParamAdd(context, parameters, "period");
+            await ExecCommandAsync(context, MQLCommand.ChartOpen_1, parameters); // MQLCommand ENUM = 70
+
+            result["result"] = Convert.ToInt64(GetCommandResult(context));
 
             return result;
         }
@@ -4117,11 +3189,10 @@ namespace MQL4CSharp.Base.REST
         /// <ul>
         /// </ul>
         /// </summary>
-        [RESTRoute(Method = HttpMethod.POST, PathInfo = @"^/[0-9]+/chartfirst")]
-        public void Handle_ChartFirst_1(HttpListenerContext context)
+        [RestRoute(HttpMethod = HttpMethod.POST, PathInfo = @"^/[0-9]+/chartfirst$")]
+        public IHttpContext Handle_ChartFirst_1(IHttpContext context)
         {
-            long chartid = Int64.Parse(context.Request.Url.Segments[1].Replace("/", ""));
-            this.SendJsonResponse(context, ChartFirst_1(context, chartid));
+            return SendJsonResponse(context, GetChartId(context), ChartFirst_1);
         }
 
         /// <summary>
@@ -4132,29 +3203,20 @@ namespace MQL4CSharp.Base.REST
         /// <ul>
         /// </ul>
         /// </summary>
-        [RESTRoute(Method = HttpMethod.POST, PathInfo = @"^/chartfirst")]
-        public void Handle_ChartFirst_1_Default(HttpListenerContext context)
+        [RestRoute(HttpMethod = HttpMethod.POST, PathInfo = @"^/chartfirst$")]
+        public IHttpContext Handle_ChartFirst_1_Default(IHttpContext context)
         {
-            this.SendJsonResponse(context, ChartFirst_1(context, DEFAULT_CHART_ID));
+            return SendJsonResponse(context, ChartFirst_1);
         }
 
-        private JObject ChartFirst_1(HttpListenerContext context, long chartId)
+        private async Task<JObject> ChartFirst_1(MQLRestContext context)
         {
-            MQLCommandManager mqlCommandManager = DLLObjectWrapper.getInstance().getMQLCommandManager(chartId);
-            JObject payload = this.GetJsonPayload(context.Request);
-            JObject result = new JObject();
+            var payload = context.JsonPayload;
+            var result = context.Result;
             List<Object> parameters = new List<Object>();
-            int id = mqlCommandManager.ExecCommand(MQLCommand.ChartFirst_1, parameters); // MQLCommand ENUM = 71
-            while (mqlCommandManager.IsCommandRunning(id)) ; // block while command is running
-            try
-            {
-                mqlCommandManager.throwExceptionIfErrorResponse(id);
-                result["result"] = Convert.ToInt64(mqlCommandManager.GetCommandResult(id));
-            }
-            catch (Exception e)
-            {
-                result["error"] = MQLExceptions.convertRESTException(e.ToString());
-            }
+            await ExecCommandAsync(context, MQLCommand.ChartFirst_1, parameters); // MQLCommand ENUM = 71
+
+            result["result"] = Convert.ToInt64(GetCommandResult(context));
 
             return result;
         }
@@ -4167,11 +3229,10 @@ namespace MQL4CSharp.Base.REST
         /// <li><b>chart_id</b> :  [in] Chart ID. 0 does not mean the current chart. 0 means "return the first chart ID".</li>
         /// </ul>
         /// </summary>
-        [RESTRoute(Method = HttpMethod.POST, PathInfo = @"^/[0-9]+/chartnext")]
-        public void Handle_ChartNext_1(HttpListenerContext context)
+        [RestRoute(HttpMethod = HttpMethod.POST, PathInfo = @"^/[0-9]+/chartnext$")]
+        public IHttpContext Handle_ChartNext_1(IHttpContext context)
         {
-            long chartid = Int64.Parse(context.Request.Url.Segments[1].Replace("/", ""));
-            this.SendJsonResponse(context, ChartNext_1(context, chartid));
+            return SendJsonResponse(context, GetChartId(context), ChartNext_1);
         }
 
         /// <summary>
@@ -4183,35 +3244,23 @@ namespace MQL4CSharp.Base.REST
         /// <li><b>chart_id</b> :  [in] Chart ID. 0 does not mean the current chart. 0 means "return the first chart ID".</li>
         /// </ul>
         /// </summary>
-        [RESTRoute(Method = HttpMethod.POST, PathInfo = @"^/chartnext")]
-        public void Handle_ChartNext_1_Default(HttpListenerContext context)
+        [RestRoute(HttpMethod = HttpMethod.POST, PathInfo = @"^/chartnext$")]
+        public IHttpContext Handle_ChartNext_1_Default(IHttpContext context)
         {
-            this.SendJsonResponse(context, ChartNext_1(context, DEFAULT_CHART_ID));
+            return SendJsonResponse(context, ChartNext_1);
         }
 
-        private JObject ChartNext_1(HttpListenerContext context, long chartId)
+        private async Task<JObject> ChartNext_1(MQLRestContext context)
         {
-            MQLCommandManager mqlCommandManager = DLLObjectWrapper.getInstance().getMQLCommandManager(chartId);
-            JObject payload = this.GetJsonPayload(context.Request);
-            JObject result = new JObject();
-            if (payload == null)
-            {
-                result["result"] = PARSE_ERROR;
-                return result;
-            }
+            var payload = context.JsonPayload;
+            var result = context.Result;
+            if (PayloadNotValid(context))
+                return context.Result;
             List<Object> parameters = new List<Object>();
-            parameters.Add(payload["chart_id"]);
-            int id = mqlCommandManager.ExecCommand(MQLCommand.ChartNext_1, parameters); // MQLCommand ENUM = 72
-            while (mqlCommandManager.IsCommandRunning(id)) ; // block while command is running
-            try
-            {
-                mqlCommandManager.throwExceptionIfErrorResponse(id);
-                result["result"] = Convert.ToInt64(mqlCommandManager.GetCommandResult(id));
-            }
-            catch (Exception e)
-            {
-                result["error"] = MQLExceptions.convertRESTException(e.ToString());
-            }
+            ParamAdd(context, parameters, "chart_id");
+            await ExecCommandAsync(context, MQLCommand.ChartNext_1, parameters); // MQLCommand ENUM = 72
+
+            result["result"] = Convert.ToInt64(GetCommandResult(context));
 
             return result;
         }
@@ -4224,11 +3273,10 @@ namespace MQL4CSharp.Base.REST
         /// <li><b>chart_id</b> :  [in] Chart ID. 0 means the current chart.</li>
         /// </ul>
         /// </summary>
-        [RESTRoute(Method = HttpMethod.POST, PathInfo = @"^/[0-9]+/chartclose")]
-        public void Handle_ChartClose_1(HttpListenerContext context)
+        [RestRoute(HttpMethod = HttpMethod.POST, PathInfo = @"^/[0-9]+/chartclose$")]
+        public IHttpContext Handle_ChartClose_1(IHttpContext context)
         {
-            long chartid = Int64.Parse(context.Request.Url.Segments[1].Replace("/", ""));
-            this.SendJsonResponse(context, ChartClose_1(context, chartid));
+            return SendJsonResponse(context, GetChartId(context), ChartClose_1);
         }
 
         /// <summary>
@@ -4240,35 +3288,23 @@ namespace MQL4CSharp.Base.REST
         /// <li><b>chart_id</b> :  [in] Chart ID. 0 means the current chart.</li>
         /// </ul>
         /// </summary>
-        [RESTRoute(Method = HttpMethod.POST, PathInfo = @"^/chartclose")]
-        public void Handle_ChartClose_1_Default(HttpListenerContext context)
+        [RestRoute(HttpMethod = HttpMethod.POST, PathInfo = @"^/chartclose$")]
+        public IHttpContext Handle_ChartClose_1_Default(IHttpContext context)
         {
-            this.SendJsonResponse(context, ChartClose_1(context, DEFAULT_CHART_ID));
+            return SendJsonResponse(context, ChartClose_1);
         }
 
-        private JObject ChartClose_1(HttpListenerContext context, long chartId)
+        private async Task<JObject> ChartClose_1(MQLRestContext context)
         {
-            MQLCommandManager mqlCommandManager = DLLObjectWrapper.getInstance().getMQLCommandManager(chartId);
-            JObject payload = this.GetJsonPayload(context.Request);
-            JObject result = new JObject();
-            if (payload == null)
-            {
-                result["result"] = PARSE_ERROR;
-                return result;
-            }
+            var payload = context.JsonPayload;
+            var result = context.Result;
+            if (PayloadNotValid(context))
+                return context.Result;
             List<Object> parameters = new List<Object>();
-            parameters.Add(payload["chart_id"]);
-            int id = mqlCommandManager.ExecCommand(MQLCommand.ChartClose_1, parameters); // MQLCommand ENUM = 73
-            while (mqlCommandManager.IsCommandRunning(id)) ; // block while command is running
-            try
-            {
-                mqlCommandManager.throwExceptionIfErrorResponse(id);
-                result["result"] = (bool)mqlCommandManager.GetCommandResult(id);
-            }
-            catch (Exception e)
-            {
-                result["error"] = MQLExceptions.convertRESTException(e.ToString());
-            }
+            ParamAdd(context, parameters, "chart_id");
+            await ExecCommandAsync(context, MQLCommand.ChartClose_1, parameters); // MQLCommand ENUM = 73
+
+            result["result"] = (bool)GetCommandResult(context);
 
             return result;
         }
@@ -4281,11 +3317,10 @@ namespace MQL4CSharp.Base.REST
         /// <li><b>chart_id</b> :  [in] Chart ID. 0 means the current chart.</li>
         /// </ul>
         /// </summary>
-        [RESTRoute(Method = HttpMethod.POST, PathInfo = @"^/[0-9]+/chartsymbol")]
-        public void Handle_ChartSymbol_1(HttpListenerContext context)
+        [RestRoute(HttpMethod = HttpMethod.POST, PathInfo = @"^/[0-9]+/chartsymbol$")]
+        public IHttpContext Handle_ChartSymbol_1(IHttpContext context)
         {
-            long chartid = Int64.Parse(context.Request.Url.Segments[1].Replace("/", ""));
-            this.SendJsonResponse(context, ChartSymbol_1(context, chartid));
+            return SendJsonResponse(context, GetChartId(context), ChartSymbol_1);
         }
 
         /// <summary>
@@ -4297,35 +3332,23 @@ namespace MQL4CSharp.Base.REST
         /// <li><b>chart_id</b> :  [in] Chart ID. 0 means the current chart.</li>
         /// </ul>
         /// </summary>
-        [RESTRoute(Method = HttpMethod.POST, PathInfo = @"^/chartsymbol")]
-        public void Handle_ChartSymbol_1_Default(HttpListenerContext context)
+        [RestRoute(HttpMethod = HttpMethod.POST, PathInfo = @"^/chartsymbol$")]
+        public IHttpContext Handle_ChartSymbol_1_Default(IHttpContext context)
         {
-            this.SendJsonResponse(context, ChartSymbol_1(context, DEFAULT_CHART_ID));
+            return SendJsonResponse(context, ChartSymbol_1);
         }
 
-        private JObject ChartSymbol_1(HttpListenerContext context, long chartId)
+        private async Task<JObject> ChartSymbol_1(MQLRestContext context)
         {
-            MQLCommandManager mqlCommandManager = DLLObjectWrapper.getInstance().getMQLCommandManager(chartId);
-            JObject payload = this.GetJsonPayload(context.Request);
-            JObject result = new JObject();
-            if (payload == null)
-            {
-                result["result"] = PARSE_ERROR;
-                return result;
-            }
+            var payload = context.JsonPayload;
+            var result = context.Result;
+            if (PayloadNotValid(context))
+                return context.Result;
             List<Object> parameters = new List<Object>();
-            parameters.Add(payload["chart_id"]);
-            int id = mqlCommandManager.ExecCommand(MQLCommand.ChartSymbol_1, parameters); // MQLCommand ENUM = 74
-            while (mqlCommandManager.IsCommandRunning(id)) ; // block while command is running
-            try
-            {
-                mqlCommandManager.throwExceptionIfErrorResponse(id);
-                result["result"] = (string)mqlCommandManager.GetCommandResult(id);
-            }
-            catch (Exception e)
-            {
-                result["error"] = MQLExceptions.convertRESTException(e.ToString());
-            }
+            ParamAdd(context, parameters, "chart_id");
+            await ExecCommandAsync(context, MQLCommand.ChartSymbol_1, parameters); // MQLCommand ENUM = 74
+
+            result["result"] = (string)GetCommandResult(context);
 
             return result;
         }
@@ -4338,11 +3361,10 @@ namespace MQL4CSharp.Base.REST
         /// <li><b>chart_id</b> :  [in] Chart ID. 0 means the current chart.</li>
         /// </ul>
         /// </summary>
-        [RESTRoute(Method = HttpMethod.POST, PathInfo = @"^/[0-9]+/chartredraw")]
-        public void Handle_ChartRedraw_1(HttpListenerContext context)
+        [RestRoute(HttpMethod = HttpMethod.POST, PathInfo = @"^/[0-9]+/chartredraw$")]
+        public IHttpContext Handle_ChartRedraw_1(IHttpContext context)
         {
-            long chartid = Int64.Parse(context.Request.Url.Segments[1].Replace("/", ""));
-            this.SendJsonResponse(context, ChartRedraw_1(context, chartid));
+            return SendJsonResponse(context, GetChartId(context), ChartRedraw_1);
         }
 
         /// <summary>
@@ -4354,35 +3376,23 @@ namespace MQL4CSharp.Base.REST
         /// <li><b>chart_id</b> :  [in] Chart ID. 0 means the current chart.</li>
         /// </ul>
         /// </summary>
-        [RESTRoute(Method = HttpMethod.POST, PathInfo = @"^/chartredraw")]
-        public void Handle_ChartRedraw_1_Default(HttpListenerContext context)
+        [RestRoute(HttpMethod = HttpMethod.POST, PathInfo = @"^/chartredraw$")]
+        public IHttpContext Handle_ChartRedraw_1_Default(IHttpContext context)
         {
-            this.SendJsonResponse(context, ChartRedraw_1(context, DEFAULT_CHART_ID));
+            return SendJsonResponse(context, ChartRedraw_1);
         }
 
-        private JObject ChartRedraw_1(HttpListenerContext context, long chartId)
+        private async Task<JObject> ChartRedraw_1(MQLRestContext context)
         {
-            MQLCommandManager mqlCommandManager = DLLObjectWrapper.getInstance().getMQLCommandManager(chartId);
-            JObject payload = this.GetJsonPayload(context.Request);
-            JObject result = new JObject();
-            if (payload == null)
-            {
-                result["result"] = PARSE_ERROR;
-                return result;
-            }
+            var payload = context.JsonPayload;
+            var result = context.Result;
+            if (PayloadNotValid(context))
+                return context.Result;
             List<Object> parameters = new List<Object>();
-            parameters.Add(payload["chart_id"]);
-            int id = mqlCommandManager.ExecCommand(MQLCommand.ChartRedraw_1, parameters); // MQLCommand ENUM = 75
-            while (mqlCommandManager.IsCommandRunning(id)) ; // block while command is running
-            try
-            {
-                mqlCommandManager.throwExceptionIfErrorResponse(id);
-                result["result"] = "";
-            }
-            catch (Exception e)
-            {
-                result["error"] = MQLExceptions.convertRESTException(e.ToString());
-            }
+            ParamAdd(context, parameters, "chart_id");
+            await ExecCommandAsync(context, MQLCommand.ChartRedraw_1, parameters); // MQLCommand ENUM = 75
+
+            result["result"] = "";
 
             return result;
         }
@@ -4397,11 +3407,10 @@ namespace MQL4CSharp.Base.REST
         /// <li><b>value</b> :  [in] Property value.</li>
         /// </ul>
         /// </summary>
-        [RESTRoute(Method = HttpMethod.POST, PathInfo = @"^/[0-9]+/chartsetdouble")]
-        public void Handle_ChartSetDouble_1(HttpListenerContext context)
+        [RestRoute(HttpMethod = HttpMethod.POST, PathInfo = @"^/[0-9]+/chartsetdouble$")]
+        public IHttpContext Handle_ChartSetDouble_1(IHttpContext context)
         {
-            long chartid = Int64.Parse(context.Request.Url.Segments[1].Replace("/", ""));
-            this.SendJsonResponse(context, ChartSetDouble_1(context, chartid));
+            return SendJsonResponse(context, GetChartId(context), ChartSetDouble_1);
         }
 
         /// <summary>
@@ -4415,37 +3424,25 @@ namespace MQL4CSharp.Base.REST
         /// <li><b>value</b> :  [in] Property value.</li>
         /// </ul>
         /// </summary>
-        [RESTRoute(Method = HttpMethod.POST, PathInfo = @"^/chartsetdouble")]
-        public void Handle_ChartSetDouble_1_Default(HttpListenerContext context)
+        [RestRoute(HttpMethod = HttpMethod.POST, PathInfo = @"^/chartsetdouble$")]
+        public IHttpContext Handle_ChartSetDouble_1_Default(IHttpContext context)
         {
-            this.SendJsonResponse(context, ChartSetDouble_1(context, DEFAULT_CHART_ID));
+            return SendJsonResponse(context, ChartSetDouble_1);
         }
 
-        private JObject ChartSetDouble_1(HttpListenerContext context, long chartId)
+        private async Task<JObject> ChartSetDouble_1(MQLRestContext context)
         {
-            MQLCommandManager mqlCommandManager = DLLObjectWrapper.getInstance().getMQLCommandManager(chartId);
-            JObject payload = this.GetJsonPayload(context.Request);
-            JObject result = new JObject();
-            if (payload == null)
-            {
-                result["result"] = PARSE_ERROR;
-                return result;
-            }
+            var payload = context.JsonPayload;
+            var result = context.Result;
+            if (PayloadNotValid(context))
+                return context.Result;
             List<Object> parameters = new List<Object>();
-            parameters.Add(payload["chart_id"]);
-            parameters.Add(payload["prop_id"]);
-            parameters.Add(payload["value"]);
-            int id = mqlCommandManager.ExecCommand(MQLCommand.ChartSetDouble_1, parameters); // MQLCommand ENUM = 76
-            while (mqlCommandManager.IsCommandRunning(id)) ; // block while command is running
-            try
-            {
-                mqlCommandManager.throwExceptionIfErrorResponse(id);
-                result["result"] = (bool)mqlCommandManager.GetCommandResult(id);
-            }
-            catch (Exception e)
-            {
-                result["error"] = MQLExceptions.convertRESTException(e.ToString());
-            }
+            ParamAdd(context, parameters, "chart_id");
+            ParamAdd(context, parameters, "prop_id");
+            ParamAdd(context, parameters, "value");
+            await ExecCommandAsync(context, MQLCommand.ChartSetDouble_1, parameters); // MQLCommand ENUM = 76
+
+            result["result"] = (bool)GetCommandResult(context);
 
             return result;
         }
@@ -4460,11 +3457,10 @@ namespace MQL4CSharp.Base.REST
         /// <li><b>value</b> :  [in] Property value.</li>
         /// </ul>
         /// </summary>
-        [RESTRoute(Method = HttpMethod.POST, PathInfo = @"^/[0-9]+/chartsetinteger")]
-        public void Handle_ChartSetInteger_1(HttpListenerContext context)
+        [RestRoute(HttpMethod = HttpMethod.POST, PathInfo = @"^/[0-9]+/chartsetinteger$")]
+        public IHttpContext Handle_ChartSetInteger_1(IHttpContext context)
         {
-            long chartid = Int64.Parse(context.Request.Url.Segments[1].Replace("/", ""));
-            this.SendJsonResponse(context, ChartSetInteger_1(context, chartid));
+            return SendJsonResponse(context, GetChartId(context), ChartSetInteger_1);
         }
 
         /// <summary>
@@ -4478,37 +3474,25 @@ namespace MQL4CSharp.Base.REST
         /// <li><b>value</b> :  [in] Property value.</li>
         /// </ul>
         /// </summary>
-        [RESTRoute(Method = HttpMethod.POST, PathInfo = @"^/chartsetinteger")]
-        public void Handle_ChartSetInteger_1_Default(HttpListenerContext context)
+        [RestRoute(HttpMethod = HttpMethod.POST, PathInfo = @"^/chartsetinteger$")]
+        public IHttpContext Handle_ChartSetInteger_1_Default(IHttpContext context)
         {
-            this.SendJsonResponse(context, ChartSetInteger_1(context, DEFAULT_CHART_ID));
+            return SendJsonResponse(context, ChartSetInteger_1);
         }
 
-        private JObject ChartSetInteger_1(HttpListenerContext context, long chartId)
+        private async Task<JObject> ChartSetInteger_1(MQLRestContext context)
         {
-            MQLCommandManager mqlCommandManager = DLLObjectWrapper.getInstance().getMQLCommandManager(chartId);
-            JObject payload = this.GetJsonPayload(context.Request);
-            JObject result = new JObject();
-            if (payload == null)
-            {
-                result["result"] = PARSE_ERROR;
-                return result;
-            }
+            var payload = context.JsonPayload;
+            var result = context.Result;
+            if (PayloadNotValid(context))
+                return context.Result;
             List<Object> parameters = new List<Object>();
-            parameters.Add(payload["chart_id"]);
-            parameters.Add(payload["prop_id"]);
-            parameters.Add(payload["value"]);
-            int id = mqlCommandManager.ExecCommand(MQLCommand.ChartSetInteger_1, parameters); // MQLCommand ENUM = 77
-            while (mqlCommandManager.IsCommandRunning(id)) ; // block while command is running
-            try
-            {
-                mqlCommandManager.throwExceptionIfErrorResponse(id);
-                result["result"] = (bool)mqlCommandManager.GetCommandResult(id);
-            }
-            catch (Exception e)
-            {
-                result["error"] = MQLExceptions.convertRESTException(e.ToString());
-            }
+            ParamAdd(context, parameters, "chart_id");
+            ParamAdd(context, parameters, "prop_id");
+            ParamAdd(context, parameters, "value");
+            await ExecCommandAsync(context, MQLCommand.ChartSetInteger_1, parameters); // MQLCommand ENUM = 77
+
+            result["result"] = (bool)GetCommandResult(context);
 
             return result;
         }
@@ -4524,11 +3508,10 @@ namespace MQL4CSharp.Base.REST
         /// <li><b>value</b> :  [in] Property value.</li>
         /// </ul>
         /// </summary>
-        [RESTRoute(Method = HttpMethod.POST, PathInfo = @"^/[0-9]+/chartsetinteger")]
-        public void Handle_ChartSetInteger_2(HttpListenerContext context)
+        [RestRoute(HttpMethod = HttpMethod.POST, PathInfo = @"^/[0-9]+/chartsetinteger$")]
+        public IHttpContext Handle_ChartSetInteger_2(IHttpContext context)
         {
-            long chartid = Int64.Parse(context.Request.Url.Segments[1].Replace("/", ""));
-            this.SendJsonResponse(context, ChartSetInteger_2(context, chartid));
+            return SendJsonResponse(context, GetChartId(context), ChartSetInteger_2);
         }
 
         /// <summary>
@@ -4543,38 +3526,26 @@ namespace MQL4CSharp.Base.REST
         /// <li><b>value</b> :  [in] Property value.</li>
         /// </ul>
         /// </summary>
-        [RESTRoute(Method = HttpMethod.POST, PathInfo = @"^/chartsetinteger")]
-        public void Handle_ChartSetInteger_2_Default(HttpListenerContext context)
+        [RestRoute(HttpMethod = HttpMethod.POST, PathInfo = @"^/chartsetinteger$")]
+        public IHttpContext Handle_ChartSetInteger_2_Default(IHttpContext context)
         {
-            this.SendJsonResponse(context, ChartSetInteger_2(context, DEFAULT_CHART_ID));
+            return SendJsonResponse(context, ChartSetInteger_2);
         }
 
-        private JObject ChartSetInteger_2(HttpListenerContext context, long chartId)
+        private async Task<JObject> ChartSetInteger_2(MQLRestContext context)
         {
-            MQLCommandManager mqlCommandManager = DLLObjectWrapper.getInstance().getMQLCommandManager(chartId);
-            JObject payload = this.GetJsonPayload(context.Request);
-            JObject result = new JObject();
-            if (payload == null)
-            {
-                result["result"] = PARSE_ERROR;
-                return result;
-            }
+            var payload = context.JsonPayload;
+            var result = context.Result;
+            if (PayloadNotValid(context))
+                return context.Result;
             List<Object> parameters = new List<Object>();
-            parameters.Add(payload["chart_id"]);
-            parameters.Add(payload["property_id"]);
-            parameters.Add(payload["sub_window"]);
-            parameters.Add(payload["value"]);
-            int id = mqlCommandManager.ExecCommand(MQLCommand.ChartSetInteger_2, parameters); // MQLCommand ENUM = 77
-            while (mqlCommandManager.IsCommandRunning(id)) ; // block while command is running
-            try
-            {
-                mqlCommandManager.throwExceptionIfErrorResponse(id);
-                result["result"] = (bool)mqlCommandManager.GetCommandResult(id);
-            }
-            catch (Exception e)
-            {
-                result["error"] = MQLExceptions.convertRESTException(e.ToString());
-            }
+            ParamAdd(context, parameters, "chart_id");
+            ParamAdd(context, parameters, "property_id");
+            ParamAdd(context, parameters, "sub_window");
+            ParamAdd(context, parameters, "value");
+            await ExecCommandAsync(context, MQLCommand.ChartSetInteger_2, parameters); // MQLCommand ENUM = 77
+
+            result["result"] = (bool)GetCommandResult(context);
 
             return result;
         }
@@ -4589,11 +3560,10 @@ namespace MQL4CSharp.Base.REST
         /// <li><b>str_value</b> :  [in] Property value string. String length cannot exceed 2045 characters (extra characters will be truncated).</li>
         /// </ul>
         /// </summary>
-        [RESTRoute(Method = HttpMethod.POST, PathInfo = @"^/[0-9]+/chartsetstring")]
-        public void Handle_ChartSetString_1(HttpListenerContext context)
+        [RestRoute(HttpMethod = HttpMethod.POST, PathInfo = @"^/[0-9]+/chartsetstring$")]
+        public IHttpContext Handle_ChartSetString_1(IHttpContext context)
         {
-            long chartid = Int64.Parse(context.Request.Url.Segments[1].Replace("/", ""));
-            this.SendJsonResponse(context, ChartSetString_1(context, chartid));
+            return SendJsonResponse(context, GetChartId(context), ChartSetString_1);
         }
 
         /// <summary>
@@ -4607,37 +3577,25 @@ namespace MQL4CSharp.Base.REST
         /// <li><b>str_value</b> :  [in] Property value string. String length cannot exceed 2045 characters (extra characters will be truncated).</li>
         /// </ul>
         /// </summary>
-        [RESTRoute(Method = HttpMethod.POST, PathInfo = @"^/chartsetstring")]
-        public void Handle_ChartSetString_1_Default(HttpListenerContext context)
+        [RestRoute(HttpMethod = HttpMethod.POST, PathInfo = @"^/chartsetstring$")]
+        public IHttpContext Handle_ChartSetString_1_Default(IHttpContext context)
         {
-            this.SendJsonResponse(context, ChartSetString_1(context, DEFAULT_CHART_ID));
+            return SendJsonResponse(context, ChartSetString_1);
         }
 
-        private JObject ChartSetString_1(HttpListenerContext context, long chartId)
+        private async Task<JObject> ChartSetString_1(MQLRestContext context)
         {
-            MQLCommandManager mqlCommandManager = DLLObjectWrapper.getInstance().getMQLCommandManager(chartId);
-            JObject payload = this.GetJsonPayload(context.Request);
-            JObject result = new JObject();
-            if (payload == null)
-            {
-                result["result"] = PARSE_ERROR;
-                return result;
-            }
+            var payload = context.JsonPayload;
+            var result = context.Result;
+            if (PayloadNotValid(context))
+                return context.Result;
             List<Object> parameters = new List<Object>();
-            parameters.Add(payload["chart_id"]);
-            parameters.Add(payload["prop_id"]);
-            parameters.Add(payload["str_value"]);
-            int id = mqlCommandManager.ExecCommand(MQLCommand.ChartSetString_1, parameters); // MQLCommand ENUM = 78
-            while (mqlCommandManager.IsCommandRunning(id)) ; // block while command is running
-            try
-            {
-                mqlCommandManager.throwExceptionIfErrorResponse(id);
-                result["result"] = (bool)mqlCommandManager.GetCommandResult(id);
-            }
-            catch (Exception e)
-            {
-                result["error"] = MQLExceptions.convertRESTException(e.ToString());
-            }
+            ParamAdd(context, parameters, "chart_id");
+            ParamAdd(context, parameters, "prop_id");
+            ParamAdd(context, parameters, "str_value");
+            await ExecCommandAsync(context, MQLCommand.ChartSetString_1, parameters); // MQLCommand ENUM = 78
+
+            result["result"] = (bool)GetCommandResult(context);
 
             return result;
         }
@@ -4652,11 +3610,10 @@ namespace MQL4CSharp.Base.REST
         /// <li><b>shift</b> :  [in] Number of bars to shift the chart. Positive value means the right shift (to the end of chart), negative value means the left shift (to the beginning of chart). The zero shift can be used to navigate to the beginning or end of chart.</li>
         /// </ul>
         /// </summary>
-        [RESTRoute(Method = HttpMethod.POST, PathInfo = @"^/[0-9]+/chartnavigate")]
-        public void Handle_ChartNavigate_1(HttpListenerContext context)
+        [RestRoute(HttpMethod = HttpMethod.POST, PathInfo = @"^/[0-9]+/chartnavigate$")]
+        public IHttpContext Handle_ChartNavigate_1(IHttpContext context)
         {
-            long chartid = Int64.Parse(context.Request.Url.Segments[1].Replace("/", ""));
-            this.SendJsonResponse(context, ChartNavigate_1(context, chartid));
+            return SendJsonResponse(context, GetChartId(context), ChartNavigate_1);
         }
 
         /// <summary>
@@ -4670,37 +3627,25 @@ namespace MQL4CSharp.Base.REST
         /// <li><b>shift</b> :  [in] Number of bars to shift the chart. Positive value means the right shift (to the end of chart), negative value means the left shift (to the beginning of chart). The zero shift can be used to navigate to the beginning or end of chart.</li>
         /// </ul>
         /// </summary>
-        [RESTRoute(Method = HttpMethod.POST, PathInfo = @"^/chartnavigate")]
-        public void Handle_ChartNavigate_1_Default(HttpListenerContext context)
+        [RestRoute(HttpMethod = HttpMethod.POST, PathInfo = @"^/chartnavigate$")]
+        public IHttpContext Handle_ChartNavigate_1_Default(IHttpContext context)
         {
-            this.SendJsonResponse(context, ChartNavigate_1(context, DEFAULT_CHART_ID));
+            return SendJsonResponse(context, ChartNavigate_1);
         }
 
-        private JObject ChartNavigate_1(HttpListenerContext context, long chartId)
+        private async Task<JObject> ChartNavigate_1(MQLRestContext context)
         {
-            MQLCommandManager mqlCommandManager = DLLObjectWrapper.getInstance().getMQLCommandManager(chartId);
-            JObject payload = this.GetJsonPayload(context.Request);
-            JObject result = new JObject();
-            if (payload == null)
-            {
-                result["result"] = PARSE_ERROR;
-                return result;
-            }
+            var payload = context.JsonPayload;
+            var result = context.Result;
+            if (PayloadNotValid(context))
+                return context.Result;
             List<Object> parameters = new List<Object>();
-            parameters.Add(payload["chart_id"]);
-            parameters.Add(payload["position"]);
-            parameters.Add(payload["shift"]);
-            int id = mqlCommandManager.ExecCommand(MQLCommand.ChartNavigate_1, parameters); // MQLCommand ENUM = 79
-            while (mqlCommandManager.IsCommandRunning(id)) ; // block while command is running
-            try
-            {
-                mqlCommandManager.throwExceptionIfErrorResponse(id);
-                result["result"] = (bool)mqlCommandManager.GetCommandResult(id);
-            }
-            catch (Exception e)
-            {
-                result["error"] = MQLExceptions.convertRESTException(e.ToString());
-            }
+            ParamAdd(context, parameters, "chart_id");
+            ParamAdd(context, parameters, "position");
+            ParamAdd(context, parameters, "shift");
+            await ExecCommandAsync(context, MQLCommand.ChartNavigate_1, parameters); // MQLCommand ENUM = 79
+
+            result["result"] = (bool)GetCommandResult(context);
 
             return result;
         }
@@ -4712,11 +3657,10 @@ namespace MQL4CSharp.Base.REST
         /// <ul>
         /// </ul>
         /// </summary>
-        [RESTRoute(Method = HttpMethod.POST, PathInfo = @"^/[0-9]+/chartid")]
-        public void Handle_ChartID_1(HttpListenerContext context)
+        [RestRoute(HttpMethod = HttpMethod.POST, PathInfo = @"^/[0-9]+/chartid$")]
+        public IHttpContext Handle_ChartID_1(IHttpContext context)
         {
-            long chartid = Int64.Parse(context.Request.Url.Segments[1].Replace("/", ""));
-            this.SendJsonResponse(context, ChartID_1(context, chartid));
+            return SendJsonResponse(context, GetChartId(context), ChartID_1);
         }
 
         /// <summary>
@@ -4727,29 +3671,20 @@ namespace MQL4CSharp.Base.REST
         /// <ul>
         /// </ul>
         /// </summary>
-        [RESTRoute(Method = HttpMethod.POST, PathInfo = @"^/chartid")]
-        public void Handle_ChartID_1_Default(HttpListenerContext context)
+        [RestRoute(HttpMethod = HttpMethod.POST, PathInfo = @"^/chartid$")]
+        public IHttpContext Handle_ChartID_1_Default(IHttpContext context)
         {
-            this.SendJsonResponse(context, ChartID_1(context, DEFAULT_CHART_ID));
+            return SendJsonResponse(context, ChartID_1);
         }
 
-        private JObject ChartID_1(HttpListenerContext context, long chartId)
+        private async Task<JObject> ChartID_1(MQLRestContext context)
         {
-            MQLCommandManager mqlCommandManager = DLLObjectWrapper.getInstance().getMQLCommandManager(chartId);
-            JObject payload = this.GetJsonPayload(context.Request);
-            JObject result = new JObject();
+            var payload = context.JsonPayload;
+            var result = context.Result;
             List<Object> parameters = new List<Object>();
-            int id = mqlCommandManager.ExecCommand(MQLCommand.ChartID_1, parameters); // MQLCommand ENUM = 80
-            while (mqlCommandManager.IsCommandRunning(id)) ; // block while command is running
-            try
-            {
-                mqlCommandManager.throwExceptionIfErrorResponse(id);
-                result["result"] = Convert.ToInt64(mqlCommandManager.GetCommandResult(id));
-            }
-            catch (Exception e)
-            {
-                result["error"] = MQLExceptions.convertRESTException(e.ToString());
-            }
+            await ExecCommandAsync(context, MQLCommand.ChartID_1, parameters); // MQLCommand ENUM = 80
+
+            result["result"] = Convert.ToInt64(GetCommandResult(context));
 
             return result;
         }
@@ -4764,11 +3699,10 @@ namespace MQL4CSharp.Base.REST
         /// <li><b>indicator_shortname</b> :  </li>
         /// </ul>
         /// </summary>
-        [RESTRoute(Method = HttpMethod.POST, PathInfo = @"^/[0-9]+/chartindicatordelete")]
-        public void Handle_ChartIndicatorDelete_1(HttpListenerContext context)
+        [RestRoute(HttpMethod = HttpMethod.POST, PathInfo = @"^/[0-9]+/chartindicatordelete$")]
+        public IHttpContext Handle_ChartIndicatorDelete_1(IHttpContext context)
         {
-            long chartid = Int64.Parse(context.Request.Url.Segments[1].Replace("/", ""));
-            this.SendJsonResponse(context, ChartIndicatorDelete_1(context, chartid));
+            return SendJsonResponse(context, GetChartId(context), ChartIndicatorDelete_1);
         }
 
         /// <summary>
@@ -4782,37 +3716,25 @@ namespace MQL4CSharp.Base.REST
         /// <li><b>indicator_shortname</b> :  </li>
         /// </ul>
         /// </summary>
-        [RESTRoute(Method = HttpMethod.POST, PathInfo = @"^/chartindicatordelete")]
-        public void Handle_ChartIndicatorDelete_1_Default(HttpListenerContext context)
+        [RestRoute(HttpMethod = HttpMethod.POST, PathInfo = @"^/chartindicatordelete$")]
+        public IHttpContext Handle_ChartIndicatorDelete_1_Default(IHttpContext context)
         {
-            this.SendJsonResponse(context, ChartIndicatorDelete_1(context, DEFAULT_CHART_ID));
+            return SendJsonResponse(context, ChartIndicatorDelete_1);
         }
 
-        private JObject ChartIndicatorDelete_1(HttpListenerContext context, long chartId)
+        private async Task<JObject> ChartIndicatorDelete_1(MQLRestContext context)
         {
-            MQLCommandManager mqlCommandManager = DLLObjectWrapper.getInstance().getMQLCommandManager(chartId);
-            JObject payload = this.GetJsonPayload(context.Request);
-            JObject result = new JObject();
-            if (payload == null)
-            {
-                result["result"] = PARSE_ERROR;
-                return result;
-            }
+            var payload = context.JsonPayload;
+            var result = context.Result;
+            if (PayloadNotValid(context))
+                return context.Result;
             List<Object> parameters = new List<Object>();
-            parameters.Add(payload["chart_id"]);
-            parameters.Add(payload["sub_window"]);
-            parameters.Add(payload["indicator_shortname"]);
-            int id = mqlCommandManager.ExecCommand(MQLCommand.ChartIndicatorDelete_1, parameters); // MQLCommand ENUM = 81
-            while (mqlCommandManager.IsCommandRunning(id)) ; // block while command is running
-            try
-            {
-                mqlCommandManager.throwExceptionIfErrorResponse(id);
-                result["result"] = (bool)mqlCommandManager.GetCommandResult(id);
-            }
-            catch (Exception e)
-            {
-                result["error"] = MQLExceptions.convertRESTException(e.ToString());
-            }
+            ParamAdd(context, parameters, "chart_id");
+            ParamAdd(context, parameters, "sub_window");
+            ParamAdd(context, parameters, "indicator_shortname");
+            await ExecCommandAsync(context, MQLCommand.ChartIndicatorDelete_1, parameters); // MQLCommand ENUM = 81
+
+            result["result"] = (bool)GetCommandResult(context);
 
             return result;
         }
@@ -4827,11 +3749,10 @@ namespace MQL4CSharp.Base.REST
         /// <li><b>index</b> :  [in] the index of the indicator in the list of indicators. The numeration of indicators start with zero, i.e. the first indicator in the list has the 0 index. To obtain the number of indicators in the list use the function.</li>
         /// </ul>
         /// </summary>
-        [RESTRoute(Method = HttpMethod.POST, PathInfo = @"^/[0-9]+/chartindicatorname")]
-        public void Handle_ChartIndicatorName_1(HttpListenerContext context)
+        [RestRoute(HttpMethod = HttpMethod.POST, PathInfo = @"^/[0-9]+/chartindicatorname$")]
+        public IHttpContext Handle_ChartIndicatorName_1(IHttpContext context)
         {
-            long chartid = Int64.Parse(context.Request.Url.Segments[1].Replace("/", ""));
-            this.SendJsonResponse(context, ChartIndicatorName_1(context, chartid));
+            return SendJsonResponse(context, GetChartId(context), ChartIndicatorName_1);
         }
 
         /// <summary>
@@ -4845,37 +3766,25 @@ namespace MQL4CSharp.Base.REST
         /// <li><b>index</b> :  [in] the index of the indicator in the list of indicators. The numeration of indicators start with zero, i.e. the first indicator in the list has the 0 index. To obtain the number of indicators in the list use the function.</li>
         /// </ul>
         /// </summary>
-        [RESTRoute(Method = HttpMethod.POST, PathInfo = @"^/chartindicatorname")]
-        public void Handle_ChartIndicatorName_1_Default(HttpListenerContext context)
+        [RestRoute(HttpMethod = HttpMethod.POST, PathInfo = @"^/chartindicatorname$")]
+        public IHttpContext Handle_ChartIndicatorName_1_Default(IHttpContext context)
         {
-            this.SendJsonResponse(context, ChartIndicatorName_1(context, DEFAULT_CHART_ID));
+            return SendJsonResponse(context, ChartIndicatorName_1);
         }
 
-        private JObject ChartIndicatorName_1(HttpListenerContext context, long chartId)
+        private async Task<JObject> ChartIndicatorName_1(MQLRestContext context)
         {
-            MQLCommandManager mqlCommandManager = DLLObjectWrapper.getInstance().getMQLCommandManager(chartId);
-            JObject payload = this.GetJsonPayload(context.Request);
-            JObject result = new JObject();
-            if (payload == null)
-            {
-                result["result"] = PARSE_ERROR;
-                return result;
-            }
+            var payload = context.JsonPayload;
+            var result = context.Result;
+            if (PayloadNotValid(context))
+                return context.Result;
             List<Object> parameters = new List<Object>();
-            parameters.Add(payload["chart_id"]);
-            parameters.Add(payload["sub_window"]);
-            parameters.Add(payload["index"]);
-            int id = mqlCommandManager.ExecCommand(MQLCommand.ChartIndicatorName_1, parameters); // MQLCommand ENUM = 82
-            while (mqlCommandManager.IsCommandRunning(id)) ; // block while command is running
-            try
-            {
-                mqlCommandManager.throwExceptionIfErrorResponse(id);
-                result["result"] = (string)mqlCommandManager.GetCommandResult(id);
-            }
-            catch (Exception e)
-            {
-                result["error"] = MQLExceptions.convertRESTException(e.ToString());
-            }
+            ParamAdd(context, parameters, "chart_id");
+            ParamAdd(context, parameters, "sub_window");
+            ParamAdd(context, parameters, "index");
+            await ExecCommandAsync(context, MQLCommand.ChartIndicatorName_1, parameters); // MQLCommand ENUM = 82
+
+            result["result"] = (string)GetCommandResult(context);
 
             return result;
         }
@@ -4889,11 +3798,10 @@ namespace MQL4CSharp.Base.REST
         /// <li><b>sub_window</b> :  [in] Number of the chart subwindow. 0 denotes the main chart subwindow.</li>
         /// </ul>
         /// </summary>
-        [RESTRoute(Method = HttpMethod.POST, PathInfo = @"^/[0-9]+/chartindicatorstotal")]
-        public void Handle_ChartIndicatorsTotal_1(HttpListenerContext context)
+        [RestRoute(HttpMethod = HttpMethod.POST, PathInfo = @"^/[0-9]+/chartindicatorstotal$")]
+        public IHttpContext Handle_ChartIndicatorsTotal_1(IHttpContext context)
         {
-            long chartid = Int64.Parse(context.Request.Url.Segments[1].Replace("/", ""));
-            this.SendJsonResponse(context, ChartIndicatorsTotal_1(context, chartid));
+            return SendJsonResponse(context, GetChartId(context), ChartIndicatorsTotal_1);
         }
 
         /// <summary>
@@ -4906,36 +3814,24 @@ namespace MQL4CSharp.Base.REST
         /// <li><b>sub_window</b> :  [in] Number of the chart subwindow. 0 denotes the main chart subwindow.</li>
         /// </ul>
         /// </summary>
-        [RESTRoute(Method = HttpMethod.POST, PathInfo = @"^/chartindicatorstotal")]
-        public void Handle_ChartIndicatorsTotal_1_Default(HttpListenerContext context)
+        [RestRoute(HttpMethod = HttpMethod.POST, PathInfo = @"^/chartindicatorstotal$")]
+        public IHttpContext Handle_ChartIndicatorsTotal_1_Default(IHttpContext context)
         {
-            this.SendJsonResponse(context, ChartIndicatorsTotal_1(context, DEFAULT_CHART_ID));
+            return SendJsonResponse(context, ChartIndicatorsTotal_1);
         }
 
-        private JObject ChartIndicatorsTotal_1(HttpListenerContext context, long chartId)
+        private async Task<JObject> ChartIndicatorsTotal_1(MQLRestContext context)
         {
-            MQLCommandManager mqlCommandManager = DLLObjectWrapper.getInstance().getMQLCommandManager(chartId);
-            JObject payload = this.GetJsonPayload(context.Request);
-            JObject result = new JObject();
-            if (payload == null)
-            {
-                result["result"] = PARSE_ERROR;
-                return result;
-            }
+            var payload = context.JsonPayload;
+            var result = context.Result;
+            if (PayloadNotValid(context))
+                return context.Result;
             List<Object> parameters = new List<Object>();
-            parameters.Add(payload["chart_id"]);
-            parameters.Add(payload["sub_window"]);
-            int id = mqlCommandManager.ExecCommand(MQLCommand.ChartIndicatorsTotal_1, parameters); // MQLCommand ENUM = 83
-            while (mqlCommandManager.IsCommandRunning(id)) ; // block while command is running
-            try
-            {
-                mqlCommandManager.throwExceptionIfErrorResponse(id);
-                result["result"] = Convert.ToInt32(mqlCommandManager.GetCommandResult(id));
-            }
-            catch (Exception e)
-            {
-                result["error"] = MQLExceptions.convertRESTException(e.ToString());
-            }
+            ParamAdd(context, parameters, "chart_id");
+            ParamAdd(context, parameters, "sub_window");
+            await ExecCommandAsync(context, MQLCommand.ChartIndicatorsTotal_1, parameters); // MQLCommand ENUM = 83
+
+            result["result"] = Convert.ToInt32(GetCommandResult(context));
 
             return result;
         }
@@ -4947,11 +3843,10 @@ namespace MQL4CSharp.Base.REST
         /// <ul>
         /// </ul>
         /// </summary>
-        [RESTRoute(Method = HttpMethod.POST, PathInfo = @"^/[0-9]+/chartwindowondropped")]
-        public void Handle_ChartWindowOnDropped_1(HttpListenerContext context)
+        [RestRoute(HttpMethod = HttpMethod.POST, PathInfo = @"^/[0-9]+/chartwindowondropped$")]
+        public IHttpContext Handle_ChartWindowOnDropped_1(IHttpContext context)
         {
-            long chartid = Int64.Parse(context.Request.Url.Segments[1].Replace("/", ""));
-            this.SendJsonResponse(context, ChartWindowOnDropped_1(context, chartid));
+            return SendJsonResponse(context, GetChartId(context), ChartWindowOnDropped_1);
         }
 
         /// <summary>
@@ -4962,29 +3857,20 @@ namespace MQL4CSharp.Base.REST
         /// <ul>
         /// </ul>
         /// </summary>
-        [RESTRoute(Method = HttpMethod.POST, PathInfo = @"^/chartwindowondropped")]
-        public void Handle_ChartWindowOnDropped_1_Default(HttpListenerContext context)
+        [RestRoute(HttpMethod = HttpMethod.POST, PathInfo = @"^/chartwindowondropped$")]
+        public IHttpContext Handle_ChartWindowOnDropped_1_Default(IHttpContext context)
         {
-            this.SendJsonResponse(context, ChartWindowOnDropped_1(context, DEFAULT_CHART_ID));
+            return SendJsonResponse(context, ChartWindowOnDropped_1);
         }
 
-        private JObject ChartWindowOnDropped_1(HttpListenerContext context, long chartId)
+        private async Task<JObject> ChartWindowOnDropped_1(MQLRestContext context)
         {
-            MQLCommandManager mqlCommandManager = DLLObjectWrapper.getInstance().getMQLCommandManager(chartId);
-            JObject payload = this.GetJsonPayload(context.Request);
-            JObject result = new JObject();
+            var payload = context.JsonPayload;
+            var result = context.Result;
             List<Object> parameters = new List<Object>();
-            int id = mqlCommandManager.ExecCommand(MQLCommand.ChartWindowOnDropped_1, parameters); // MQLCommand ENUM = 84
-            while (mqlCommandManager.IsCommandRunning(id)) ; // block while command is running
-            try
-            {
-                mqlCommandManager.throwExceptionIfErrorResponse(id);
-                result["result"] = Convert.ToInt32(mqlCommandManager.GetCommandResult(id));
-            }
-            catch (Exception e)
-            {
-                result["error"] = MQLExceptions.convertRESTException(e.ToString());
-            }
+            await ExecCommandAsync(context, MQLCommand.ChartWindowOnDropped_1, parameters); // MQLCommand ENUM = 84
+
+            result["result"] = Convert.ToInt32(GetCommandResult(context));
 
             return result;
         }
@@ -4996,11 +3882,10 @@ namespace MQL4CSharp.Base.REST
         /// <ul>
         /// </ul>
         /// </summary>
-        [RESTRoute(Method = HttpMethod.POST, PathInfo = @"^/[0-9]+/chartpriceondropped")]
-        public void Handle_ChartPriceOnDropped_1(HttpListenerContext context)
+        [RestRoute(HttpMethod = HttpMethod.POST, PathInfo = @"^/[0-9]+/chartpriceondropped$")]
+        public IHttpContext Handle_ChartPriceOnDropped_1(IHttpContext context)
         {
-            long chartid = Int64.Parse(context.Request.Url.Segments[1].Replace("/", ""));
-            this.SendJsonResponse(context, ChartPriceOnDropped_1(context, chartid));
+            return SendJsonResponse(context, GetChartId(context), ChartPriceOnDropped_1);
         }
 
         /// <summary>
@@ -5011,29 +3896,20 @@ namespace MQL4CSharp.Base.REST
         /// <ul>
         /// </ul>
         /// </summary>
-        [RESTRoute(Method = HttpMethod.POST, PathInfo = @"^/chartpriceondropped")]
-        public void Handle_ChartPriceOnDropped_1_Default(HttpListenerContext context)
+        [RestRoute(HttpMethod = HttpMethod.POST, PathInfo = @"^/chartpriceondropped$")]
+        public IHttpContext Handle_ChartPriceOnDropped_1_Default(IHttpContext context)
         {
-            this.SendJsonResponse(context, ChartPriceOnDropped_1(context, DEFAULT_CHART_ID));
+            return SendJsonResponse(context, ChartPriceOnDropped_1);
         }
 
-        private JObject ChartPriceOnDropped_1(HttpListenerContext context, long chartId)
+        private async Task<JObject> ChartPriceOnDropped_1(MQLRestContext context)
         {
-            MQLCommandManager mqlCommandManager = DLLObjectWrapper.getInstance().getMQLCommandManager(chartId);
-            JObject payload = this.GetJsonPayload(context.Request);
-            JObject result = new JObject();
+            var payload = context.JsonPayload;
+            var result = context.Result;
             List<Object> parameters = new List<Object>();
-            int id = mqlCommandManager.ExecCommand(MQLCommand.ChartPriceOnDropped_1, parameters); // MQLCommand ENUM = 85
-            while (mqlCommandManager.IsCommandRunning(id)) ; // block while command is running
-            try
-            {
-                mqlCommandManager.throwExceptionIfErrorResponse(id);
-                result["result"] = Convert.ToDecimal(mqlCommandManager.GetCommandResult(id));
-            }
-            catch (Exception e)
-            {
-                result["error"] = MQLExceptions.convertRESTException(e.ToString());
-            }
+            await ExecCommandAsync(context, MQLCommand.ChartPriceOnDropped_1, parameters); // MQLCommand ENUM = 85
+
+            result["result"] = Convert.ToDecimal(GetCommandResult(context));
 
             return result;
         }
@@ -5045,11 +3921,10 @@ namespace MQL4CSharp.Base.REST
         /// <ul>
         /// </ul>
         /// </summary>
-        [RESTRoute(Method = HttpMethod.POST, PathInfo = @"^/[0-9]+/charttimeondropped")]
-        public void Handle_ChartTimeOnDropped_1(HttpListenerContext context)
+        [RestRoute(HttpMethod = HttpMethod.POST, PathInfo = @"^/[0-9]+/charttimeondropped$")]
+        public IHttpContext Handle_ChartTimeOnDropped_1(IHttpContext context)
         {
-            long chartid = Int64.Parse(context.Request.Url.Segments[1].Replace("/", ""));
-            this.SendJsonResponse(context, ChartTimeOnDropped_1(context, chartid));
+            return SendJsonResponse(context, GetChartId(context), ChartTimeOnDropped_1);
         }
 
         /// <summary>
@@ -5060,29 +3935,20 @@ namespace MQL4CSharp.Base.REST
         /// <ul>
         /// </ul>
         /// </summary>
-        [RESTRoute(Method = HttpMethod.POST, PathInfo = @"^/charttimeondropped")]
-        public void Handle_ChartTimeOnDropped_1_Default(HttpListenerContext context)
+        [RestRoute(HttpMethod = HttpMethod.POST, PathInfo = @"^/charttimeondropped$")]
+        public IHttpContext Handle_ChartTimeOnDropped_1_Default(IHttpContext context)
         {
-            this.SendJsonResponse(context, ChartTimeOnDropped_1(context, DEFAULT_CHART_ID));
+            return SendJsonResponse(context, ChartTimeOnDropped_1);
         }
 
-        private JObject ChartTimeOnDropped_1(HttpListenerContext context, long chartId)
+        private async Task<JObject> ChartTimeOnDropped_1(MQLRestContext context)
         {
-            MQLCommandManager mqlCommandManager = DLLObjectWrapper.getInstance().getMQLCommandManager(chartId);
-            JObject payload = this.GetJsonPayload(context.Request);
-            JObject result = new JObject();
+            var payload = context.JsonPayload;
+            var result = context.Result;
             List<Object> parameters = new List<Object>();
-            int id = mqlCommandManager.ExecCommand(MQLCommand.ChartTimeOnDropped_1, parameters); // MQLCommand ENUM = 86
-            while (mqlCommandManager.IsCommandRunning(id)) ; // block while command is running
-            try
-            {
-                mqlCommandManager.throwExceptionIfErrorResponse(id);
-                result["result"] = (DateTime)mqlCommandManager.GetCommandResult(id);
-            }
-            catch (Exception e)
-            {
-                result["error"] = MQLExceptions.convertRESTException(e.ToString());
-            }
+            await ExecCommandAsync(context, MQLCommand.ChartTimeOnDropped_1, parameters); // MQLCommand ENUM = 86
+
+            result["result"] = (DateTime)GetCommandResult(context);
 
             return result;
         }
@@ -5094,11 +3960,10 @@ namespace MQL4CSharp.Base.REST
         /// <ul>
         /// </ul>
         /// </summary>
-        [RESTRoute(Method = HttpMethod.POST, PathInfo = @"^/[0-9]+/chartxondropped")]
-        public void Handle_ChartXOnDropped_1(HttpListenerContext context)
+        [RestRoute(HttpMethod = HttpMethod.POST, PathInfo = @"^/[0-9]+/chartxondropped$")]
+        public IHttpContext Handle_ChartXOnDropped_1(IHttpContext context)
         {
-            long chartid = Int64.Parse(context.Request.Url.Segments[1].Replace("/", ""));
-            this.SendJsonResponse(context, ChartXOnDropped_1(context, chartid));
+            return SendJsonResponse(context, GetChartId(context), ChartXOnDropped_1);
         }
 
         /// <summary>
@@ -5109,29 +3974,20 @@ namespace MQL4CSharp.Base.REST
         /// <ul>
         /// </ul>
         /// </summary>
-        [RESTRoute(Method = HttpMethod.POST, PathInfo = @"^/chartxondropped")]
-        public void Handle_ChartXOnDropped_1_Default(HttpListenerContext context)
+        [RestRoute(HttpMethod = HttpMethod.POST, PathInfo = @"^/chartxondropped$")]
+        public IHttpContext Handle_ChartXOnDropped_1_Default(IHttpContext context)
         {
-            this.SendJsonResponse(context, ChartXOnDropped_1(context, DEFAULT_CHART_ID));
+            return SendJsonResponse(context, ChartXOnDropped_1);
         }
 
-        private JObject ChartXOnDropped_1(HttpListenerContext context, long chartId)
+        private async Task<JObject> ChartXOnDropped_1(MQLRestContext context)
         {
-            MQLCommandManager mqlCommandManager = DLLObjectWrapper.getInstance().getMQLCommandManager(chartId);
-            JObject payload = this.GetJsonPayload(context.Request);
-            JObject result = new JObject();
+            var payload = context.JsonPayload;
+            var result = context.Result;
             List<Object> parameters = new List<Object>();
-            int id = mqlCommandManager.ExecCommand(MQLCommand.ChartXOnDropped_1, parameters); // MQLCommand ENUM = 87
-            while (mqlCommandManager.IsCommandRunning(id)) ; // block while command is running
-            try
-            {
-                mqlCommandManager.throwExceptionIfErrorResponse(id);
-                result["result"] = Convert.ToInt32(mqlCommandManager.GetCommandResult(id));
-            }
-            catch (Exception e)
-            {
-                result["error"] = MQLExceptions.convertRESTException(e.ToString());
-            }
+            await ExecCommandAsync(context, MQLCommand.ChartXOnDropped_1, parameters); // MQLCommand ENUM = 87
+
+            result["result"] = Convert.ToInt32(GetCommandResult(context));
 
             return result;
         }
@@ -5143,11 +3999,10 @@ namespace MQL4CSharp.Base.REST
         /// <ul>
         /// </ul>
         /// </summary>
-        [RESTRoute(Method = HttpMethod.POST, PathInfo = @"^/[0-9]+/chartyondropped")]
-        public void Handle_ChartYOnDropped_1(HttpListenerContext context)
+        [RestRoute(HttpMethod = HttpMethod.POST, PathInfo = @"^/[0-9]+/chartyondropped$")]
+        public IHttpContext Handle_ChartYOnDropped_1(IHttpContext context)
         {
-            long chartid = Int64.Parse(context.Request.Url.Segments[1].Replace("/", ""));
-            this.SendJsonResponse(context, ChartYOnDropped_1(context, chartid));
+            return SendJsonResponse(context, GetChartId(context), ChartYOnDropped_1);
         }
 
         /// <summary>
@@ -5158,29 +4013,20 @@ namespace MQL4CSharp.Base.REST
         /// <ul>
         /// </ul>
         /// </summary>
-        [RESTRoute(Method = HttpMethod.POST, PathInfo = @"^/chartyondropped")]
-        public void Handle_ChartYOnDropped_1_Default(HttpListenerContext context)
+        [RestRoute(HttpMethod = HttpMethod.POST, PathInfo = @"^/chartyondropped$")]
+        public IHttpContext Handle_ChartYOnDropped_1_Default(IHttpContext context)
         {
-            this.SendJsonResponse(context, ChartYOnDropped_1(context, DEFAULT_CHART_ID));
+            return SendJsonResponse(context, ChartYOnDropped_1);
         }
 
-        private JObject ChartYOnDropped_1(HttpListenerContext context, long chartId)
+        private async Task<JObject> ChartYOnDropped_1(MQLRestContext context)
         {
-            MQLCommandManager mqlCommandManager = DLLObjectWrapper.getInstance().getMQLCommandManager(chartId);
-            JObject payload = this.GetJsonPayload(context.Request);
-            JObject result = new JObject();
+            var payload = context.JsonPayload;
+            var result = context.Result;
             List<Object> parameters = new List<Object>();
-            int id = mqlCommandManager.ExecCommand(MQLCommand.ChartYOnDropped_1, parameters); // MQLCommand ENUM = 88
-            while (mqlCommandManager.IsCommandRunning(id)) ; // block while command is running
-            try
-            {
-                mqlCommandManager.throwExceptionIfErrorResponse(id);
-                result["result"] = Convert.ToInt32(mqlCommandManager.GetCommandResult(id));
-            }
-            catch (Exception e)
-            {
-                result["error"] = MQLExceptions.convertRESTException(e.ToString());
-            }
+            await ExecCommandAsync(context, MQLCommand.ChartYOnDropped_1, parameters); // MQLCommand ENUM = 88
+
+            result["result"] = Convert.ToInt32(GetCommandResult(context));
 
             return result;
         }
@@ -5195,11 +4041,10 @@ namespace MQL4CSharp.Base.REST
         /// <li><b>period</b> :  [in] Chart period (timeframe). Can be one of the values. 0 means the current chart period.</li>
         /// </ul>
         /// </summary>
-        [RESTRoute(Method = HttpMethod.POST, PathInfo = @"^/[0-9]+/chartsetsymbolperiod")]
-        public void Handle_ChartSetSymbolPeriod_1(HttpListenerContext context)
+        [RestRoute(HttpMethod = HttpMethod.POST, PathInfo = @"^/[0-9]+/chartsetsymbolperiod$")]
+        public IHttpContext Handle_ChartSetSymbolPeriod_1(IHttpContext context)
         {
-            long chartid = Int64.Parse(context.Request.Url.Segments[1].Replace("/", ""));
-            this.SendJsonResponse(context, ChartSetSymbolPeriod_1(context, chartid));
+            return SendJsonResponse(context, GetChartId(context), ChartSetSymbolPeriod_1);
         }
 
         /// <summary>
@@ -5213,37 +4058,25 @@ namespace MQL4CSharp.Base.REST
         /// <li><b>period</b> :  [in] Chart period (timeframe). Can be one of the values. 0 means the current chart period.</li>
         /// </ul>
         /// </summary>
-        [RESTRoute(Method = HttpMethod.POST, PathInfo = @"^/chartsetsymbolperiod")]
-        public void Handle_ChartSetSymbolPeriod_1_Default(HttpListenerContext context)
+        [RestRoute(HttpMethod = HttpMethod.POST, PathInfo = @"^/chartsetsymbolperiod$")]
+        public IHttpContext Handle_ChartSetSymbolPeriod_1_Default(IHttpContext context)
         {
-            this.SendJsonResponse(context, ChartSetSymbolPeriod_1(context, DEFAULT_CHART_ID));
+            return SendJsonResponse(context, ChartSetSymbolPeriod_1);
         }
 
-        private JObject ChartSetSymbolPeriod_1(HttpListenerContext context, long chartId)
+        private async Task<JObject> ChartSetSymbolPeriod_1(MQLRestContext context)
         {
-            MQLCommandManager mqlCommandManager = DLLObjectWrapper.getInstance().getMQLCommandManager(chartId);
-            JObject payload = this.GetJsonPayload(context.Request);
-            JObject result = new JObject();
-            if (payload == null)
-            {
-                result["result"] = PARSE_ERROR;
-                return result;
-            }
+            var payload = context.JsonPayload;
+            var result = context.Result;
+            if (PayloadNotValid(context))
+                return context.Result;
             List<Object> parameters = new List<Object>();
-            parameters.Add(payload["chart_id"]);
-            parameters.Add(payload["symbol"]);
-            parameters.Add(payload["period"]);
-            int id = mqlCommandManager.ExecCommand(MQLCommand.ChartSetSymbolPeriod_1, parameters); // MQLCommand ENUM = 89
-            while (mqlCommandManager.IsCommandRunning(id)) ; // block while command is running
-            try
-            {
-                mqlCommandManager.throwExceptionIfErrorResponse(id);
-                result["result"] = (bool)mqlCommandManager.GetCommandResult(id);
-            }
-            catch (Exception e)
-            {
-                result["error"] = MQLExceptions.convertRESTException(e.ToString());
-            }
+            ParamAdd(context, parameters, "chart_id");
+            ParamAdd(context, parameters, "symbol");
+            ParamAdd(context, parameters, "period");
+            await ExecCommandAsync(context, MQLCommand.ChartSetSymbolPeriod_1, parameters); // MQLCommand ENUM = 89
+
+            result["result"] = (bool)GetCommandResult(context);
 
             return result;
         }
@@ -5260,11 +4093,10 @@ namespace MQL4CSharp.Base.REST
         /// <li><b>align_mode</b> :  [in] Output mode of a narrow screenshot. A value of the enumeration. ALIGN_RIGHT means align to the right margin (the output from the end). ALIGN_LEFT means Left justify.</li>
         /// </ul>
         /// </summary>
-        [RESTRoute(Method = HttpMethod.POST, PathInfo = @"^/[0-9]+/chartscreenshot")]
-        public void Handle_ChartScreenShot_1(HttpListenerContext context)
+        [RestRoute(HttpMethod = HttpMethod.POST, PathInfo = @"^/[0-9]+/chartscreenshot$")]
+        public IHttpContext Handle_ChartScreenShot_1(IHttpContext context)
         {
-            long chartid = Int64.Parse(context.Request.Url.Segments[1].Replace("/", ""));
-            this.SendJsonResponse(context, ChartScreenShot_1(context, chartid));
+            return SendJsonResponse(context, GetChartId(context), ChartScreenShot_1);
         }
 
         /// <summary>
@@ -5280,45 +4112,29 @@ namespace MQL4CSharp.Base.REST
         /// <li><b>align_mode</b> :  [in] Output mode of a narrow screenshot. A value of the enumeration. ALIGN_RIGHT means align to the right margin (the output from the end). ALIGN_LEFT means Left justify.</li>
         /// </ul>
         /// </summary>
-        [RESTRoute(Method = HttpMethod.POST, PathInfo = @"^/chartscreenshot")]
-        public void Handle_ChartScreenShot_1_Default(HttpListenerContext context)
+        [RestRoute(HttpMethod = HttpMethod.POST, PathInfo = @"^/chartscreenshot$")]
+        public IHttpContext Handle_ChartScreenShot_1_Default(IHttpContext context)
         {
-            this.SendJsonResponse(context, ChartScreenShot_1(context, DEFAULT_CHART_ID));
+            return SendJsonResponse(context, ChartScreenShot_1);
         }
 
-        private JObject ChartScreenShot_1(HttpListenerContext context, long chartId)
+        private async Task<JObject> ChartScreenShot_1(MQLRestContext context)
         {
-            MQLCommandManager mqlCommandManager = DLLObjectWrapper.getInstance().getMQLCommandManager(chartId);
-            JObject payload = this.GetJsonPayload(context.Request);
-            JObject result = new JObject();
-            if (payload == null)
-            {
-                result["result"] = PARSE_ERROR;
-                return result;
-            }
+            var payload = context.JsonPayload;
+            var result = context.Result;
+            if (PayloadNotValid(context))
+                return context.Result;
 
-            SetFileNameFull(payload, mqlCommandManager, "MQL4\\Files", "png,gif,bmp");
+            await SetFileNameInfoAsOutput(context, "MQL4\\Files", "png,gif,bmp");
             List<Object> parameters = new List<Object>();
-            parameters.Add(payload["chart_id"]);
-            parameters.Add(payload["filename"]);
-            parameters.Add(payload["width"]);
-            parameters.Add(payload["height"]);
-            parameters.Add(payload["align_mode"]);
-            int id = mqlCommandManager.ExecCommand(MQLCommand.ChartScreenShot_1, parameters); // MQLCommand ENUM = 90
-            while (mqlCommandManager.IsCommandRunning(id)) ; // block while command is running
-            try
-            {
-                mqlCommandManager.throwExceptionIfErrorResponse(id);
-                result["result"] = (bool)mqlCommandManager.GetCommandResult(id);
-            }
-            catch (Exception e)
-            {
-                result["error"] = MQLExceptions.convertRESTException(e.ToString());
-            }
-            finally
-            {
-                EndFileNameProcess(payload, result, true);
-            }
+            ParamAdd(context, parameters, "chart_id");
+            ParamAdd(context, parameters, "filename");
+            ParamAdd(context, parameters, "width");
+            ParamAdd(context, parameters, "height");
+            ParamAdd(context, parameters, "align_mode");
+            await ExecCommandAsync(context, MQLCommand.ChartScreenShot_1, parameters); // MQLCommand ENUM = 90
+
+            result["result"] = (bool)GetCommandResult(context);
 
             return result;
         }
@@ -5330,11 +4146,10 @@ namespace MQL4CSharp.Base.REST
         /// <ul>
         /// </ul>
         /// </summary>
-        [RESTRoute(Method = HttpMethod.POST, PathInfo = @"^/[0-9]+/windowbarsperchart")]
-        public void Handle_WindowBarsPerChart_1(HttpListenerContext context)
+        [RestRoute(HttpMethod = HttpMethod.POST, PathInfo = @"^/[0-9]+/windowbarsperchart$")]
+        public IHttpContext Handle_WindowBarsPerChart_1(IHttpContext context)
         {
-            long chartid = Int64.Parse(context.Request.Url.Segments[1].Replace("/", ""));
-            this.SendJsonResponse(context, WindowBarsPerChart_1(context, chartid));
+            return SendJsonResponse(context, GetChartId(context), WindowBarsPerChart_1);
         }
 
         /// <summary>
@@ -5345,29 +4160,20 @@ namespace MQL4CSharp.Base.REST
         /// <ul>
         /// </ul>
         /// </summary>
-        [RESTRoute(Method = HttpMethod.POST, PathInfo = @"^/windowbarsperchart")]
-        public void Handle_WindowBarsPerChart_1_Default(HttpListenerContext context)
+        [RestRoute(HttpMethod = HttpMethod.POST, PathInfo = @"^/windowbarsperchart$")]
+        public IHttpContext Handle_WindowBarsPerChart_1_Default(IHttpContext context)
         {
-            this.SendJsonResponse(context, WindowBarsPerChart_1(context, DEFAULT_CHART_ID));
+            return SendJsonResponse(context, WindowBarsPerChart_1);
         }
 
-        private JObject WindowBarsPerChart_1(HttpListenerContext context, long chartId)
+        private async Task<JObject> WindowBarsPerChart_1(MQLRestContext context)
         {
-            MQLCommandManager mqlCommandManager = DLLObjectWrapper.getInstance().getMQLCommandManager(chartId);
-            JObject payload = this.GetJsonPayload(context.Request);
-            JObject result = new JObject();
+            var payload = context.JsonPayload;
+            var result = context.Result;
             List<Object> parameters = new List<Object>();
-            int id = mqlCommandManager.ExecCommand(MQLCommand.WindowBarsPerChart_1, parameters); // MQLCommand ENUM = 91
-            while (mqlCommandManager.IsCommandRunning(id)) ; // block while command is running
-            try
-            {
-                mqlCommandManager.throwExceptionIfErrorResponse(id);
-                result["result"] = Convert.ToInt32(mqlCommandManager.GetCommandResult(id));
-            }
-            catch (Exception e)
-            {
-                result["error"] = MQLExceptions.convertRESTException(e.ToString());
-            }
+            await ExecCommandAsync(context, MQLCommand.WindowBarsPerChart_1, parameters); // MQLCommand ENUM = 91
+
+            result["result"] = Convert.ToInt32(GetCommandResult(context));
 
             return result;
         }
@@ -5379,11 +4185,10 @@ namespace MQL4CSharp.Base.REST
         /// <ul>
         /// </ul>
         /// </summary>
-        [RESTRoute(Method = HttpMethod.POST, PathInfo = @"^/[0-9]+/windowexpertname")]
-        public void Handle_WindowExpertName_1(HttpListenerContext context)
+        [RestRoute(HttpMethod = HttpMethod.POST, PathInfo = @"^/[0-9]+/windowexpertname$")]
+        public IHttpContext Handle_WindowExpertName_1(IHttpContext context)
         {
-            long chartid = Int64.Parse(context.Request.Url.Segments[1].Replace("/", ""));
-            this.SendJsonResponse(context, WindowExpertName_1(context, chartid));
+            return SendJsonResponse(context, GetChartId(context), WindowExpertName_1);
         }
 
         /// <summary>
@@ -5394,29 +4199,20 @@ namespace MQL4CSharp.Base.REST
         /// <ul>
         /// </ul>
         /// </summary>
-        [RESTRoute(Method = HttpMethod.POST, PathInfo = @"^/windowexpertname")]
-        public void Handle_WindowExpertName_1_Default(HttpListenerContext context)
+        [RestRoute(HttpMethod = HttpMethod.POST, PathInfo = @"^/windowexpertname$")]
+        public IHttpContext Handle_WindowExpertName_1_Default(IHttpContext context)
         {
-            this.SendJsonResponse(context, WindowExpertName_1(context, DEFAULT_CHART_ID));
+            return SendJsonResponse(context, WindowExpertName_1);
         }
 
-        private JObject WindowExpertName_1(HttpListenerContext context, long chartId)
+        private async Task<JObject> WindowExpertName_1(MQLRestContext context)
         {
-            MQLCommandManager mqlCommandManager = DLLObjectWrapper.getInstance().getMQLCommandManager(chartId);
-            JObject payload = this.GetJsonPayload(context.Request);
-            JObject result = new JObject();
+            var payload = context.JsonPayload;
+            var result = context.Result;
             List<Object> parameters = new List<Object>();
-            int id = mqlCommandManager.ExecCommand(MQLCommand.WindowExpertName_1, parameters); // MQLCommand ENUM = 92
-            while (mqlCommandManager.IsCommandRunning(id)) ; // block while command is running
-            try
-            {
-                mqlCommandManager.throwExceptionIfErrorResponse(id);
-                result["result"] = (string)mqlCommandManager.GetCommandResult(id);
-            }
-            catch (Exception e)
-            {
-                result["error"] = MQLExceptions.convertRESTException(e.ToString());
-            }
+            await ExecCommandAsync(context, MQLCommand.WindowExpertName_1, parameters); // MQLCommand ENUM = 92
+
+            result["result"] = (string)GetCommandResult(context);
 
             return result;
         }
@@ -5429,11 +4225,10 @@ namespace MQL4CSharp.Base.REST
         /// <li><b>name</b> :  [in] Indicator short name.</li>
         /// </ul>
         /// </summary>
-        [RESTRoute(Method = HttpMethod.POST, PathInfo = @"^/[0-9]+/windowfind")]
-        public void Handle_WindowFind_1(HttpListenerContext context)
+        [RestRoute(HttpMethod = HttpMethod.POST, PathInfo = @"^/[0-9]+/windowfind$")]
+        public IHttpContext Handle_WindowFind_1(IHttpContext context)
         {
-            long chartid = Int64.Parse(context.Request.Url.Segments[1].Replace("/", ""));
-            this.SendJsonResponse(context, WindowFind_1(context, chartid));
+            return SendJsonResponse(context, GetChartId(context), WindowFind_1);
         }
 
         /// <summary>
@@ -5445,35 +4240,23 @@ namespace MQL4CSharp.Base.REST
         /// <li><b>name</b> :  [in] Indicator short name.</li>
         /// </ul>
         /// </summary>
-        [RESTRoute(Method = HttpMethod.POST, PathInfo = @"^/windowfind")]
-        public void Handle_WindowFind_1_Default(HttpListenerContext context)
+        [RestRoute(HttpMethod = HttpMethod.POST, PathInfo = @"^/windowfind$")]
+        public IHttpContext Handle_WindowFind_1_Default(IHttpContext context)
         {
-            this.SendJsonResponse(context, WindowFind_1(context, DEFAULT_CHART_ID));
+            return SendJsonResponse(context, WindowFind_1);
         }
 
-        private JObject WindowFind_1(HttpListenerContext context, long chartId)
+        private async Task<JObject> WindowFind_1(MQLRestContext context)
         {
-            MQLCommandManager mqlCommandManager = DLLObjectWrapper.getInstance().getMQLCommandManager(chartId);
-            JObject payload = this.GetJsonPayload(context.Request);
-            JObject result = new JObject();
-            if (payload == null)
-            {
-                result["result"] = PARSE_ERROR;
-                return result;
-            }
+            var payload = context.JsonPayload;
+            var result = context.Result;
+            if (PayloadNotValid(context))
+                return context.Result;
             List<Object> parameters = new List<Object>();
-            parameters.Add(payload["name"]);
-            int id = mqlCommandManager.ExecCommand(MQLCommand.WindowFind_1, parameters); // MQLCommand ENUM = 93
-            while (mqlCommandManager.IsCommandRunning(id)) ; // block while command is running
-            try
-            {
-                mqlCommandManager.throwExceptionIfErrorResponse(id);
-                result["result"] = Convert.ToInt32(mqlCommandManager.GetCommandResult(id));
-            }
-            catch (Exception e)
-            {
-                result["error"] = MQLExceptions.convertRESTException(e.ToString());
-            }
+            ParamAdd(context, parameters, "name");
+            await ExecCommandAsync(context, MQLCommand.WindowFind_1, parameters); // MQLCommand ENUM = 93
+
+            result["result"] = Convert.ToInt32(GetCommandResult(context));
 
             return result;
         }
@@ -5485,11 +4268,10 @@ namespace MQL4CSharp.Base.REST
         /// <ul>
         /// </ul>
         /// </summary>
-        [RESTRoute(Method = HttpMethod.POST, PathInfo = @"^/[0-9]+/windowfirstvisiblebar")]
-        public void Handle_WindowFirstVisibleBar_1(HttpListenerContext context)
+        [RestRoute(HttpMethod = HttpMethod.POST, PathInfo = @"^/[0-9]+/windowfirstvisiblebar$")]
+        public IHttpContext Handle_WindowFirstVisibleBar_1(IHttpContext context)
         {
-            long chartid = Int64.Parse(context.Request.Url.Segments[1].Replace("/", ""));
-            this.SendJsonResponse(context, WindowFirstVisibleBar_1(context, chartid));
+            return SendJsonResponse(context, GetChartId(context), WindowFirstVisibleBar_1);
         }
 
         /// <summary>
@@ -5500,29 +4282,20 @@ namespace MQL4CSharp.Base.REST
         /// <ul>
         /// </ul>
         /// </summary>
-        [RESTRoute(Method = HttpMethod.POST, PathInfo = @"^/windowfirstvisiblebar")]
-        public void Handle_WindowFirstVisibleBar_1_Default(HttpListenerContext context)
+        [RestRoute(HttpMethod = HttpMethod.POST, PathInfo = @"^/windowfirstvisiblebar$")]
+        public IHttpContext Handle_WindowFirstVisibleBar_1_Default(IHttpContext context)
         {
-            this.SendJsonResponse(context, WindowFirstVisibleBar_1(context, DEFAULT_CHART_ID));
+            return SendJsonResponse(context, WindowFirstVisibleBar_1);
         }
 
-        private JObject WindowFirstVisibleBar_1(HttpListenerContext context, long chartId)
+        private async Task<JObject> WindowFirstVisibleBar_1(MQLRestContext context)
         {
-            MQLCommandManager mqlCommandManager = DLLObjectWrapper.getInstance().getMQLCommandManager(chartId);
-            JObject payload = this.GetJsonPayload(context.Request);
-            JObject result = new JObject();
+            var payload = context.JsonPayload;
+            var result = context.Result;
             List<Object> parameters = new List<Object>();
-            int id = mqlCommandManager.ExecCommand(MQLCommand.WindowFirstVisibleBar_1, parameters); // MQLCommand ENUM = 94
-            while (mqlCommandManager.IsCommandRunning(id)) ; // block while command is running
-            try
-            {
-                mqlCommandManager.throwExceptionIfErrorResponse(id);
-                result["result"] = Convert.ToInt32(mqlCommandManager.GetCommandResult(id));
-            }
-            catch (Exception e)
-            {
-                result["error"] = MQLExceptions.convertRESTException(e.ToString());
-            }
+            await ExecCommandAsync(context, MQLCommand.WindowFirstVisibleBar_1, parameters); // MQLCommand ENUM = 94
+
+            result["result"] = Convert.ToInt32(GetCommandResult(context));
 
             return result;
         }
@@ -5536,11 +4309,10 @@ namespace MQL4CSharp.Base.REST
         /// <li><b>timeframe</b> :  [in] Timeframe. It can be any of enumeration values. 0 means the current chart timeframe.</li>
         /// </ul>
         /// </summary>
-        [RESTRoute(Method = HttpMethod.POST, PathInfo = @"^/[0-9]+/windowhandle")]
-        public void Handle_WindowHandle_1(HttpListenerContext context)
+        [RestRoute(HttpMethod = HttpMethod.POST, PathInfo = @"^/[0-9]+/windowhandle$")]
+        public IHttpContext Handle_WindowHandle_1(IHttpContext context)
         {
-            long chartid = Int64.Parse(context.Request.Url.Segments[1].Replace("/", ""));
-            this.SendJsonResponse(context, WindowHandle_1(context, chartid));
+            return SendJsonResponse(context, GetChartId(context), WindowHandle_1);
         }
 
         /// <summary>
@@ -5553,36 +4325,24 @@ namespace MQL4CSharp.Base.REST
         /// <li><b>timeframe</b> :  [in] Timeframe. It can be any of enumeration values. 0 means the current chart timeframe.</li>
         /// </ul>
         /// </summary>
-        [RESTRoute(Method = HttpMethod.POST, PathInfo = @"^/windowhandle")]
-        public void Handle_WindowHandle_1_Default(HttpListenerContext context)
+        [RestRoute(HttpMethod = HttpMethod.POST, PathInfo = @"^/windowhandle$")]
+        public IHttpContext Handle_WindowHandle_1_Default(IHttpContext context)
         {
-            this.SendJsonResponse(context, WindowHandle_1(context, DEFAULT_CHART_ID));
+            return SendJsonResponse(context, WindowHandle_1);
         }
 
-        private JObject WindowHandle_1(HttpListenerContext context, long chartId)
+        private async Task<JObject> WindowHandle_1(MQLRestContext context)
         {
-            MQLCommandManager mqlCommandManager = DLLObjectWrapper.getInstance().getMQLCommandManager(chartId);
-            JObject payload = this.GetJsonPayload(context.Request);
-            JObject result = new JObject();
-            if (payload == null)
-            {
-                result["result"] = PARSE_ERROR;
-                return result;
-            }
+            var payload = context.JsonPayload;
+            var result = context.Result;
+            if (PayloadNotValid(context))
+                return context.Result;
             List<Object> parameters = new List<Object>();
-            parameters.Add(payload["symbol"]);
-            parameters.Add(payload["timeframe"]);
-            int id = mqlCommandManager.ExecCommand(MQLCommand.WindowHandle_1, parameters); // MQLCommand ENUM = 95
-            while (mqlCommandManager.IsCommandRunning(id)) ; // block while command is running
-            try
-            {
-                mqlCommandManager.throwExceptionIfErrorResponse(id);
-                result["result"] = Convert.ToInt32(mqlCommandManager.GetCommandResult(id));
-            }
-            catch (Exception e)
-            {
-                result["error"] = MQLExceptions.convertRESTException(e.ToString());
-            }
+            ParamAdd(context, parameters, "symbol");
+            ParamAdd(context, parameters, "timeframe");
+            await ExecCommandAsync(context, MQLCommand.WindowHandle_1, parameters); // MQLCommand ENUM = 95
+
+            result["result"] = Convert.ToInt32(GetCommandResult(context));
 
             return result;
         }
@@ -5595,11 +4355,10 @@ namespace MQL4CSharp.Base.REST
         /// <li><b>index</b> :  [in] Subwindow index.</li>
         /// </ul>
         /// </summary>
-        [RESTRoute(Method = HttpMethod.POST, PathInfo = @"^/[0-9]+/windowisvisible")]
-        public void Handle_WindowIsVisible_1(HttpListenerContext context)
+        [RestRoute(HttpMethod = HttpMethod.POST, PathInfo = @"^/[0-9]+/windowisvisible$")]
+        public IHttpContext Handle_WindowIsVisible_1(IHttpContext context)
         {
-            long chartid = Int64.Parse(context.Request.Url.Segments[1].Replace("/", ""));
-            this.SendJsonResponse(context, WindowIsVisible_1(context, chartid));
+            return SendJsonResponse(context, GetChartId(context), WindowIsVisible_1);
         }
 
         /// <summary>
@@ -5611,35 +4370,23 @@ namespace MQL4CSharp.Base.REST
         /// <li><b>index</b> :  [in] Subwindow index.</li>
         /// </ul>
         /// </summary>
-        [RESTRoute(Method = HttpMethod.POST, PathInfo = @"^/windowisvisible")]
-        public void Handle_WindowIsVisible_1_Default(HttpListenerContext context)
+        [RestRoute(HttpMethod = HttpMethod.POST, PathInfo = @"^/windowisvisible$")]
+        public IHttpContext Handle_WindowIsVisible_1_Default(IHttpContext context)
         {
-            this.SendJsonResponse(context, WindowIsVisible_1(context, DEFAULT_CHART_ID));
+            return SendJsonResponse(context, WindowIsVisible_1);
         }
 
-        private JObject WindowIsVisible_1(HttpListenerContext context, long chartId)
+        private async Task<JObject> WindowIsVisible_1(MQLRestContext context)
         {
-            MQLCommandManager mqlCommandManager = DLLObjectWrapper.getInstance().getMQLCommandManager(chartId);
-            JObject payload = this.GetJsonPayload(context.Request);
-            JObject result = new JObject();
-            if (payload == null)
-            {
-                result["result"] = PARSE_ERROR;
-                return result;
-            }
+            var payload = context.JsonPayload;
+            var result = context.Result;
+            if (PayloadNotValid(context))
+                return context.Result;
             List<Object> parameters = new List<Object>();
-            parameters.Add(payload["index"]);
-            int id = mqlCommandManager.ExecCommand(MQLCommand.WindowIsVisible_1, parameters); // MQLCommand ENUM = 96
-            while (mqlCommandManager.IsCommandRunning(id)) ; // block while command is running
-            try
-            {
-                mqlCommandManager.throwExceptionIfErrorResponse(id);
-                result["result"] = Convert.ToInt32(mqlCommandManager.GetCommandResult(id));
-            }
-            catch (Exception e)
-            {
-                result["error"] = MQLExceptions.convertRESTException(e.ToString());
-            }
+            ParamAdd(context, parameters, "index");
+            await ExecCommandAsync(context, MQLCommand.WindowIsVisible_1, parameters); // MQLCommand ENUM = 96
+
+            result["result"] = Convert.ToInt32(GetCommandResult(context));
 
             return result;
         }
@@ -5651,11 +4398,10 @@ namespace MQL4CSharp.Base.REST
         /// <ul>
         /// </ul>
         /// </summary>
-        [RESTRoute(Method = HttpMethod.POST, PathInfo = @"^/[0-9]+/windowondropped")]
-        public void Handle_WindowOnDropped_1(HttpListenerContext context)
+        [RestRoute(HttpMethod = HttpMethod.POST, PathInfo = @"^/[0-9]+/windowondropped$")]
+        public IHttpContext Handle_WindowOnDropped_1(IHttpContext context)
         {
-            long chartid = Int64.Parse(context.Request.Url.Segments[1].Replace("/", ""));
-            this.SendJsonResponse(context, WindowOnDropped_1(context, chartid));
+            return SendJsonResponse(context, GetChartId(context), WindowOnDropped_1);
         }
 
         /// <summary>
@@ -5666,29 +4412,20 @@ namespace MQL4CSharp.Base.REST
         /// <ul>
         /// </ul>
         /// </summary>
-        [RESTRoute(Method = HttpMethod.POST, PathInfo = @"^/windowondropped")]
-        public void Handle_WindowOnDropped_1_Default(HttpListenerContext context)
+        [RestRoute(HttpMethod = HttpMethod.POST, PathInfo = @"^/windowondropped$")]
+        public IHttpContext Handle_WindowOnDropped_1_Default(IHttpContext context)
         {
-            this.SendJsonResponse(context, WindowOnDropped_1(context, DEFAULT_CHART_ID));
+            return SendJsonResponse(context, WindowOnDropped_1);
         }
 
-        private JObject WindowOnDropped_1(HttpListenerContext context, long chartId)
+        private async Task<JObject> WindowOnDropped_1(MQLRestContext context)
         {
-            MQLCommandManager mqlCommandManager = DLLObjectWrapper.getInstance().getMQLCommandManager(chartId);
-            JObject payload = this.GetJsonPayload(context.Request);
-            JObject result = new JObject();
+            var payload = context.JsonPayload;
+            var result = context.Result;
             List<Object> parameters = new List<Object>();
-            int id = mqlCommandManager.ExecCommand(MQLCommand.WindowOnDropped_1, parameters); // MQLCommand ENUM = 97
-            while (mqlCommandManager.IsCommandRunning(id)) ; // block while command is running
-            try
-            {
-                mqlCommandManager.throwExceptionIfErrorResponse(id);
-                result["result"] = Convert.ToInt32(mqlCommandManager.GetCommandResult(id));
-            }
-            catch (Exception e)
-            {
-                result["error"] = MQLExceptions.convertRESTException(e.ToString());
-            }
+            await ExecCommandAsync(context, MQLCommand.WindowOnDropped_1, parameters); // MQLCommand ENUM = 97
+
+            result["result"] = Convert.ToInt32(GetCommandResult(context));
 
             return result;
         }
@@ -5701,11 +4438,10 @@ namespace MQL4CSharp.Base.REST
         /// <li><b>index</b> :  [in] Chart subwindow index (0 - main chart window).</li>
         /// </ul>
         /// </summary>
-        [RESTRoute(Method = HttpMethod.POST, PathInfo = @"^/[0-9]+/windowpricemax")]
-        public void Handle_WindowPriceMax_1(HttpListenerContext context)
+        [RestRoute(HttpMethod = HttpMethod.POST, PathInfo = @"^/[0-9]+/windowpricemax$")]
+        public IHttpContext Handle_WindowPriceMax_1(IHttpContext context)
         {
-            long chartid = Int64.Parse(context.Request.Url.Segments[1].Replace("/", ""));
-            this.SendJsonResponse(context, WindowPriceMax_1(context, chartid));
+            return SendJsonResponse(context, GetChartId(context), WindowPriceMax_1);
         }
 
         /// <summary>
@@ -5717,35 +4453,23 @@ namespace MQL4CSharp.Base.REST
         /// <li><b>index</b> :  [in] Chart subwindow index (0 - main chart window).</li>
         /// </ul>
         /// </summary>
-        [RESTRoute(Method = HttpMethod.POST, PathInfo = @"^/windowpricemax")]
-        public void Handle_WindowPriceMax_1_Default(HttpListenerContext context)
+        [RestRoute(HttpMethod = HttpMethod.POST, PathInfo = @"^/windowpricemax$")]
+        public IHttpContext Handle_WindowPriceMax_1_Default(IHttpContext context)
         {
-            this.SendJsonResponse(context, WindowPriceMax_1(context, DEFAULT_CHART_ID));
+            return SendJsonResponse(context, WindowPriceMax_1);
         }
 
-        private JObject WindowPriceMax_1(HttpListenerContext context, long chartId)
+        private async Task<JObject> WindowPriceMax_1(MQLRestContext context)
         {
-            MQLCommandManager mqlCommandManager = DLLObjectWrapper.getInstance().getMQLCommandManager(chartId);
-            JObject payload = this.GetJsonPayload(context.Request);
-            JObject result = new JObject();
-            if (payload == null)
-            {
-                result["result"] = PARSE_ERROR;
-                return result;
-            }
+            var payload = context.JsonPayload;
+            var result = context.Result;
+            if (PayloadNotValid(context))
+                return context.Result;
             List<Object> parameters = new List<Object>();
-            parameters.Add(payload["index"]);
-            int id = mqlCommandManager.ExecCommand(MQLCommand.WindowPriceMax_1, parameters); // MQLCommand ENUM = 98
-            while (mqlCommandManager.IsCommandRunning(id)) ; // block while command is running
-            try
-            {
-                mqlCommandManager.throwExceptionIfErrorResponse(id);
-                result["result"] = Convert.ToInt32(mqlCommandManager.GetCommandResult(id));
-            }
-            catch (Exception e)
-            {
-                result["error"] = MQLExceptions.convertRESTException(e.ToString());
-            }
+            ParamAdd(context, parameters, "index");
+            await ExecCommandAsync(context, MQLCommand.WindowPriceMax_1, parameters); // MQLCommand ENUM = 98
+
+            result["result"] = Convert.ToInt32(GetCommandResult(context));
 
             return result;
         }
@@ -5758,11 +4482,10 @@ namespace MQL4CSharp.Base.REST
         /// <li><b>index</b> :  [in] Chart subwindow index (0 - main chart window).</li>
         /// </ul>
         /// </summary>
-        [RESTRoute(Method = HttpMethod.POST, PathInfo = @"^/[0-9]+/windowpricemin")]
-        public void Handle_WindowPriceMin_1(HttpListenerContext context)
+        [RestRoute(HttpMethod = HttpMethod.POST, PathInfo = @"^/[0-9]+/windowpricemin$")]
+        public IHttpContext Handle_WindowPriceMin_1(IHttpContext context)
         {
-            long chartid = Int64.Parse(context.Request.Url.Segments[1].Replace("/", ""));
-            this.SendJsonResponse(context, WindowPriceMin_1(context, chartid));
+            return SendJsonResponse(context, GetChartId(context), WindowPriceMin_1);
         }
 
         /// <summary>
@@ -5774,35 +4497,23 @@ namespace MQL4CSharp.Base.REST
         /// <li><b>index</b> :  [in] Chart subwindow index (0 - main chart window).</li>
         /// </ul>
         /// </summary>
-        [RESTRoute(Method = HttpMethod.POST, PathInfo = @"^/windowpricemin")]
-        public void Handle_WindowPriceMin_1_Default(HttpListenerContext context)
+        [RestRoute(HttpMethod = HttpMethod.POST, PathInfo = @"^/windowpricemin$")]
+        public IHttpContext Handle_WindowPriceMin_1_Default(IHttpContext context)
         {
-            this.SendJsonResponse(context, WindowPriceMin_1(context, DEFAULT_CHART_ID));
+            return SendJsonResponse(context, WindowPriceMin_1);
         }
 
-        private JObject WindowPriceMin_1(HttpListenerContext context, long chartId)
+        private async Task<JObject> WindowPriceMin_1(MQLRestContext context)
         {
-            MQLCommandManager mqlCommandManager = DLLObjectWrapper.getInstance().getMQLCommandManager(chartId);
-            JObject payload = this.GetJsonPayload(context.Request);
-            JObject result = new JObject();
-            if (payload == null)
-            {
-                result["result"] = PARSE_ERROR;
-                return result;
-            }
+            var payload = context.JsonPayload;
+            var result = context.Result;
+            if (PayloadNotValid(context))
+                return context.Result;
             List<Object> parameters = new List<Object>();
-            parameters.Add(payload["index"]);
-            int id = mqlCommandManager.ExecCommand(MQLCommand.WindowPriceMin_1, parameters); // MQLCommand ENUM = 99
-            while (mqlCommandManager.IsCommandRunning(id)) ; // block while command is running
-            try
-            {
-                mqlCommandManager.throwExceptionIfErrorResponse(id);
-                result["result"] = Convert.ToInt32(mqlCommandManager.GetCommandResult(id));
-            }
-            catch (Exception e)
-            {
-                result["error"] = MQLExceptions.convertRESTException(e.ToString());
-            }
+            ParamAdd(context, parameters, "index");
+            await ExecCommandAsync(context, MQLCommand.WindowPriceMin_1, parameters); // MQLCommand ENUM = 99
+
+            result["result"] = Convert.ToInt32(GetCommandResult(context));
 
             return result;
         }
@@ -5814,11 +4525,10 @@ namespace MQL4CSharp.Base.REST
         /// <ul>
         /// </ul>
         /// </summary>
-        [RESTRoute(Method = HttpMethod.POST, PathInfo = @"^/[0-9]+/windowpriceondropped")]
-        public void Handle_WindowPriceOnDropped_1(HttpListenerContext context)
+        [RestRoute(HttpMethod = HttpMethod.POST, PathInfo = @"^/[0-9]+/windowpriceondropped$")]
+        public IHttpContext Handle_WindowPriceOnDropped_1(IHttpContext context)
         {
-            long chartid = Int64.Parse(context.Request.Url.Segments[1].Replace("/", ""));
-            this.SendJsonResponse(context, WindowPriceOnDropped_1(context, chartid));
+            return SendJsonResponse(context, GetChartId(context), WindowPriceOnDropped_1);
         }
 
         /// <summary>
@@ -5829,29 +4539,20 @@ namespace MQL4CSharp.Base.REST
         /// <ul>
         /// </ul>
         /// </summary>
-        [RESTRoute(Method = HttpMethod.POST, PathInfo = @"^/windowpriceondropped")]
-        public void Handle_WindowPriceOnDropped_1_Default(HttpListenerContext context)
+        [RestRoute(HttpMethod = HttpMethod.POST, PathInfo = @"^/windowpriceondropped$")]
+        public IHttpContext Handle_WindowPriceOnDropped_1_Default(IHttpContext context)
         {
-            this.SendJsonResponse(context, WindowPriceOnDropped_1(context, DEFAULT_CHART_ID));
+            return SendJsonResponse(context, WindowPriceOnDropped_1);
         }
 
-        private JObject WindowPriceOnDropped_1(HttpListenerContext context, long chartId)
+        private async Task<JObject> WindowPriceOnDropped_1(MQLRestContext context)
         {
-            MQLCommandManager mqlCommandManager = DLLObjectWrapper.getInstance().getMQLCommandManager(chartId);
-            JObject payload = this.GetJsonPayload(context.Request);
-            JObject result = new JObject();
+            var payload = context.JsonPayload;
+            var result = context.Result;
             List<Object> parameters = new List<Object>();
-            int id = mqlCommandManager.ExecCommand(MQLCommand.WindowPriceOnDropped_1, parameters); // MQLCommand ENUM = 100
-            while (mqlCommandManager.IsCommandRunning(id)) ; // block while command is running
-            try
-            {
-                mqlCommandManager.throwExceptionIfErrorResponse(id);
-                result["result"] = Convert.ToDecimal(mqlCommandManager.GetCommandResult(id));
-            }
-            catch (Exception e)
-            {
-                result["error"] = MQLExceptions.convertRESTException(e.ToString());
-            }
+            await ExecCommandAsync(context, MQLCommand.WindowPriceOnDropped_1, parameters); // MQLCommand ENUM = 100
+
+            result["result"] = Convert.ToDecimal(GetCommandResult(context));
 
             return result;
         }
@@ -5863,11 +4564,10 @@ namespace MQL4CSharp.Base.REST
         /// <ul>
         /// </ul>
         /// </summary>
-        [RESTRoute(Method = HttpMethod.POST, PathInfo = @"^/[0-9]+/windowredraw")]
-        public void Handle_WindowRedraw_1(HttpListenerContext context)
+        [RestRoute(HttpMethod = HttpMethod.POST, PathInfo = @"^/[0-9]+/windowredraw$")]
+        public IHttpContext Handle_WindowRedraw_1(IHttpContext context)
         {
-            long chartid = Int64.Parse(context.Request.Url.Segments[1].Replace("/", ""));
-            this.SendJsonResponse(context, WindowRedraw_1(context, chartid));
+            return SendJsonResponse(context, GetChartId(context), WindowRedraw_1);
         }
 
         /// <summary>
@@ -5878,29 +4578,20 @@ namespace MQL4CSharp.Base.REST
         /// <ul>
         /// </ul>
         /// </summary>
-        [RESTRoute(Method = HttpMethod.POST, PathInfo = @"^/windowredraw")]
-        public void Handle_WindowRedraw_1_Default(HttpListenerContext context)
+        [RestRoute(HttpMethod = HttpMethod.POST, PathInfo = @"^/windowredraw$")]
+        public IHttpContext Handle_WindowRedraw_1_Default(IHttpContext context)
         {
-            this.SendJsonResponse(context, WindowRedraw_1(context, DEFAULT_CHART_ID));
+            return SendJsonResponse(context, WindowRedraw_1);
         }
 
-        private JObject WindowRedraw_1(HttpListenerContext context, long chartId)
+        private async Task<JObject> WindowRedraw_1(MQLRestContext context)
         {
-            MQLCommandManager mqlCommandManager = DLLObjectWrapper.getInstance().getMQLCommandManager(chartId);
-            JObject payload = this.GetJsonPayload(context.Request);
-            JObject result = new JObject();
+            var payload = context.JsonPayload;
+            var result = context.Result;
             List<Object> parameters = new List<Object>();
-            int id = mqlCommandManager.ExecCommand(MQLCommand.WindowRedraw_1, parameters); // MQLCommand ENUM = 101
-            while (mqlCommandManager.IsCommandRunning(id)) ; // block while command is running
-            try
-            {
-                mqlCommandManager.throwExceptionIfErrorResponse(id);
-                result["result"] = "";
-            }
-            catch (Exception e)
-            {
-                result["error"] = MQLExceptions.convertRESTException(e.ToString());
-            }
+            await ExecCommandAsync(context, MQLCommand.WindowRedraw_1, parameters); // MQLCommand ENUM = 101
+
+            result["result"] = "";
 
             return result;
         }
@@ -5918,11 +4609,10 @@ namespace MQL4CSharp.Base.REST
         /// <li><b>chart_mode</b> :  [in] Chart displaying mode. It can take the following values: CHART_BAR (0 is a sequence of bars), CHART_CANDLE (1 is a sequence of candlesticks), CHART_LINE (2 is a close prices line). If no value or negative value has been set, the chart will be shown in its current mode.</li>
         /// </ul>
         /// </summary>
-        [RESTRoute(Method = HttpMethod.POST, PathInfo = @"^/[0-9]+/windowscreenshot")]
-        public void Handle_WindowScreenShot_1(HttpListenerContext context)
+        [RestRoute(HttpMethod = HttpMethod.POST, PathInfo = @"^/[0-9]+/windowscreenshot$")]
+        public IHttpContext Handle_WindowScreenShot_1(IHttpContext context)
         {
-            long chartid = Int64.Parse(context.Request.Url.Segments[1].Replace("/", ""));
-            this.SendJsonResponse(context, WindowScreenShot_1(context, chartid));
+            return SendJsonResponse(context, GetChartId(context), WindowScreenShot_1);
         }
 
         /// <summary>
@@ -5939,40 +4629,28 @@ namespace MQL4CSharp.Base.REST
         /// <li><b>chart_mode</b> :  [in] Chart displaying mode. It can take the following values: CHART_BAR (0 is a sequence of bars), CHART_CANDLE (1 is a sequence of candlesticks), CHART_LINE (2 is a close prices line). If no value or negative value has been set, the chart will be shown in its current mode.</li>
         /// </ul>
         /// </summary>
-        [RESTRoute(Method = HttpMethod.POST, PathInfo = @"^/windowscreenshot")]
-        public void Handle_WindowScreenShot_1_Default(HttpListenerContext context)
+        [RestRoute(HttpMethod = HttpMethod.POST, PathInfo = @"^/windowscreenshot$")]
+        public IHttpContext Handle_WindowScreenShot_1_Default(IHttpContext context)
         {
-            this.SendJsonResponse(context, WindowScreenShot_1(context, DEFAULT_CHART_ID));
+            return SendJsonResponse(context, WindowScreenShot_1);
         }
 
-        private JObject WindowScreenShot_1(HttpListenerContext context, long chartId)
+        private async Task<JObject> WindowScreenShot_1(MQLRestContext context)
         {
-            MQLCommandManager mqlCommandManager = DLLObjectWrapper.getInstance().getMQLCommandManager(chartId);
-            JObject payload = this.GetJsonPayload(context.Request);
-            JObject result = new JObject();
-            if (payload == null)
-            {
-                result["result"] = PARSE_ERROR;
-                return result;
-            }
+            var payload = context.JsonPayload;
+            var result = context.Result;
+            if (PayloadNotValid(context))
+                return context.Result;
             List<Object> parameters = new List<Object>();
-            parameters.Add(payload["filename"]);
-            parameters.Add(payload["size_x"]);
-            parameters.Add(payload["size_y"]);
-            parameters.Add(payload["start_bar"]);
-            parameters.Add(payload["chart_scale"]);
-            parameters.Add(payload["chart_mode"]);
-            int id = mqlCommandManager.ExecCommand(MQLCommand.WindowScreenShot_1, parameters); // MQLCommand ENUM = 102
-            while (mqlCommandManager.IsCommandRunning(id)) ; // block while command is running
-            try
-            {
-                mqlCommandManager.throwExceptionIfErrorResponse(id);
-                result["result"] = (bool)mqlCommandManager.GetCommandResult(id);
-            }
-            catch (Exception e)
-            {
-                result["error"] = MQLExceptions.convertRESTException(e.ToString());
-            }
+            ParamAdd(context, parameters, "filename");
+            ParamAdd(context, parameters, "size_x");
+            ParamAdd(context, parameters, "size_y");
+            ParamAdd(context, parameters, "start_bar");
+            ParamAdd(context, parameters, "chart_scale");
+            ParamAdd(context, parameters, "chart_mode");
+            await ExecCommandAsync(context, MQLCommand.WindowScreenShot_1, parameters); // MQLCommand ENUM = 102
+
+            result["result"] = (bool)GetCommandResult(context);
 
             return result;
         }
@@ -5984,11 +4662,10 @@ namespace MQL4CSharp.Base.REST
         /// <ul>
         /// </ul>
         /// </summary>
-        [RESTRoute(Method = HttpMethod.POST, PathInfo = @"^/[0-9]+/windowtimeondropped")]
-        public void Handle_WindowTimeOnDropped_1(HttpListenerContext context)
+        [RestRoute(HttpMethod = HttpMethod.POST, PathInfo = @"^/[0-9]+/windowtimeondropped$")]
+        public IHttpContext Handle_WindowTimeOnDropped_1(IHttpContext context)
         {
-            long chartid = Int64.Parse(context.Request.Url.Segments[1].Replace("/", ""));
-            this.SendJsonResponse(context, WindowTimeOnDropped_1(context, chartid));
+            return SendJsonResponse(context, GetChartId(context), WindowTimeOnDropped_1);
         }
 
         /// <summary>
@@ -5999,29 +4676,20 @@ namespace MQL4CSharp.Base.REST
         /// <ul>
         /// </ul>
         /// </summary>
-        [RESTRoute(Method = HttpMethod.POST, PathInfo = @"^/windowtimeondropped")]
-        public void Handle_WindowTimeOnDropped_1_Default(HttpListenerContext context)
+        [RestRoute(HttpMethod = HttpMethod.POST, PathInfo = @"^/windowtimeondropped$")]
+        public IHttpContext Handle_WindowTimeOnDropped_1_Default(IHttpContext context)
         {
-            this.SendJsonResponse(context, WindowTimeOnDropped_1(context, DEFAULT_CHART_ID));
+            return SendJsonResponse(context, WindowTimeOnDropped_1);
         }
 
-        private JObject WindowTimeOnDropped_1(HttpListenerContext context, long chartId)
+        private async Task<JObject> WindowTimeOnDropped_1(MQLRestContext context)
         {
-            MQLCommandManager mqlCommandManager = DLLObjectWrapper.getInstance().getMQLCommandManager(chartId);
-            JObject payload = this.GetJsonPayload(context.Request);
-            JObject result = new JObject();
+            var payload = context.JsonPayload;
+            var result = context.Result;
             List<Object> parameters = new List<Object>();
-            int id = mqlCommandManager.ExecCommand(MQLCommand.WindowTimeOnDropped_1, parameters); // MQLCommand ENUM = 103
-            while (mqlCommandManager.IsCommandRunning(id)) ; // block while command is running
-            try
-            {
-                mqlCommandManager.throwExceptionIfErrorResponse(id);
-                result["result"] = (DateTime)mqlCommandManager.GetCommandResult(id);
-            }
-            catch (Exception e)
-            {
-                result["error"] = MQLExceptions.convertRESTException(e.ToString());
-            }
+            await ExecCommandAsync(context, MQLCommand.WindowTimeOnDropped_1, parameters); // MQLCommand ENUM = 103
+
+            result["result"] = (DateTime)GetCommandResult(context);
 
             return result;
         }
@@ -6033,11 +4701,10 @@ namespace MQL4CSharp.Base.REST
         /// <ul>
         /// </ul>
         /// </summary>
-        [RESTRoute(Method = HttpMethod.POST, PathInfo = @"^/[0-9]+/windowstotal")]
-        public void Handle_WindowsTotal_1(HttpListenerContext context)
+        [RestRoute(HttpMethod = HttpMethod.POST, PathInfo = @"^/[0-9]+/windowstotal$")]
+        public IHttpContext Handle_WindowsTotal_1(IHttpContext context)
         {
-            long chartid = Int64.Parse(context.Request.Url.Segments[1].Replace("/", ""));
-            this.SendJsonResponse(context, WindowsTotal_1(context, chartid));
+            return SendJsonResponse(context, GetChartId(context), WindowsTotal_1);
         }
 
         /// <summary>
@@ -6048,29 +4715,20 @@ namespace MQL4CSharp.Base.REST
         /// <ul>
         /// </ul>
         /// </summary>
-        [RESTRoute(Method = HttpMethod.POST, PathInfo = @"^/windowstotal")]
-        public void Handle_WindowsTotal_1_Default(HttpListenerContext context)
+        [RestRoute(HttpMethod = HttpMethod.POST, PathInfo = @"^/windowstotal$")]
+        public IHttpContext Handle_WindowsTotal_1_Default(IHttpContext context)
         {
-            this.SendJsonResponse(context, WindowsTotal_1(context, DEFAULT_CHART_ID));
+            return SendJsonResponse(context, WindowsTotal_1);
         }
 
-        private JObject WindowsTotal_1(HttpListenerContext context, long chartId)
+        private async Task<JObject> WindowsTotal_1(MQLRestContext context)
         {
-            MQLCommandManager mqlCommandManager = DLLObjectWrapper.getInstance().getMQLCommandManager(chartId);
-            JObject payload = this.GetJsonPayload(context.Request);
-            JObject result = new JObject();
+            var payload = context.JsonPayload;
+            var result = context.Result;
             List<Object> parameters = new List<Object>();
-            int id = mqlCommandManager.ExecCommand(MQLCommand.WindowsTotal_1, parameters); // MQLCommand ENUM = 104
-            while (mqlCommandManager.IsCommandRunning(id)) ; // block while command is running
-            try
-            {
-                mqlCommandManager.throwExceptionIfErrorResponse(id);
-                result["result"] = Convert.ToInt32(mqlCommandManager.GetCommandResult(id));
-            }
-            catch (Exception e)
-            {
-                result["error"] = MQLExceptions.convertRESTException(e.ToString());
-            }
+            await ExecCommandAsync(context, MQLCommand.WindowsTotal_1, parameters); // MQLCommand ENUM = 104
+
+            result["result"] = Convert.ToInt32(GetCommandResult(context));
 
             return result;
         }
@@ -6082,11 +4740,10 @@ namespace MQL4CSharp.Base.REST
         /// <ul>
         /// </ul>
         /// </summary>
-        [RESTRoute(Method = HttpMethod.POST, PathInfo = @"^/[0-9]+/windowxondropped")]
-        public void Handle_WindowXOnDropped_1(HttpListenerContext context)
+        [RestRoute(HttpMethod = HttpMethod.POST, PathInfo = @"^/[0-9]+/windowxondropped$")]
+        public IHttpContext Handle_WindowXOnDropped_1(IHttpContext context)
         {
-            long chartid = Int64.Parse(context.Request.Url.Segments[1].Replace("/", ""));
-            this.SendJsonResponse(context, WindowXOnDropped_1(context, chartid));
+            return SendJsonResponse(context, GetChartId(context), WindowXOnDropped_1);
         }
 
         /// <summary>
@@ -6097,29 +4754,20 @@ namespace MQL4CSharp.Base.REST
         /// <ul>
         /// </ul>
         /// </summary>
-        [RESTRoute(Method = HttpMethod.POST, PathInfo = @"^/windowxondropped")]
-        public void Handle_WindowXOnDropped_1_Default(HttpListenerContext context)
+        [RestRoute(HttpMethod = HttpMethod.POST, PathInfo = @"^/windowxondropped$")]
+        public IHttpContext Handle_WindowXOnDropped_1_Default(IHttpContext context)
         {
-            this.SendJsonResponse(context, WindowXOnDropped_1(context, DEFAULT_CHART_ID));
+            return SendJsonResponse(context, WindowXOnDropped_1);
         }
 
-        private JObject WindowXOnDropped_1(HttpListenerContext context, long chartId)
+        private async Task<JObject> WindowXOnDropped_1(MQLRestContext context)
         {
-            MQLCommandManager mqlCommandManager = DLLObjectWrapper.getInstance().getMQLCommandManager(chartId);
-            JObject payload = this.GetJsonPayload(context.Request);
-            JObject result = new JObject();
+            var payload = context.JsonPayload;
+            var result = context.Result;
             List<Object> parameters = new List<Object>();
-            int id = mqlCommandManager.ExecCommand(MQLCommand.WindowXOnDropped_1, parameters); // MQLCommand ENUM = 105
-            while (mqlCommandManager.IsCommandRunning(id)) ; // block while command is running
-            try
-            {
-                mqlCommandManager.throwExceptionIfErrorResponse(id);
-                result["result"] = Convert.ToInt32(mqlCommandManager.GetCommandResult(id));
-            }
-            catch (Exception e)
-            {
-                result["error"] = MQLExceptions.convertRESTException(e.ToString());
-            }
+            await ExecCommandAsync(context, MQLCommand.WindowXOnDropped_1, parameters); // MQLCommand ENUM = 105
+
+            result["result"] = Convert.ToInt32(GetCommandResult(context));
 
             return result;
         }
@@ -6131,11 +4779,10 @@ namespace MQL4CSharp.Base.REST
         /// <ul>
         /// </ul>
         /// </summary>
-        [RESTRoute(Method = HttpMethod.POST, PathInfo = @"^/[0-9]+/windowyondropped")]
-        public void Handle_WindowYOnDropped_1(HttpListenerContext context)
+        [RestRoute(HttpMethod = HttpMethod.POST, PathInfo = @"^/[0-9]+/windowyondropped$")]
+        public IHttpContext Handle_WindowYOnDropped_1(IHttpContext context)
         {
-            long chartid = Int64.Parse(context.Request.Url.Segments[1].Replace("/", ""));
-            this.SendJsonResponse(context, WindowYOnDropped_1(context, chartid));
+            return SendJsonResponse(context, GetChartId(context), WindowYOnDropped_1);
         }
 
         /// <summary>
@@ -6146,29 +4793,20 @@ namespace MQL4CSharp.Base.REST
         /// <ul>
         /// </ul>
         /// </summary>
-        [RESTRoute(Method = HttpMethod.POST, PathInfo = @"^/windowyondropped")]
-        public void Handle_WindowYOnDropped_1_Default(HttpListenerContext context)
+        [RestRoute(HttpMethod = HttpMethod.POST, PathInfo = @"^/windowyondropped$")]
+        public IHttpContext Handle_WindowYOnDropped_1_Default(IHttpContext context)
         {
-            this.SendJsonResponse(context, WindowYOnDropped_1(context, DEFAULT_CHART_ID));
+            return SendJsonResponse(context, WindowYOnDropped_1);
         }
 
-        private JObject WindowYOnDropped_1(HttpListenerContext context, long chartId)
+        private async Task<JObject> WindowYOnDropped_1(MQLRestContext context)
         {
-            MQLCommandManager mqlCommandManager = DLLObjectWrapper.getInstance().getMQLCommandManager(chartId);
-            JObject payload = this.GetJsonPayload(context.Request);
-            JObject result = new JObject();
+            var payload = context.JsonPayload;
+            var result = context.Result;
             List<Object> parameters = new List<Object>();
-            int id = mqlCommandManager.ExecCommand(MQLCommand.WindowYOnDropped_1, parameters); // MQLCommand ENUM = 106
-            while (mqlCommandManager.IsCommandRunning(id)) ; // block while command is running
-            try
-            {
-                mqlCommandManager.throwExceptionIfErrorResponse(id);
-                result["result"] = Convert.ToInt32(mqlCommandManager.GetCommandResult(id));
-            }
-            catch (Exception e)
-            {
-                result["error"] = MQLExceptions.convertRESTException(e.ToString());
-            }
+            await ExecCommandAsync(context, MQLCommand.WindowYOnDropped_1, parameters); // MQLCommand ENUM = 106
+
+            result["result"] = Convert.ToInt32(GetCommandResult(context));
 
             return result;
         }
@@ -6185,11 +4823,10 @@ namespace MQL4CSharp.Base.REST
         /// <li><b>arrow_color</b> :  [in] Color of the closing arrow on the chart. If the parameter is missing or has CLR_NONE value closing arrow will not be drawn on the chart.</li>
         /// </ul>
         /// </summary>
-        [RESTRoute(Method = HttpMethod.POST, PathInfo = @"^/[0-9]+/orderclose")]
-        public void Handle_OrderClose_1(HttpListenerContext context)
+        [RestRoute(HttpMethod = HttpMethod.POST, PathInfo = @"^/[0-9]+/orderclose$")]
+        public IHttpContext Handle_OrderClose_1(IHttpContext context)
         {
-            long chartid = Int64.Parse(context.Request.Url.Segments[1].Replace("/", ""));
-            this.SendJsonResponse(context, OrderClose_1(context, chartid));
+            return SendJsonResponse(context, GetChartId(context), OrderClose_1);
         }
 
         /// <summary>
@@ -6205,39 +4842,27 @@ namespace MQL4CSharp.Base.REST
         /// <li><b>arrow_color</b> :  [in] Color of the closing arrow on the chart. If the parameter is missing or has CLR_NONE value closing arrow will not be drawn on the chart.</li>
         /// </ul>
         /// </summary>
-        [RESTRoute(Method = HttpMethod.POST, PathInfo = @"^/orderclose")]
-        public void Handle_OrderClose_1_Default(HttpListenerContext context)
+        [RestRoute(HttpMethod = HttpMethod.POST, PathInfo = @"^/orderclose$")]
+        public IHttpContext Handle_OrderClose_1_Default(IHttpContext context)
         {
-            this.SendJsonResponse(context, OrderClose_1(context, DEFAULT_CHART_ID));
+            return SendJsonResponse(context, OrderClose_1);
         }
 
-        private JObject OrderClose_1(HttpListenerContext context, long chartId)
+        private async Task<JObject> OrderClose_1(MQLRestContext context)
         {
-            MQLCommandManager mqlCommandManager = DLLObjectWrapper.getInstance().getMQLCommandManager(chartId);
-            JObject payload = this.GetJsonPayload(context.Request);
-            JObject result = new JObject();
-            if (payload == null)
-            {
-                result["result"] = PARSE_ERROR;
-                return result;
-            }
+            var payload = context.JsonPayload;
+            var result = context.Result;
+            if (PayloadNotValid(context))
+                return context.Result;
             List<Object> parameters = new List<Object>();
-            parameters.Add(payload["ticket"]);
-            parameters.Add(payload["lots"]);
-            parameters.Add(payload["price"]);
-            parameters.Add(payload["slippage"]);
-            parameters.Add(payload["arrow_color"]);
-            int id = mqlCommandManager.ExecCommand(MQLCommand.OrderClose_1, parameters); // MQLCommand ENUM = 107
-            while (mqlCommandManager.IsCommandRunning(id)) ; // block while command is running
-            try
-            {
-                mqlCommandManager.throwExceptionIfErrorResponse(id);
-                result["result"] = (bool)mqlCommandManager.GetCommandResult(id);
-            }
-            catch (Exception e)
-            {
-                result["error"] = MQLExceptions.convertRESTException(e.ToString());
-            }
+            ParamAdd(context, parameters, "ticket");
+            ParamAdd(context, parameters, "lots");
+            ParamAdd(context, parameters, "price");
+            ParamAdd(context, parameters, "slippage");
+            ParamAdd(context, parameters, "arrow_color");
+            await ExecCommandAsync(context, MQLCommand.OrderClose_1, parameters); // MQLCommand ENUM = 107
+
+            result["result"] = (bool)GetCommandResult(context);
 
             return result;
         }
@@ -6252,11 +4877,10 @@ namespace MQL4CSharp.Base.REST
         /// <li><b>arrow_color</b> :  [in] Color of the closing arrow on the chart. If the parameter is missing or has CLR_NONE value closing arrow will not be drawn on the chart.</li>
         /// </ul>
         /// </summary>
-        [RESTRoute(Method = HttpMethod.POST, PathInfo = @"^/[0-9]+/ordercloseby")]
-        public void Handle_OrderCloseBy_1(HttpListenerContext context)
+        [RestRoute(HttpMethod = HttpMethod.POST, PathInfo = @"^/[0-9]+/ordercloseby$")]
+        public IHttpContext Handle_OrderCloseBy_1(IHttpContext context)
         {
-            long chartid = Int64.Parse(context.Request.Url.Segments[1].Replace("/", ""));
-            this.SendJsonResponse(context, OrderCloseBy_1(context, chartid));
+            return SendJsonResponse(context, GetChartId(context), OrderCloseBy_1);
         }
 
         /// <summary>
@@ -6270,37 +4894,25 @@ namespace MQL4CSharp.Base.REST
         /// <li><b>arrow_color</b> :  [in] Color of the closing arrow on the chart. If the parameter is missing or has CLR_NONE value closing arrow will not be drawn on the chart.</li>
         /// </ul>
         /// </summary>
-        [RESTRoute(Method = HttpMethod.POST, PathInfo = @"^/ordercloseby")]
-        public void Handle_OrderCloseBy_1_Default(HttpListenerContext context)
+        [RestRoute(HttpMethod = HttpMethod.POST, PathInfo = @"^/ordercloseby$")]
+        public IHttpContext Handle_OrderCloseBy_1_Default(IHttpContext context)
         {
-            this.SendJsonResponse(context, OrderCloseBy_1(context, DEFAULT_CHART_ID));
+            return SendJsonResponse(context, OrderCloseBy_1);
         }
 
-        private JObject OrderCloseBy_1(HttpListenerContext context, long chartId)
+        private async Task<JObject> OrderCloseBy_1(MQLRestContext context)
         {
-            MQLCommandManager mqlCommandManager = DLLObjectWrapper.getInstance().getMQLCommandManager(chartId);
-            JObject payload = this.GetJsonPayload(context.Request);
-            JObject result = new JObject();
-            if (payload == null)
-            {
-                result["result"] = PARSE_ERROR;
-                return result;
-            }
+            var payload = context.JsonPayload;
+            var result = context.Result;
+            if (PayloadNotValid(context))
+                return context.Result;
             List<Object> parameters = new List<Object>();
-            parameters.Add(payload["ticket"]);
-            parameters.Add(payload["opposite"]);
-            parameters.Add(payload["arrow_color"]);
-            int id = mqlCommandManager.ExecCommand(MQLCommand.OrderCloseBy_1, parameters); // MQLCommand ENUM = 108
-            while (mqlCommandManager.IsCommandRunning(id)) ; // block while command is running
-            try
-            {
-                mqlCommandManager.throwExceptionIfErrorResponse(id);
-                result["result"] = (bool)mqlCommandManager.GetCommandResult(id);
-            }
-            catch (Exception e)
-            {
-                result["error"] = MQLExceptions.convertRESTException(e.ToString());
-            }
+            ParamAdd(context, parameters, "ticket");
+            ParamAdd(context, parameters, "opposite");
+            ParamAdd(context, parameters, "arrow_color");
+            await ExecCommandAsync(context, MQLCommand.OrderCloseBy_1, parameters); // MQLCommand ENUM = 108
+
+            result["result"] = (bool)GetCommandResult(context);
 
             return result;
         }
@@ -6312,11 +4924,10 @@ namespace MQL4CSharp.Base.REST
         /// <ul>
         /// </ul>
         /// </summary>
-        [RESTRoute(Method = HttpMethod.POST, PathInfo = @"^/[0-9]+/ordercloseprice")]
-        public void Handle_OrderClosePrice_1(HttpListenerContext context)
+        [RestRoute(HttpMethod = HttpMethod.POST, PathInfo = @"^/[0-9]+/ordercloseprice$")]
+        public IHttpContext Handle_OrderClosePrice_1(IHttpContext context)
         {
-            long chartid = Int64.Parse(context.Request.Url.Segments[1].Replace("/", ""));
-            this.SendJsonResponse(context, OrderClosePrice_1(context, chartid));
+            return SendJsonResponse(context, GetChartId(context), OrderClosePrice_1);
         }
 
         /// <summary>
@@ -6327,29 +4938,20 @@ namespace MQL4CSharp.Base.REST
         /// <ul>
         /// </ul>
         /// </summary>
-        [RESTRoute(Method = HttpMethod.POST, PathInfo = @"^/ordercloseprice")]
-        public void Handle_OrderClosePrice_1_Default(HttpListenerContext context)
+        [RestRoute(HttpMethod = HttpMethod.POST, PathInfo = @"^/ordercloseprice$")]
+        public IHttpContext Handle_OrderClosePrice_1_Default(IHttpContext context)
         {
-            this.SendJsonResponse(context, OrderClosePrice_1(context, DEFAULT_CHART_ID));
+            return SendJsonResponse(context, OrderClosePrice_1);
         }
 
-        private JObject OrderClosePrice_1(HttpListenerContext context, long chartId)
+        private async Task<JObject> OrderClosePrice_1(MQLRestContext context)
         {
-            MQLCommandManager mqlCommandManager = DLLObjectWrapper.getInstance().getMQLCommandManager(chartId);
-            JObject payload = this.GetJsonPayload(context.Request);
-            JObject result = new JObject();
+            var payload = context.JsonPayload;
+            var result = context.Result;
             List<Object> parameters = new List<Object>();
-            int id = mqlCommandManager.ExecCommand(MQLCommand.OrderClosePrice_1, parameters); // MQLCommand ENUM = 109
-            while (mqlCommandManager.IsCommandRunning(id)) ; // block while command is running
-            try
-            {
-                mqlCommandManager.throwExceptionIfErrorResponse(id);
-                result["result"] = Convert.ToDecimal(mqlCommandManager.GetCommandResult(id));
-            }
-            catch (Exception e)
-            {
-                result["error"] = MQLExceptions.convertRESTException(e.ToString());
-            }
+            await ExecCommandAsync(context, MQLCommand.OrderClosePrice_1, parameters); // MQLCommand ENUM = 109
+
+            result["result"] = Convert.ToDecimal(GetCommandResult(context));
 
             return result;
         }
@@ -6361,11 +4963,10 @@ namespace MQL4CSharp.Base.REST
         /// <ul>
         /// </ul>
         /// </summary>
-        [RESTRoute(Method = HttpMethod.POST, PathInfo = @"^/[0-9]+/orderclosetime")]
-        public void Handle_OrderCloseTime_1(HttpListenerContext context)
+        [RestRoute(HttpMethod = HttpMethod.POST, PathInfo = @"^/[0-9]+/orderclosetime$")]
+        public IHttpContext Handle_OrderCloseTime_1(IHttpContext context)
         {
-            long chartid = Int64.Parse(context.Request.Url.Segments[1].Replace("/", ""));
-            this.SendJsonResponse(context, OrderCloseTime_1(context, chartid));
+            return SendJsonResponse(context, GetChartId(context), OrderCloseTime_1);
         }
 
         /// <summary>
@@ -6376,29 +4977,20 @@ namespace MQL4CSharp.Base.REST
         /// <ul>
         /// </ul>
         /// </summary>
-        [RESTRoute(Method = HttpMethod.POST, PathInfo = @"^/orderclosetime")]
-        public void Handle_OrderCloseTime_1_Default(HttpListenerContext context)
+        [RestRoute(HttpMethod = HttpMethod.POST, PathInfo = @"^/orderclosetime$")]
+        public IHttpContext Handle_OrderCloseTime_1_Default(IHttpContext context)
         {
-            this.SendJsonResponse(context, OrderCloseTime_1(context, DEFAULT_CHART_ID));
+            return SendJsonResponse(context, OrderCloseTime_1);
         }
 
-        private JObject OrderCloseTime_1(HttpListenerContext context, long chartId)
+        private async Task<JObject> OrderCloseTime_1(MQLRestContext context)
         {
-            MQLCommandManager mqlCommandManager = DLLObjectWrapper.getInstance().getMQLCommandManager(chartId);
-            JObject payload = this.GetJsonPayload(context.Request);
-            JObject result = new JObject();
+            var payload = context.JsonPayload;
+            var result = context.Result;
             List<Object> parameters = new List<Object>();
-            int id = mqlCommandManager.ExecCommand(MQLCommand.OrderCloseTime_1, parameters); // MQLCommand ENUM = 110
-            while (mqlCommandManager.IsCommandRunning(id)) ; // block while command is running
-            try
-            {
-                mqlCommandManager.throwExceptionIfErrorResponse(id);
-                result["result"] = (DateTime)mqlCommandManager.GetCommandResult(id);
-            }
-            catch (Exception e)
-            {
-                result["error"] = MQLExceptions.convertRESTException(e.ToString());
-            }
+            await ExecCommandAsync(context, MQLCommand.OrderCloseTime_1, parameters); // MQLCommand ENUM = 110
+
+            result["result"] = (DateTime)GetCommandResult(context);
 
             return result;
         }
@@ -6410,11 +5002,10 @@ namespace MQL4CSharp.Base.REST
         /// <ul>
         /// </ul>
         /// </summary>
-        [RESTRoute(Method = HttpMethod.POST, PathInfo = @"^/[0-9]+/ordercomment")]
-        public void Handle_OrderComment_1(HttpListenerContext context)
+        [RestRoute(HttpMethod = HttpMethod.POST, PathInfo = @"^/[0-9]+/ordercomment$")]
+        public IHttpContext Handle_OrderComment_1(IHttpContext context)
         {
-            long chartid = Int64.Parse(context.Request.Url.Segments[1].Replace("/", ""));
-            this.SendJsonResponse(context, OrderComment_1(context, chartid));
+            return SendJsonResponse(context, GetChartId(context), OrderComment_1);
         }
 
         /// <summary>
@@ -6425,29 +5016,20 @@ namespace MQL4CSharp.Base.REST
         /// <ul>
         /// </ul>
         /// </summary>
-        [RESTRoute(Method = HttpMethod.POST, PathInfo = @"^/ordercomment")]
-        public void Handle_OrderComment_1_Default(HttpListenerContext context)
+        [RestRoute(HttpMethod = HttpMethod.POST, PathInfo = @"^/ordercomment$")]
+        public IHttpContext Handle_OrderComment_1_Default(IHttpContext context)
         {
-            this.SendJsonResponse(context, OrderComment_1(context, DEFAULT_CHART_ID));
+            return SendJsonResponse(context, OrderComment_1);
         }
 
-        private JObject OrderComment_1(HttpListenerContext context, long chartId)
+        private async Task<JObject> OrderComment_1(MQLRestContext context)
         {
-            MQLCommandManager mqlCommandManager = DLLObjectWrapper.getInstance().getMQLCommandManager(chartId);
-            JObject payload = this.GetJsonPayload(context.Request);
-            JObject result = new JObject();
+            var payload = context.JsonPayload;
+            var result = context.Result;
             List<Object> parameters = new List<Object>();
-            int id = mqlCommandManager.ExecCommand(MQLCommand.OrderComment_1, parameters); // MQLCommand ENUM = 111
-            while (mqlCommandManager.IsCommandRunning(id)) ; // block while command is running
-            try
-            {
-                mqlCommandManager.throwExceptionIfErrorResponse(id);
-                result["result"] = (string)mqlCommandManager.GetCommandResult(id);
-            }
-            catch (Exception e)
-            {
-                result["error"] = MQLExceptions.convertRESTException(e.ToString());
-            }
+            await ExecCommandAsync(context, MQLCommand.OrderComment_1, parameters); // MQLCommand ENUM = 111
+
+            result["result"] = (string)GetCommandResult(context);
 
             return result;
         }
@@ -6459,11 +5041,10 @@ namespace MQL4CSharp.Base.REST
         /// <ul>
         /// </ul>
         /// </summary>
-        [RESTRoute(Method = HttpMethod.POST, PathInfo = @"^/[0-9]+/ordercommission")]
-        public void Handle_OrderCommission_1(HttpListenerContext context)
+        [RestRoute(HttpMethod = HttpMethod.POST, PathInfo = @"^/[0-9]+/ordercommission$")]
+        public IHttpContext Handle_OrderCommission_1(IHttpContext context)
         {
-            long chartid = Int64.Parse(context.Request.Url.Segments[1].Replace("/", ""));
-            this.SendJsonResponse(context, OrderCommission_1(context, chartid));
+            return SendJsonResponse(context, GetChartId(context), OrderCommission_1);
         }
 
         /// <summary>
@@ -6474,29 +5055,20 @@ namespace MQL4CSharp.Base.REST
         /// <ul>
         /// </ul>
         /// </summary>
-        [RESTRoute(Method = HttpMethod.POST, PathInfo = @"^/ordercommission")]
-        public void Handle_OrderCommission_1_Default(HttpListenerContext context)
+        [RestRoute(HttpMethod = HttpMethod.POST, PathInfo = @"^/ordercommission$")]
+        public IHttpContext Handle_OrderCommission_1_Default(IHttpContext context)
         {
-            this.SendJsonResponse(context, OrderCommission_1(context, DEFAULT_CHART_ID));
+            return SendJsonResponse(context, OrderCommission_1);
         }
 
-        private JObject OrderCommission_1(HttpListenerContext context, long chartId)
+        private async Task<JObject> OrderCommission_1(MQLRestContext context)
         {
-            MQLCommandManager mqlCommandManager = DLLObjectWrapper.getInstance().getMQLCommandManager(chartId);
-            JObject payload = this.GetJsonPayload(context.Request);
-            JObject result = new JObject();
+            var payload = context.JsonPayload;
+            var result = context.Result;
             List<Object> parameters = new List<Object>();
-            int id = mqlCommandManager.ExecCommand(MQLCommand.OrderCommission_1, parameters); // MQLCommand ENUM = 112
-            while (mqlCommandManager.IsCommandRunning(id)) ; // block while command is running
-            try
-            {
-                mqlCommandManager.throwExceptionIfErrorResponse(id);
-                result["result"] = Convert.ToDecimal(mqlCommandManager.GetCommandResult(id));
-            }
-            catch (Exception e)
-            {
-                result["error"] = MQLExceptions.convertRESTException(e.ToString());
-            }
+            await ExecCommandAsync(context, MQLCommand.OrderCommission_1, parameters); // MQLCommand ENUM = 112
+
+            result["result"] = Convert.ToDecimal(GetCommandResult(context));
 
             return result;
         }
@@ -6510,11 +5082,10 @@ namespace MQL4CSharp.Base.REST
         /// <li><b>arrow_color</b> :  [in] Color of the arrow on the chart. If the parameter is missing or has CLR_NONE value arrow will not be drawn on the chart.</li>
         /// </ul>
         /// </summary>
-        [RESTRoute(Method = HttpMethod.POST, PathInfo = @"^/[0-9]+/orderdelete")]
-        public void Handle_OrderDelete_1(HttpListenerContext context)
+        [RestRoute(HttpMethod = HttpMethod.POST, PathInfo = @"^/[0-9]+/orderdelete$")]
+        public IHttpContext Handle_OrderDelete_1(IHttpContext context)
         {
-            long chartid = Int64.Parse(context.Request.Url.Segments[1].Replace("/", ""));
-            this.SendJsonResponse(context, OrderDelete_1(context, chartid));
+            return SendJsonResponse(context, GetChartId(context), OrderDelete_1);
         }
 
         /// <summary>
@@ -6527,36 +5098,24 @@ namespace MQL4CSharp.Base.REST
         /// <li><b>arrow_color</b> :  [in] Color of the arrow on the chart. If the parameter is missing or has CLR_NONE value arrow will not be drawn on the chart.</li>
         /// </ul>
         /// </summary>
-        [RESTRoute(Method = HttpMethod.POST, PathInfo = @"^/orderdelete")]
-        public void Handle_OrderDelete_1_Default(HttpListenerContext context)
+        [RestRoute(HttpMethod = HttpMethod.POST, PathInfo = @"^/orderdelete$")]
+        public IHttpContext Handle_OrderDelete_1_Default(IHttpContext context)
         {
-            this.SendJsonResponse(context, OrderDelete_1(context, DEFAULT_CHART_ID));
+            return SendJsonResponse(context, OrderDelete_1);
         }
 
-        private JObject OrderDelete_1(HttpListenerContext context, long chartId)
+        private async Task<JObject> OrderDelete_1(MQLRestContext context)
         {
-            MQLCommandManager mqlCommandManager = DLLObjectWrapper.getInstance().getMQLCommandManager(chartId);
-            JObject payload = this.GetJsonPayload(context.Request);
-            JObject result = new JObject();
-            if (payload == null)
-            {
-                result["result"] = PARSE_ERROR;
-                return result;
-            }
+            var payload = context.JsonPayload;
+            var result = context.Result;
+            if (PayloadNotValid(context))
+                return context.Result;
             List<Object> parameters = new List<Object>();
-            parameters.Add(payload["ticket"]);
-            parameters.Add(payload["arrow_color"]);
-            int id = mqlCommandManager.ExecCommand(MQLCommand.OrderDelete_1, parameters); // MQLCommand ENUM = 113
-            while (mqlCommandManager.IsCommandRunning(id)) ; // block while command is running
-            try
-            {
-                mqlCommandManager.throwExceptionIfErrorResponse(id);
-                result["result"] = (bool)mqlCommandManager.GetCommandResult(id);
-            }
-            catch (Exception e)
-            {
-                result["error"] = MQLExceptions.convertRESTException(e.ToString());
-            }
+            ParamAdd(context, parameters, "ticket");
+            ParamAdd(context, parameters, "arrow_color");
+            await ExecCommandAsync(context, MQLCommand.OrderDelete_1, parameters); // MQLCommand ENUM = 113
+
+            result["result"] = (bool)GetCommandResult(context);
 
             return result;
         }
@@ -6568,11 +5127,10 @@ namespace MQL4CSharp.Base.REST
         /// <ul>
         /// </ul>
         /// </summary>
-        [RESTRoute(Method = HttpMethod.POST, PathInfo = @"^/[0-9]+/orderexpiration")]
-        public void Handle_OrderExpiration_1(HttpListenerContext context)
+        [RestRoute(HttpMethod = HttpMethod.POST, PathInfo = @"^/[0-9]+/orderexpiration$")]
+        public IHttpContext Handle_OrderExpiration_1(IHttpContext context)
         {
-            long chartid = Int64.Parse(context.Request.Url.Segments[1].Replace("/", ""));
-            this.SendJsonResponse(context, OrderExpiration_1(context, chartid));
+            return SendJsonResponse(context, GetChartId(context), OrderExpiration_1);
         }
 
         /// <summary>
@@ -6583,29 +5141,20 @@ namespace MQL4CSharp.Base.REST
         /// <ul>
         /// </ul>
         /// </summary>
-        [RESTRoute(Method = HttpMethod.POST, PathInfo = @"^/orderexpiration")]
-        public void Handle_OrderExpiration_1_Default(HttpListenerContext context)
+        [RestRoute(HttpMethod = HttpMethod.POST, PathInfo = @"^/orderexpiration$")]
+        public IHttpContext Handle_OrderExpiration_1_Default(IHttpContext context)
         {
-            this.SendJsonResponse(context, OrderExpiration_1(context, DEFAULT_CHART_ID));
+            return SendJsonResponse(context, OrderExpiration_1);
         }
 
-        private JObject OrderExpiration_1(HttpListenerContext context, long chartId)
+        private async Task<JObject> OrderExpiration_1(MQLRestContext context)
         {
-            MQLCommandManager mqlCommandManager = DLLObjectWrapper.getInstance().getMQLCommandManager(chartId);
-            JObject payload = this.GetJsonPayload(context.Request);
-            JObject result = new JObject();
+            var payload = context.JsonPayload;
+            var result = context.Result;
             List<Object> parameters = new List<Object>();
-            int id = mqlCommandManager.ExecCommand(MQLCommand.OrderExpiration_1, parameters); // MQLCommand ENUM = 114
-            while (mqlCommandManager.IsCommandRunning(id)) ; // block while command is running
-            try
-            {
-                mqlCommandManager.throwExceptionIfErrorResponse(id);
-                result["result"] = (DateTime)mqlCommandManager.GetCommandResult(id);
-            }
-            catch (Exception e)
-            {
-                result["error"] = MQLExceptions.convertRESTException(e.ToString());
-            }
+            await ExecCommandAsync(context, MQLCommand.OrderExpiration_1, parameters); // MQLCommand ENUM = 114
+
+            result["result"] = (DateTime)GetCommandResult(context);
 
             return result;
         }
@@ -6617,11 +5166,10 @@ namespace MQL4CSharp.Base.REST
         /// <ul>
         /// </ul>
         /// </summary>
-        [RESTRoute(Method = HttpMethod.POST, PathInfo = @"^/[0-9]+/orderlots")]
-        public void Handle_OrderLots_1(HttpListenerContext context)
+        [RestRoute(HttpMethod = HttpMethod.POST, PathInfo = @"^/[0-9]+/orderlots$")]
+        public IHttpContext Handle_OrderLots_1(IHttpContext context)
         {
-            long chartid = Int64.Parse(context.Request.Url.Segments[1].Replace("/", ""));
-            this.SendJsonResponse(context, OrderLots_1(context, chartid));
+            return SendJsonResponse(context, GetChartId(context), OrderLots_1);
         }
 
         /// <summary>
@@ -6632,29 +5180,20 @@ namespace MQL4CSharp.Base.REST
         /// <ul>
         /// </ul>
         /// </summary>
-        [RESTRoute(Method = HttpMethod.POST, PathInfo = @"^/orderlots")]
-        public void Handle_OrderLots_1_Default(HttpListenerContext context)
+        [RestRoute(HttpMethod = HttpMethod.POST, PathInfo = @"^/orderlots$")]
+        public IHttpContext Handle_OrderLots_1_Default(IHttpContext context)
         {
-            this.SendJsonResponse(context, OrderLots_1(context, DEFAULT_CHART_ID));
+            return SendJsonResponse(context, OrderLots_1);
         }
 
-        private JObject OrderLots_1(HttpListenerContext context, long chartId)
+        private async Task<JObject> OrderLots_1(MQLRestContext context)
         {
-            MQLCommandManager mqlCommandManager = DLLObjectWrapper.getInstance().getMQLCommandManager(chartId);
-            JObject payload = this.GetJsonPayload(context.Request);
-            JObject result = new JObject();
+            var payload = context.JsonPayload;
+            var result = context.Result;
             List<Object> parameters = new List<Object>();
-            int id = mqlCommandManager.ExecCommand(MQLCommand.OrderLots_1, parameters); // MQLCommand ENUM = 115
-            while (mqlCommandManager.IsCommandRunning(id)) ; // block while command is running
-            try
-            {
-                mqlCommandManager.throwExceptionIfErrorResponse(id);
-                result["result"] = Convert.ToDecimal(mqlCommandManager.GetCommandResult(id));
-            }
-            catch (Exception e)
-            {
-                result["error"] = MQLExceptions.convertRESTException(e.ToString());
-            }
+            await ExecCommandAsync(context, MQLCommand.OrderLots_1, parameters); // MQLCommand ENUM = 115
+
+            result["result"] = Convert.ToDecimal(GetCommandResult(context));
 
             return result;
         }
@@ -6666,11 +5205,10 @@ namespace MQL4CSharp.Base.REST
         /// <ul>
         /// </ul>
         /// </summary>
-        [RESTRoute(Method = HttpMethod.POST, PathInfo = @"^/[0-9]+/ordermagicnumber")]
-        public void Handle_OrderMagicNumber_1(HttpListenerContext context)
+        [RestRoute(HttpMethod = HttpMethod.POST, PathInfo = @"^/[0-9]+/ordermagicnumber$")]
+        public IHttpContext Handle_OrderMagicNumber_1(IHttpContext context)
         {
-            long chartid = Int64.Parse(context.Request.Url.Segments[1].Replace("/", ""));
-            this.SendJsonResponse(context, OrderMagicNumber_1(context, chartid));
+            return SendJsonResponse(context, GetChartId(context), OrderMagicNumber_1);
         }
 
         /// <summary>
@@ -6681,29 +5219,20 @@ namespace MQL4CSharp.Base.REST
         /// <ul>
         /// </ul>
         /// </summary>
-        [RESTRoute(Method = HttpMethod.POST, PathInfo = @"^/ordermagicnumber")]
-        public void Handle_OrderMagicNumber_1_Default(HttpListenerContext context)
+        [RestRoute(HttpMethod = HttpMethod.POST, PathInfo = @"^/ordermagicnumber$")]
+        public IHttpContext Handle_OrderMagicNumber_1_Default(IHttpContext context)
         {
-            this.SendJsonResponse(context, OrderMagicNumber_1(context, DEFAULT_CHART_ID));
+            return SendJsonResponse(context, OrderMagicNumber_1);
         }
 
-        private JObject OrderMagicNumber_1(HttpListenerContext context, long chartId)
+        private async Task<JObject> OrderMagicNumber_1(MQLRestContext context)
         {
-            MQLCommandManager mqlCommandManager = DLLObjectWrapper.getInstance().getMQLCommandManager(chartId);
-            JObject payload = this.GetJsonPayload(context.Request);
-            JObject result = new JObject();
+            var payload = context.JsonPayload;
+            var result = context.Result;
             List<Object> parameters = new List<Object>();
-            int id = mqlCommandManager.ExecCommand(MQLCommand.OrderMagicNumber_1, parameters); // MQLCommand ENUM = 116
-            while (mqlCommandManager.IsCommandRunning(id)) ; // block while command is running
-            try
-            {
-                mqlCommandManager.throwExceptionIfErrorResponse(id);
-                result["result"] = Convert.ToInt32(mqlCommandManager.GetCommandResult(id));
-            }
-            catch (Exception e)
-            {
-                result["error"] = MQLExceptions.convertRESTException(e.ToString());
-            }
+            await ExecCommandAsync(context, MQLCommand.OrderMagicNumber_1, parameters); // MQLCommand ENUM = 116
+
+            result["result"] = Convert.ToInt32(GetCommandResult(context));
 
             return result;
         }
@@ -6721,11 +5250,10 @@ namespace MQL4CSharp.Base.REST
         /// <li><b>arrow_color</b> :  [in] Arrow color for StopLoss/TakeProfit modifications in the chart. If the parameter is missing or has CLR_NONE value, the arrows will not be shown in the chart.</li>
         /// </ul>
         /// </summary>
-        [RESTRoute(Method = HttpMethod.POST, PathInfo = @"^/[0-9]+/ordermodify")]
-        public void Handle_OrderModify_1(HttpListenerContext context)
+        [RestRoute(HttpMethod = HttpMethod.POST, PathInfo = @"^/[0-9]+/ordermodify$")]
+        public IHttpContext Handle_OrderModify_1(IHttpContext context)
         {
-            long chartid = Int64.Parse(context.Request.Url.Segments[1].Replace("/", ""));
-            this.SendJsonResponse(context, OrderModify_1(context, chartid));
+            return SendJsonResponse(context, GetChartId(context), OrderModify_1);
         }
 
         /// <summary>
@@ -6742,40 +5270,28 @@ namespace MQL4CSharp.Base.REST
         /// <li><b>arrow_color</b> :  [in] Arrow color for StopLoss/TakeProfit modifications in the chart. If the parameter is missing or has CLR_NONE value, the arrows will not be shown in the chart.</li>
         /// </ul>
         /// </summary>
-        [RESTRoute(Method = HttpMethod.POST, PathInfo = @"^/ordermodify")]
-        public void Handle_OrderModify_1_Default(HttpListenerContext context)
+        [RestRoute(HttpMethod = HttpMethod.POST, PathInfo = @"^/ordermodify$")]
+        public IHttpContext Handle_OrderModify_1_Default(IHttpContext context)
         {
-            this.SendJsonResponse(context, OrderModify_1(context, DEFAULT_CHART_ID));
+            return SendJsonResponse(context, OrderModify_1);
         }
 
-        private JObject OrderModify_1(HttpListenerContext context, long chartId)
+        private async Task<JObject> OrderModify_1(MQLRestContext context)
         {
-            MQLCommandManager mqlCommandManager = DLLObjectWrapper.getInstance().getMQLCommandManager(chartId);
-            JObject payload = this.GetJsonPayload(context.Request);
-            JObject result = new JObject();
-            if (payload == null)
-            {
-                result["result"] = PARSE_ERROR;
-                return result;
-            }
+            var payload = context.JsonPayload;
+            var result = context.Result;
+            if (PayloadNotValid(context))
+                return context.Result;
             List<Object> parameters = new List<Object>();
-            parameters.Add(payload["ticket"]);
-            parameters.Add(payload["price"]);
-            parameters.Add(payload["stoploss"]);
-            parameters.Add(payload["takeprofit"]);
-            parameters.Add(payload["expiration"]);
-            parameters.Add(payload["arrow_color"]);
-            int id = mqlCommandManager.ExecCommand(MQLCommand.OrderModify_1, parameters); // MQLCommand ENUM = 117
-            while (mqlCommandManager.IsCommandRunning(id)) ; // block while command is running
-            try
-            {
-                mqlCommandManager.throwExceptionIfErrorResponse(id);
-                result["result"] = (bool)mqlCommandManager.GetCommandResult(id);
-            }
-            catch (Exception e)
-            {
-                result["error"] = MQLExceptions.convertRESTException(e.ToString());
-            }
+            ParamAdd(context, parameters, "ticket");
+            ParamAdd(context, parameters, "price");
+            ParamAdd(context, parameters, "stoploss");
+            ParamAdd(context, parameters, "takeprofit");
+            ParamAdd(context, parameters, "expiration");
+            ParamAdd(context, parameters, "arrow_color");
+            await ExecCommandAsync(context, MQLCommand.OrderModify_1, parameters); // MQLCommand ENUM = 117
+
+            result["result"] = (bool)GetCommandResult(context);
 
             return result;
         }
@@ -6787,11 +5303,10 @@ namespace MQL4CSharp.Base.REST
         /// <ul>
         /// </ul>
         /// </summary>
-        [RESTRoute(Method = HttpMethod.POST, PathInfo = @"^/[0-9]+/orderopenprice")]
-        public void Handle_OrderOpenPrice_1(HttpListenerContext context)
+        [RestRoute(HttpMethod = HttpMethod.POST, PathInfo = @"^/[0-9]+/orderopenprice$")]
+        public IHttpContext Handle_OrderOpenPrice_1(IHttpContext context)
         {
-            long chartid = Int64.Parse(context.Request.Url.Segments[1].Replace("/", ""));
-            this.SendJsonResponse(context, OrderOpenPrice_1(context, chartid));
+            return SendJsonResponse(context, GetChartId(context), OrderOpenPrice_1);
         }
 
         /// <summary>
@@ -6802,29 +5317,20 @@ namespace MQL4CSharp.Base.REST
         /// <ul>
         /// </ul>
         /// </summary>
-        [RESTRoute(Method = HttpMethod.POST, PathInfo = @"^/orderopenprice")]
-        public void Handle_OrderOpenPrice_1_Default(HttpListenerContext context)
+        [RestRoute(HttpMethod = HttpMethod.POST, PathInfo = @"^/orderopenprice$")]
+        public IHttpContext Handle_OrderOpenPrice_1_Default(IHttpContext context)
         {
-            this.SendJsonResponse(context, OrderOpenPrice_1(context, DEFAULT_CHART_ID));
+            return SendJsonResponse(context, OrderOpenPrice_1);
         }
 
-        private JObject OrderOpenPrice_1(HttpListenerContext context, long chartId)
+        private async Task<JObject> OrderOpenPrice_1(MQLRestContext context)
         {
-            MQLCommandManager mqlCommandManager = DLLObjectWrapper.getInstance().getMQLCommandManager(chartId);
-            JObject payload = this.GetJsonPayload(context.Request);
-            JObject result = new JObject();
+            var payload = context.JsonPayload;
+            var result = context.Result;
             List<Object> parameters = new List<Object>();
-            int id = mqlCommandManager.ExecCommand(MQLCommand.OrderOpenPrice_1, parameters); // MQLCommand ENUM = 118
-            while (mqlCommandManager.IsCommandRunning(id)) ; // block while command is running
-            try
-            {
-                mqlCommandManager.throwExceptionIfErrorResponse(id);
-                result["result"] = Convert.ToDecimal(mqlCommandManager.GetCommandResult(id));
-            }
-            catch (Exception e)
-            {
-                result["error"] = MQLExceptions.convertRESTException(e.ToString());
-            }
+            await ExecCommandAsync(context, MQLCommand.OrderOpenPrice_1, parameters); // MQLCommand ENUM = 118
+
+            result["result"] = Convert.ToDecimal(GetCommandResult(context));
 
             return result;
         }
@@ -6836,11 +5342,10 @@ namespace MQL4CSharp.Base.REST
         /// <ul>
         /// </ul>
         /// </summary>
-        [RESTRoute(Method = HttpMethod.POST, PathInfo = @"^/[0-9]+/orderopentime")]
-        public void Handle_OrderOpenTime_1(HttpListenerContext context)
+        [RestRoute(HttpMethod = HttpMethod.POST, PathInfo = @"^/[0-9]+/orderopentime$")]
+        public IHttpContext Handle_OrderOpenTime_1(IHttpContext context)
         {
-            long chartid = Int64.Parse(context.Request.Url.Segments[1].Replace("/", ""));
-            this.SendJsonResponse(context, OrderOpenTime_1(context, chartid));
+            return SendJsonResponse(context, GetChartId(context), OrderOpenTime_1);
         }
 
         /// <summary>
@@ -6851,29 +5356,20 @@ namespace MQL4CSharp.Base.REST
         /// <ul>
         /// </ul>
         /// </summary>
-        [RESTRoute(Method = HttpMethod.POST, PathInfo = @"^/orderopentime")]
-        public void Handle_OrderOpenTime_1_Default(HttpListenerContext context)
+        [RestRoute(HttpMethod = HttpMethod.POST, PathInfo = @"^/orderopentime$")]
+        public IHttpContext Handle_OrderOpenTime_1_Default(IHttpContext context)
         {
-            this.SendJsonResponse(context, OrderOpenTime_1(context, DEFAULT_CHART_ID));
+            return SendJsonResponse(context, OrderOpenTime_1);
         }
 
-        private JObject OrderOpenTime_1(HttpListenerContext context, long chartId)
+        private async Task<JObject> OrderOpenTime_1(MQLRestContext context)
         {
-            MQLCommandManager mqlCommandManager = DLLObjectWrapper.getInstance().getMQLCommandManager(chartId);
-            JObject payload = this.GetJsonPayload(context.Request);
-            JObject result = new JObject();
+            var payload = context.JsonPayload;
+            var result = context.Result;
             List<Object> parameters = new List<Object>();
-            int id = mqlCommandManager.ExecCommand(MQLCommand.OrderOpenTime_1, parameters); // MQLCommand ENUM = 119
-            while (mqlCommandManager.IsCommandRunning(id)) ; // block while command is running
-            try
-            {
-                mqlCommandManager.throwExceptionIfErrorResponse(id);
-                result["result"] = (DateTime)mqlCommandManager.GetCommandResult(id);
-            }
-            catch (Exception e)
-            {
-                result["error"] = MQLExceptions.convertRESTException(e.ToString());
-            }
+            await ExecCommandAsync(context, MQLCommand.OrderOpenTime_1, parameters); // MQLCommand ENUM = 119
+
+            result["result"] = (DateTime)GetCommandResult(context);
 
             return result;
         }
@@ -6885,11 +5381,10 @@ namespace MQL4CSharp.Base.REST
         /// <ul>
         /// </ul>
         /// </summary>
-        [RESTRoute(Method = HttpMethod.POST, PathInfo = @"^/[0-9]+/orderprint")]
-        public void Handle_OrderPrint_1(HttpListenerContext context)
+        [RestRoute(HttpMethod = HttpMethod.POST, PathInfo = @"^/[0-9]+/orderprint$")]
+        public IHttpContext Handle_OrderPrint_1(IHttpContext context)
         {
-            long chartid = Int64.Parse(context.Request.Url.Segments[1].Replace("/", ""));
-            this.SendJsonResponse(context, OrderPrint_1(context, chartid));
+            return SendJsonResponse(context, GetChartId(context), OrderPrint_1);
         }
 
         /// <summary>
@@ -6900,29 +5395,20 @@ namespace MQL4CSharp.Base.REST
         /// <ul>
         /// </ul>
         /// </summary>
-        [RESTRoute(Method = HttpMethod.POST, PathInfo = @"^/orderprint")]
-        public void Handle_OrderPrint_1_Default(HttpListenerContext context)
+        [RestRoute(HttpMethod = HttpMethod.POST, PathInfo = @"^/orderprint$")]
+        public IHttpContext Handle_OrderPrint_1_Default(IHttpContext context)
         {
-            this.SendJsonResponse(context, OrderPrint_1(context, DEFAULT_CHART_ID));
+            return SendJsonResponse(context, OrderPrint_1);
         }
 
-        private JObject OrderPrint_1(HttpListenerContext context, long chartId)
+        private async Task<JObject> OrderPrint_1(MQLRestContext context)
         {
-            MQLCommandManager mqlCommandManager = DLLObjectWrapper.getInstance().getMQLCommandManager(chartId);
-            JObject payload = this.GetJsonPayload(context.Request);
-            JObject result = new JObject();
+            var payload = context.JsonPayload;
+            var result = context.Result;
             List<Object> parameters = new List<Object>();
-            int id = mqlCommandManager.ExecCommand(MQLCommand.OrderPrint_1, parameters); // MQLCommand ENUM = 120
-            while (mqlCommandManager.IsCommandRunning(id)) ; // block while command is running
-            try
-            {
-                mqlCommandManager.throwExceptionIfErrorResponse(id);
-                result["result"] = "";
-            }
-            catch (Exception e)
-            {
-                result["error"] = MQLExceptions.convertRESTException(e.ToString());
-            }
+            await ExecCommandAsync(context, MQLCommand.OrderPrint_1, parameters); // MQLCommand ENUM = 120
+
+            result["result"] = "";
 
             return result;
         }
@@ -6934,11 +5420,10 @@ namespace MQL4CSharp.Base.REST
         /// <ul>
         /// </ul>
         /// </summary>
-        [RESTRoute(Method = HttpMethod.POST, PathInfo = @"^/[0-9]+/orderprofit")]
-        public void Handle_OrderProfit_1(HttpListenerContext context)
+        [RestRoute(HttpMethod = HttpMethod.POST, PathInfo = @"^/[0-9]+/orderprofit$")]
+        public IHttpContext Handle_OrderProfit_1(IHttpContext context)
         {
-            long chartid = Int64.Parse(context.Request.Url.Segments[1].Replace("/", ""));
-            this.SendJsonResponse(context, OrderProfit_1(context, chartid));
+            return SendJsonResponse(context, GetChartId(context), OrderProfit_1);
         }
 
         /// <summary>
@@ -6949,29 +5434,20 @@ namespace MQL4CSharp.Base.REST
         /// <ul>
         /// </ul>
         /// </summary>
-        [RESTRoute(Method = HttpMethod.POST, PathInfo = @"^/orderprofit")]
-        public void Handle_OrderProfit_1_Default(HttpListenerContext context)
+        [RestRoute(HttpMethod = HttpMethod.POST, PathInfo = @"^/orderprofit$")]
+        public IHttpContext Handle_OrderProfit_1_Default(IHttpContext context)
         {
-            this.SendJsonResponse(context, OrderProfit_1(context, DEFAULT_CHART_ID));
+            return SendJsonResponse(context, OrderProfit_1);
         }
 
-        private JObject OrderProfit_1(HttpListenerContext context, long chartId)
+        private async Task<JObject> OrderProfit_1(MQLRestContext context)
         {
-            MQLCommandManager mqlCommandManager = DLLObjectWrapper.getInstance().getMQLCommandManager(chartId);
-            JObject payload = this.GetJsonPayload(context.Request);
-            JObject result = new JObject();
+            var payload = context.JsonPayload;
+            var result = context.Result;
             List<Object> parameters = new List<Object>();
-            int id = mqlCommandManager.ExecCommand(MQLCommand.OrderProfit_1, parameters); // MQLCommand ENUM = 121
-            while (mqlCommandManager.IsCommandRunning(id)) ; // block while command is running
-            try
-            {
-                mqlCommandManager.throwExceptionIfErrorResponse(id);
-                result["result"] = Convert.ToDecimal(mqlCommandManager.GetCommandResult(id));
-            }
-            catch (Exception e)
-            {
-                result["error"] = MQLExceptions.convertRESTException(e.ToString());
-            }
+            await ExecCommandAsync(context, MQLCommand.OrderProfit_1, parameters); // MQLCommand ENUM = 121
+
+            result["result"] = Convert.ToDecimal(GetCommandResult(context));
 
             return result;
         }
@@ -6986,11 +5462,10 @@ namespace MQL4CSharp.Base.REST
         /// <li><b>pool</b> :  SELECT_BY_POS - index in the order pool, SELECT_BY_TICKET - index is order ticket.</li>
         /// </ul>
         /// </summary>
-        [RESTRoute(Method = HttpMethod.POST, PathInfo = @"^/[0-9]+/orderselect")]
-        public void Handle_OrderSelect_1(HttpListenerContext context)
+        [RestRoute(HttpMethod = HttpMethod.POST, PathInfo = @"^/[0-9]+/orderselect$")]
+        public IHttpContext Handle_OrderSelect_1(IHttpContext context)
         {
-            long chartid = Int64.Parse(context.Request.Url.Segments[1].Replace("/", ""));
-            this.SendJsonResponse(context, OrderSelect_1(context, chartid));
+            return SendJsonResponse(context, GetChartId(context), OrderSelect_1);
         }
 
         /// <summary>
@@ -7004,37 +5479,25 @@ namespace MQL4CSharp.Base.REST
         /// <li><b>pool</b> :  SELECT_BY_POS - index in the order pool, SELECT_BY_TICKET - index is order ticket.</li>
         /// </ul>
         /// </summary>
-        [RESTRoute(Method = HttpMethod.POST, PathInfo = @"^/orderselect")]
-        public void Handle_OrderSelect_1_Default(HttpListenerContext context)
+        [RestRoute(HttpMethod = HttpMethod.POST, PathInfo = @"^/orderselect$")]
+        public IHttpContext Handle_OrderSelect_1_Default(IHttpContext context)
         {
-            this.SendJsonResponse(context, OrderSelect_1(context, DEFAULT_CHART_ID));
+            return SendJsonResponse(context, OrderSelect_1);
         }
 
-        private JObject OrderSelect_1(HttpListenerContext context, long chartId)
+        private async Task<JObject> OrderSelect_1(MQLRestContext context)
         {
-            MQLCommandManager mqlCommandManager = DLLObjectWrapper.getInstance().getMQLCommandManager(chartId);
-            JObject payload = this.GetJsonPayload(context.Request);
-            JObject result = new JObject();
-            if (payload == null)
-            {
-                result["result"] = PARSE_ERROR;
-                return result;
-            }
+            var payload = context.JsonPayload;
+            var result = context.Result;
+            if (PayloadNotValid(context))
+                return context.Result;
             List<Object> parameters = new List<Object>();
-            parameters.Add(payload["index"]);
-            parameters.Add(payload["select"]);
-            parameters.Add(payload["pool"]);
-            int id = mqlCommandManager.ExecCommand(MQLCommand.OrderSelect_1, parameters); // MQLCommand ENUM = 122
-            while (mqlCommandManager.IsCommandRunning(id)) ; // block while command is running
-            try
-            {
-                mqlCommandManager.throwExceptionIfErrorResponse(id);
-                result["result"] = (bool)mqlCommandManager.GetCommandResult(id);
-            }
-            catch (Exception e)
-            {
-                result["error"] = MQLExceptions.convertRESTException(e.ToString());
-            }
+            ParamAdd(context, parameters, "index");
+            ParamAdd(context, parameters, "select");
+            ParamAdd(context, parameters, "pool");
+            await ExecCommandAsync(context, MQLCommand.OrderSelect_1, parameters); // MQLCommand ENUM = 122
+
+            result["result"] = (bool)GetCommandResult(context);
 
             return result;
         }
@@ -7057,11 +5520,10 @@ namespace MQL4CSharp.Base.REST
         /// <li><b>arrow_color</b> :  [in] Color of the opening arrow on the chart. If parameter is missing or has CLR_NONE value opening arrow is not drawn on the chart.</li>
         /// </ul>
         /// </summary>
-        [RESTRoute(Method = HttpMethod.POST, PathInfo = @"^/[0-9]+/ordersend")]
-        public void Handle_OrderSend_1(HttpListenerContext context)
+        [RestRoute(HttpMethod = HttpMethod.POST, PathInfo = @"^/[0-9]+/ordersend$")]
+        public IHttpContext Handle_OrderSend_1(IHttpContext context)
         {
-            long chartid = Int64.Parse(context.Request.Url.Segments[1].Replace("/", ""));
-            this.SendJsonResponse(context, OrderSend_1(context, chartid));
+            return SendJsonResponse(context, GetChartId(context), OrderSend_1);
         }
 
         /// <summary>
@@ -7083,45 +5545,33 @@ namespace MQL4CSharp.Base.REST
         /// <li><b>arrow_color</b> :  [in] Color of the opening arrow on the chart. If parameter is missing or has CLR_NONE value opening arrow is not drawn on the chart.</li>
         /// </ul>
         /// </summary>
-        [RESTRoute(Method = HttpMethod.POST, PathInfo = @"^/ordersend")]
-        public void Handle_OrderSend_1_Default(HttpListenerContext context)
+        [RestRoute(HttpMethod = HttpMethod.POST, PathInfo = @"^/ordersend$")]
+        public IHttpContext Handle_OrderSend_1_Default(IHttpContext context)
         {
-            this.SendJsonResponse(context, OrderSend_1(context, DEFAULT_CHART_ID));
+            return SendJsonResponse(context, OrderSend_1);
         }
 
-        private JObject OrderSend_1(HttpListenerContext context, long chartId)
+        private async Task<JObject> OrderSend_1(MQLRestContext context)
         {
-            MQLCommandManager mqlCommandManager = DLLObjectWrapper.getInstance().getMQLCommandManager(chartId);
-            JObject payload = this.GetJsonPayload(context.Request);
-            JObject result = new JObject();
-            if (payload == null)
-            {
-                result["result"] = PARSE_ERROR;
-                return result;
-            }
+            var payload = context.JsonPayload;
+            var result = context.Result;
+            if (PayloadNotValid(context))
+                return context.Result;
             List<Object> parameters = new List<Object>();
-            parameters.Add(payload["symbol"]);
-            parameters.Add(payload["cmd"]);
-            parameters.Add(payload["volume"]);
-            parameters.Add(payload["price"]);
-            parameters.Add(payload["slippage"]);
-            parameters.Add(payload["stoploss"]);
-            parameters.Add(payload["takeprofit"]);
-            parameters.Add(payload["comment"]);
-            parameters.Add(payload["magic"]);
-            parameters.Add(payload["expiration"]);
-            parameters.Add(payload["arrow_color"]);
-            int id = mqlCommandManager.ExecCommand(MQLCommand.OrderSend_1, parameters); // MQLCommand ENUM = 123
-            while (mqlCommandManager.IsCommandRunning(id)) ; // block while command is running
-            try
-            {
-                mqlCommandManager.throwExceptionIfErrorResponse(id);
-                result["result"] = Convert.ToInt32(mqlCommandManager.GetCommandResult(id));
-            }
-            catch (Exception e)
-            {
-                result["error"] = MQLExceptions.convertRESTException(e.ToString());
-            }
+            ParamAdd(context, parameters, "symbol");
+            ParamAdd(context, parameters, "cmd");
+            ParamAdd(context, parameters, "volume");
+            ParamAdd(context, parameters, "price");
+            ParamAdd(context, parameters, "slippage");
+            ParamAdd(context, parameters, "stoploss");
+            ParamAdd(context, parameters, "takeprofit");
+            ParamAdd(context, parameters, "comment");
+            ParamAdd(context, parameters, "magic");
+            ParamAdd(context, parameters, "expiration");
+            ParamAdd(context, parameters, "arrow_color");
+            await ExecCommandAsync(context, MQLCommand.OrderSend_1, parameters); // MQLCommand ENUM = 123
+
+            result["result"] = Convert.ToInt32(GetCommandResult(context));
 
             return result;
         }
@@ -7133,11 +5583,10 @@ namespace MQL4CSharp.Base.REST
         /// <ul>
         /// </ul>
         /// </summary>
-        [RESTRoute(Method = HttpMethod.POST, PathInfo = @"^/[0-9]+/ordershistorytotal")]
-        public void Handle_OrdersHistoryTotal_1(HttpListenerContext context)
+        [RestRoute(HttpMethod = HttpMethod.POST, PathInfo = @"^/[0-9]+/ordershistorytotal$")]
+        public IHttpContext Handle_OrdersHistoryTotal_1(IHttpContext context)
         {
-            long chartid = Int64.Parse(context.Request.Url.Segments[1].Replace("/", ""));
-            this.SendJsonResponse(context, OrdersHistoryTotal_1(context, chartid));
+            return SendJsonResponse(context, GetChartId(context), OrdersHistoryTotal_1);
         }
 
         /// <summary>
@@ -7148,29 +5597,20 @@ namespace MQL4CSharp.Base.REST
         /// <ul>
         /// </ul>
         /// </summary>
-        [RESTRoute(Method = HttpMethod.POST, PathInfo = @"^/ordershistorytotal")]
-        public void Handle_OrdersHistoryTotal_1_Default(HttpListenerContext context)
+        [RestRoute(HttpMethod = HttpMethod.POST, PathInfo = @"^/ordershistorytotal$")]
+        public IHttpContext Handle_OrdersHistoryTotal_1_Default(IHttpContext context)
         {
-            this.SendJsonResponse(context, OrdersHistoryTotal_1(context, DEFAULT_CHART_ID));
+            return SendJsonResponse(context, OrdersHistoryTotal_1);
         }
 
-        private JObject OrdersHistoryTotal_1(HttpListenerContext context, long chartId)
+        private async Task<JObject> OrdersHistoryTotal_1(MQLRestContext context)
         {
-            MQLCommandManager mqlCommandManager = DLLObjectWrapper.getInstance().getMQLCommandManager(chartId);
-            JObject payload = this.GetJsonPayload(context.Request);
-            JObject result = new JObject();
+            var payload = context.JsonPayload;
+            var result = context.Result;
             List<Object> parameters = new List<Object>();
-            int id = mqlCommandManager.ExecCommand(MQLCommand.OrdersHistoryTotal_1, parameters); // MQLCommand ENUM = 124
-            while (mqlCommandManager.IsCommandRunning(id)) ; // block while command is running
-            try
-            {
-                mqlCommandManager.throwExceptionIfErrorResponse(id);
-                result["result"] = Convert.ToInt32(mqlCommandManager.GetCommandResult(id));
-            }
-            catch (Exception e)
-            {
-                result["error"] = MQLExceptions.convertRESTException(e.ToString());
-            }
+            await ExecCommandAsync(context, MQLCommand.OrdersHistoryTotal_1, parameters); // MQLCommand ENUM = 124
+
+            result["result"] = Convert.ToInt32(GetCommandResult(context));
 
             return result;
         }
@@ -7182,11 +5622,10 @@ namespace MQL4CSharp.Base.REST
         /// <ul>
         /// </ul>
         /// </summary>
-        [RESTRoute(Method = HttpMethod.POST, PathInfo = @"^/[0-9]+/orderstoploss")]
-        public void Handle_OrderStopLoss_1(HttpListenerContext context)
+        [RestRoute(HttpMethod = HttpMethod.POST, PathInfo = @"^/[0-9]+/orderstoploss$")]
+        public IHttpContext Handle_OrderStopLoss_1(IHttpContext context)
         {
-            long chartid = Int64.Parse(context.Request.Url.Segments[1].Replace("/", ""));
-            this.SendJsonResponse(context, OrderStopLoss_1(context, chartid));
+            return SendJsonResponse(context, GetChartId(context), OrderStopLoss_1);
         }
 
         /// <summary>
@@ -7197,29 +5636,20 @@ namespace MQL4CSharp.Base.REST
         /// <ul>
         /// </ul>
         /// </summary>
-        [RESTRoute(Method = HttpMethod.POST, PathInfo = @"^/orderstoploss")]
-        public void Handle_OrderStopLoss_1_Default(HttpListenerContext context)
+        [RestRoute(HttpMethod = HttpMethod.POST, PathInfo = @"^/orderstoploss$")]
+        public IHttpContext Handle_OrderStopLoss_1_Default(IHttpContext context)
         {
-            this.SendJsonResponse(context, OrderStopLoss_1(context, DEFAULT_CHART_ID));
+            return SendJsonResponse(context, OrderStopLoss_1);
         }
 
-        private JObject OrderStopLoss_1(HttpListenerContext context, long chartId)
+        private async Task<JObject> OrderStopLoss_1(MQLRestContext context)
         {
-            MQLCommandManager mqlCommandManager = DLLObjectWrapper.getInstance().getMQLCommandManager(chartId);
-            JObject payload = this.GetJsonPayload(context.Request);
-            JObject result = new JObject();
+            var payload = context.JsonPayload;
+            var result = context.Result;
             List<Object> parameters = new List<Object>();
-            int id = mqlCommandManager.ExecCommand(MQLCommand.OrderStopLoss_1, parameters); // MQLCommand ENUM = 125
-            while (mqlCommandManager.IsCommandRunning(id)) ; // block while command is running
-            try
-            {
-                mqlCommandManager.throwExceptionIfErrorResponse(id);
-                result["result"] = Convert.ToDecimal(mqlCommandManager.GetCommandResult(id));
-            }
-            catch (Exception e)
-            {
-                result["error"] = MQLExceptions.convertRESTException(e.ToString());
-            }
+            await ExecCommandAsync(context, MQLCommand.OrderStopLoss_1, parameters); // MQLCommand ENUM = 125
+
+            result["result"] = Convert.ToDecimal(GetCommandResult(context));
 
             return result;
         }
@@ -7231,11 +5661,10 @@ namespace MQL4CSharp.Base.REST
         /// <ul>
         /// </ul>
         /// </summary>
-        [RESTRoute(Method = HttpMethod.POST, PathInfo = @"^/[0-9]+/orderstotal")]
-        public void Handle_OrdersTotal_1(HttpListenerContext context)
+        [RestRoute(HttpMethod = HttpMethod.POST, PathInfo = @"^/[0-9]+/orderstotal$")]
+        public IHttpContext Handle_OrdersTotal_1(IHttpContext context)
         {
-            long chartid = Int64.Parse(context.Request.Url.Segments[1].Replace("/", ""));
-            this.SendJsonResponse(context, OrdersTotal_1(context, chartid));
+            return SendJsonResponse(context, GetChartId(context), OrdersTotal_1);
         }
 
         /// <summary>
@@ -7246,29 +5675,20 @@ namespace MQL4CSharp.Base.REST
         /// <ul>
         /// </ul>
         /// </summary>
-        [RESTRoute(Method = HttpMethod.POST, PathInfo = @"^/orderstotal")]
-        public void Handle_OrdersTotal_1_Default(HttpListenerContext context)
+        [RestRoute(HttpMethod = HttpMethod.POST, PathInfo = @"^/orderstotal$")]
+        public IHttpContext Handle_OrdersTotal_1_Default(IHttpContext context)
         {
-            this.SendJsonResponse(context, OrdersTotal_1(context, DEFAULT_CHART_ID));
+            return SendJsonResponse(context, OrdersTotal_1);
         }
 
-        private JObject OrdersTotal_1(HttpListenerContext context, long chartId)
+        private async Task<JObject> OrdersTotal_1(MQLRestContext context)
         {
-            MQLCommandManager mqlCommandManager = DLLObjectWrapper.getInstance().getMQLCommandManager(chartId);
-            JObject payload = this.GetJsonPayload(context.Request);
-            JObject result = new JObject();
+            var payload = context.JsonPayload;
+            var result = context.Result;
             List<Object> parameters = new List<Object>();
-            int id = mqlCommandManager.ExecCommand(MQLCommand.OrdersTotal_1, parameters); // MQLCommand ENUM = 126
-            while (mqlCommandManager.IsCommandRunning(id)) ; // block while command is running
-            try
-            {
-                mqlCommandManager.throwExceptionIfErrorResponse(id);
-                result["result"] = Convert.ToInt32(mqlCommandManager.GetCommandResult(id));
-            }
-            catch (Exception e)
-            {
-                result["error"] = MQLExceptions.convertRESTException(e.ToString());
-            }
+            await ExecCommandAsync(context, MQLCommand.OrdersTotal_1, parameters); // MQLCommand ENUM = 126
+
+            result["result"] = Convert.ToInt32(GetCommandResult(context));
 
             return result;
         }
@@ -7280,11 +5700,10 @@ namespace MQL4CSharp.Base.REST
         /// <ul>
         /// </ul>
         /// </summary>
-        [RESTRoute(Method = HttpMethod.POST, PathInfo = @"^/[0-9]+/orderswap")]
-        public void Handle_OrderSwap_1(HttpListenerContext context)
+        [RestRoute(HttpMethod = HttpMethod.POST, PathInfo = @"^/[0-9]+/orderswap$")]
+        public IHttpContext Handle_OrderSwap_1(IHttpContext context)
         {
-            long chartid = Int64.Parse(context.Request.Url.Segments[1].Replace("/", ""));
-            this.SendJsonResponse(context, OrderSwap_1(context, chartid));
+            return SendJsonResponse(context, GetChartId(context), OrderSwap_1);
         }
 
         /// <summary>
@@ -7295,29 +5714,20 @@ namespace MQL4CSharp.Base.REST
         /// <ul>
         /// </ul>
         /// </summary>
-        [RESTRoute(Method = HttpMethod.POST, PathInfo = @"^/orderswap")]
-        public void Handle_OrderSwap_1_Default(HttpListenerContext context)
+        [RestRoute(HttpMethod = HttpMethod.POST, PathInfo = @"^/orderswap$")]
+        public IHttpContext Handle_OrderSwap_1_Default(IHttpContext context)
         {
-            this.SendJsonResponse(context, OrderSwap_1(context, DEFAULT_CHART_ID));
+            return SendJsonResponse(context, OrderSwap_1);
         }
 
-        private JObject OrderSwap_1(HttpListenerContext context, long chartId)
+        private async Task<JObject> OrderSwap_1(MQLRestContext context)
         {
-            MQLCommandManager mqlCommandManager = DLLObjectWrapper.getInstance().getMQLCommandManager(chartId);
-            JObject payload = this.GetJsonPayload(context.Request);
-            JObject result = new JObject();
+            var payload = context.JsonPayload;
+            var result = context.Result;
             List<Object> parameters = new List<Object>();
-            int id = mqlCommandManager.ExecCommand(MQLCommand.OrderSwap_1, parameters); // MQLCommand ENUM = 127
-            while (mqlCommandManager.IsCommandRunning(id)) ; // block while command is running
-            try
-            {
-                mqlCommandManager.throwExceptionIfErrorResponse(id);
-                result["result"] = Convert.ToDecimal(mqlCommandManager.GetCommandResult(id));
-            }
-            catch (Exception e)
-            {
-                result["error"] = MQLExceptions.convertRESTException(e.ToString());
-            }
+            await ExecCommandAsync(context, MQLCommand.OrderSwap_1, parameters); // MQLCommand ENUM = 127
+
+            result["result"] = Convert.ToDecimal(GetCommandResult(context));
 
             return result;
         }
@@ -7329,11 +5739,10 @@ namespace MQL4CSharp.Base.REST
         /// <ul>
         /// </ul>
         /// </summary>
-        [RESTRoute(Method = HttpMethod.POST, PathInfo = @"^/[0-9]+/ordersymbol")]
-        public void Handle_OrderSymbol_1(HttpListenerContext context)
+        [RestRoute(HttpMethod = HttpMethod.POST, PathInfo = @"^/[0-9]+/ordersymbol$")]
+        public IHttpContext Handle_OrderSymbol_1(IHttpContext context)
         {
-            long chartid = Int64.Parse(context.Request.Url.Segments[1].Replace("/", ""));
-            this.SendJsonResponse(context, OrderSymbol_1(context, chartid));
+            return SendJsonResponse(context, GetChartId(context), OrderSymbol_1);
         }
 
         /// <summary>
@@ -7344,29 +5753,20 @@ namespace MQL4CSharp.Base.REST
         /// <ul>
         /// </ul>
         /// </summary>
-        [RESTRoute(Method = HttpMethod.POST, PathInfo = @"^/ordersymbol")]
-        public void Handle_OrderSymbol_1_Default(HttpListenerContext context)
+        [RestRoute(HttpMethod = HttpMethod.POST, PathInfo = @"^/ordersymbol$")]
+        public IHttpContext Handle_OrderSymbol_1_Default(IHttpContext context)
         {
-            this.SendJsonResponse(context, OrderSymbol_1(context, DEFAULT_CHART_ID));
+            return SendJsonResponse(context, OrderSymbol_1);
         }
 
-        private JObject OrderSymbol_1(HttpListenerContext context, long chartId)
+        private async Task<JObject> OrderSymbol_1(MQLRestContext context)
         {
-            MQLCommandManager mqlCommandManager = DLLObjectWrapper.getInstance().getMQLCommandManager(chartId);
-            JObject payload = this.GetJsonPayload(context.Request);
-            JObject result = new JObject();
+            var payload = context.JsonPayload;
+            var result = context.Result;
             List<Object> parameters = new List<Object>();
-            int id = mqlCommandManager.ExecCommand(MQLCommand.OrderSymbol_1, parameters); // MQLCommand ENUM = 128
-            while (mqlCommandManager.IsCommandRunning(id)) ; // block while command is running
-            try
-            {
-                mqlCommandManager.throwExceptionIfErrorResponse(id);
-                result["result"] = (string)mqlCommandManager.GetCommandResult(id);
-            }
-            catch (Exception e)
-            {
-                result["error"] = MQLExceptions.convertRESTException(e.ToString());
-            }
+            await ExecCommandAsync(context, MQLCommand.OrderSymbol_1, parameters); // MQLCommand ENUM = 128
+
+            result["result"] = (string)GetCommandResult(context);
 
             return result;
         }
@@ -7378,11 +5778,10 @@ namespace MQL4CSharp.Base.REST
         /// <ul>
         /// </ul>
         /// </summary>
-        [RESTRoute(Method = HttpMethod.POST, PathInfo = @"^/[0-9]+/ordertakeprofit")]
-        public void Handle_OrderTakeProfit_1(HttpListenerContext context)
+        [RestRoute(HttpMethod = HttpMethod.POST, PathInfo = @"^/[0-9]+/ordertakeprofit$")]
+        public IHttpContext Handle_OrderTakeProfit_1(IHttpContext context)
         {
-            long chartid = Int64.Parse(context.Request.Url.Segments[1].Replace("/", ""));
-            this.SendJsonResponse(context, OrderTakeProfit_1(context, chartid));
+            return SendJsonResponse(context, GetChartId(context), OrderTakeProfit_1);
         }
 
         /// <summary>
@@ -7393,29 +5792,20 @@ namespace MQL4CSharp.Base.REST
         /// <ul>
         /// </ul>
         /// </summary>
-        [RESTRoute(Method = HttpMethod.POST, PathInfo = @"^/ordertakeprofit")]
-        public void Handle_OrderTakeProfit_1_Default(HttpListenerContext context)
+        [RestRoute(HttpMethod = HttpMethod.POST, PathInfo = @"^/ordertakeprofit$")]
+        public IHttpContext Handle_OrderTakeProfit_1_Default(IHttpContext context)
         {
-            this.SendJsonResponse(context, OrderTakeProfit_1(context, DEFAULT_CHART_ID));
+            return SendJsonResponse(context, OrderTakeProfit_1);
         }
 
-        private JObject OrderTakeProfit_1(HttpListenerContext context, long chartId)
+        private async Task<JObject> OrderTakeProfit_1(MQLRestContext context)
         {
-            MQLCommandManager mqlCommandManager = DLLObjectWrapper.getInstance().getMQLCommandManager(chartId);
-            JObject payload = this.GetJsonPayload(context.Request);
-            JObject result = new JObject();
+            var payload = context.JsonPayload;
+            var result = context.Result;
             List<Object> parameters = new List<Object>();
-            int id = mqlCommandManager.ExecCommand(MQLCommand.OrderTakeProfit_1, parameters); // MQLCommand ENUM = 129
-            while (mqlCommandManager.IsCommandRunning(id)) ; // block while command is running
-            try
-            {
-                mqlCommandManager.throwExceptionIfErrorResponse(id);
-                result["result"] = Convert.ToDecimal(mqlCommandManager.GetCommandResult(id));
-            }
-            catch (Exception e)
-            {
-                result["error"] = MQLExceptions.convertRESTException(e.ToString());
-            }
+            await ExecCommandAsync(context, MQLCommand.OrderTakeProfit_1, parameters); // MQLCommand ENUM = 129
+
+            result["result"] = Convert.ToDecimal(GetCommandResult(context));
 
             return result;
         }
@@ -7427,11 +5817,10 @@ namespace MQL4CSharp.Base.REST
         /// <ul>
         /// </ul>
         /// </summary>
-        [RESTRoute(Method = HttpMethod.POST, PathInfo = @"^/[0-9]+/orderticket")]
-        public void Handle_OrderTicket_1(HttpListenerContext context)
+        [RestRoute(HttpMethod = HttpMethod.POST, PathInfo = @"^/[0-9]+/orderticket$")]
+        public IHttpContext Handle_OrderTicket_1(IHttpContext context)
         {
-            long chartid = Int64.Parse(context.Request.Url.Segments[1].Replace("/", ""));
-            this.SendJsonResponse(context, OrderTicket_1(context, chartid));
+            return SendJsonResponse(context, GetChartId(context), OrderTicket_1);
         }
 
         /// <summary>
@@ -7442,29 +5831,20 @@ namespace MQL4CSharp.Base.REST
         /// <ul>
         /// </ul>
         /// </summary>
-        [RESTRoute(Method = HttpMethod.POST, PathInfo = @"^/orderticket")]
-        public void Handle_OrderTicket_1_Default(HttpListenerContext context)
+        [RestRoute(HttpMethod = HttpMethod.POST, PathInfo = @"^/orderticket$")]
+        public IHttpContext Handle_OrderTicket_1_Default(IHttpContext context)
         {
-            this.SendJsonResponse(context, OrderTicket_1(context, DEFAULT_CHART_ID));
+            return SendJsonResponse(context, OrderTicket_1);
         }
 
-        private JObject OrderTicket_1(HttpListenerContext context, long chartId)
+        private async Task<JObject> OrderTicket_1(MQLRestContext context)
         {
-            MQLCommandManager mqlCommandManager = DLLObjectWrapper.getInstance().getMQLCommandManager(chartId);
-            JObject payload = this.GetJsonPayload(context.Request);
-            JObject result = new JObject();
+            var payload = context.JsonPayload;
+            var result = context.Result;
             List<Object> parameters = new List<Object>();
-            int id = mqlCommandManager.ExecCommand(MQLCommand.OrderTicket_1, parameters); // MQLCommand ENUM = 130
-            while (mqlCommandManager.IsCommandRunning(id)) ; // block while command is running
-            try
-            {
-                mqlCommandManager.throwExceptionIfErrorResponse(id);
-                result["result"] = Convert.ToInt32(mqlCommandManager.GetCommandResult(id));
-            }
-            catch (Exception e)
-            {
-                result["error"] = MQLExceptions.convertRESTException(e.ToString());
-            }
+            await ExecCommandAsync(context, MQLCommand.OrderTicket_1, parameters); // MQLCommand ENUM = 130
+
+            result["result"] = Convert.ToInt32(GetCommandResult(context));
 
             return result;
         }
@@ -7476,11 +5856,10 @@ namespace MQL4CSharp.Base.REST
         /// <ul>
         /// </ul>
         /// </summary>
-        [RESTRoute(Method = HttpMethod.POST, PathInfo = @"^/[0-9]+/ordertype")]
-        public void Handle_OrderType_1(HttpListenerContext context)
+        [RestRoute(HttpMethod = HttpMethod.POST, PathInfo = @"^/[0-9]+/ordertype$")]
+        public IHttpContext Handle_OrderType_1(IHttpContext context)
         {
-            long chartid = Int64.Parse(context.Request.Url.Segments[1].Replace("/", ""));
-            this.SendJsonResponse(context, OrderType_1(context, chartid));
+            return SendJsonResponse(context, GetChartId(context), OrderType_1);
         }
 
         /// <summary>
@@ -7491,29 +5870,20 @@ namespace MQL4CSharp.Base.REST
         /// <ul>
         /// </ul>
         /// </summary>
-        [RESTRoute(Method = HttpMethod.POST, PathInfo = @"^/ordertype")]
-        public void Handle_OrderType_1_Default(HttpListenerContext context)
+        [RestRoute(HttpMethod = HttpMethod.POST, PathInfo = @"^/ordertype$")]
+        public IHttpContext Handle_OrderType_1_Default(IHttpContext context)
         {
-            this.SendJsonResponse(context, OrderType_1(context, DEFAULT_CHART_ID));
+            return SendJsonResponse(context, OrderType_1);
         }
 
-        private JObject OrderType_1(HttpListenerContext context, long chartId)
+        private async Task<JObject> OrderType_1(MQLRestContext context)
         {
-            MQLCommandManager mqlCommandManager = DLLObjectWrapper.getInstance().getMQLCommandManager(chartId);
-            JObject payload = this.GetJsonPayload(context.Request);
-            JObject result = new JObject();
+            var payload = context.JsonPayload;
+            var result = context.Result;
             List<Object> parameters = new List<Object>();
-            int id = mqlCommandManager.ExecCommand(MQLCommand.OrderType_1, parameters); // MQLCommand ENUM = 131
-            while (mqlCommandManager.IsCommandRunning(id)) ; // block while command is running
-            try
-            {
-                mqlCommandManager.throwExceptionIfErrorResponse(id);
-                result["result"] = Convert.ToInt32(mqlCommandManager.GetCommandResult(id));
-            }
-            catch (Exception e)
-            {
-                result["error"] = MQLExceptions.convertRESTException(e.ToString());
-            }
+            await ExecCommandAsync(context, MQLCommand.OrderType_1, parameters); // MQLCommand ENUM = 131
+
+            result["result"] = Convert.ToInt32(GetCommandResult(context));
 
             return result;
         }
@@ -7526,11 +5896,10 @@ namespace MQL4CSharp.Base.REST
         /// <li><b>property_id</b> :  [in] Signal property identifier. The value can be one of the values of the enumeration.</li>
         /// </ul>
         /// </summary>
-        [RESTRoute(Method = HttpMethod.POST, PathInfo = @"^/[0-9]+/signalbasegetdouble")]
-        public void Handle_SignalBaseGetDouble_1(HttpListenerContext context)
+        [RestRoute(HttpMethod = HttpMethod.POST, PathInfo = @"^/[0-9]+/signalbasegetdouble$")]
+        public IHttpContext Handle_SignalBaseGetDouble_1(IHttpContext context)
         {
-            long chartid = Int64.Parse(context.Request.Url.Segments[1].Replace("/", ""));
-            this.SendJsonResponse(context, SignalBaseGetDouble_1(context, chartid));
+            return SendJsonResponse(context, GetChartId(context), SignalBaseGetDouble_1);
         }
 
         /// <summary>
@@ -7542,35 +5911,23 @@ namespace MQL4CSharp.Base.REST
         /// <li><b>property_id</b> :  [in] Signal property identifier. The value can be one of the values of the enumeration.</li>
         /// </ul>
         /// </summary>
-        [RESTRoute(Method = HttpMethod.POST, PathInfo = @"^/signalbasegetdouble")]
-        public void Handle_SignalBaseGetDouble_1_Default(HttpListenerContext context)
+        [RestRoute(HttpMethod = HttpMethod.POST, PathInfo = @"^/signalbasegetdouble$")]
+        public IHttpContext Handle_SignalBaseGetDouble_1_Default(IHttpContext context)
         {
-            this.SendJsonResponse(context, SignalBaseGetDouble_1(context, DEFAULT_CHART_ID));
+            return SendJsonResponse(context, SignalBaseGetDouble_1);
         }
 
-        private JObject SignalBaseGetDouble_1(HttpListenerContext context, long chartId)
+        private async Task<JObject> SignalBaseGetDouble_1(MQLRestContext context)
         {
-            MQLCommandManager mqlCommandManager = DLLObjectWrapper.getInstance().getMQLCommandManager(chartId);
-            JObject payload = this.GetJsonPayload(context.Request);
-            JObject result = new JObject();
-            if (payload == null)
-            {
-                result["result"] = PARSE_ERROR;
-                return result;
-            }
+            var payload = context.JsonPayload;
+            var result = context.Result;
+            if (PayloadNotValid(context))
+                return context.Result;
             List<Object> parameters = new List<Object>();
-            parameters.Add(payload["property_id"]);
-            int id = mqlCommandManager.ExecCommand(MQLCommand.SignalBaseGetDouble_1, parameters); // MQLCommand ENUM = 132
-            while (mqlCommandManager.IsCommandRunning(id)) ; // block while command is running
-            try
-            {
-                mqlCommandManager.throwExceptionIfErrorResponse(id);
-                result["result"] = Convert.ToDecimal(mqlCommandManager.GetCommandResult(id));
-            }
-            catch (Exception e)
-            {
-                result["error"] = MQLExceptions.convertRESTException(e.ToString());
-            }
+            ParamAdd(context, parameters, "property_id");
+            await ExecCommandAsync(context, MQLCommand.SignalBaseGetDouble_1, parameters); // MQLCommand ENUM = 132
+
+            result["result"] = Convert.ToDecimal(GetCommandResult(context));
 
             return result;
         }
@@ -7583,11 +5940,10 @@ namespace MQL4CSharp.Base.REST
         /// <li><b>property_id</b> :  [in] Signal property identifier. The value can be one of the values of the enumeration.</li>
         /// </ul>
         /// </summary>
-        [RESTRoute(Method = HttpMethod.POST, PathInfo = @"^/[0-9]+/signalbasegetinteger")]
-        public void Handle_SignalBaseGetInteger_1(HttpListenerContext context)
+        [RestRoute(HttpMethod = HttpMethod.POST, PathInfo = @"^/[0-9]+/signalbasegetinteger$")]
+        public IHttpContext Handle_SignalBaseGetInteger_1(IHttpContext context)
         {
-            long chartid = Int64.Parse(context.Request.Url.Segments[1].Replace("/", ""));
-            this.SendJsonResponse(context, SignalBaseGetInteger_1(context, chartid));
+            return SendJsonResponse(context, GetChartId(context), SignalBaseGetInteger_1);
         }
 
         /// <summary>
@@ -7599,35 +5955,23 @@ namespace MQL4CSharp.Base.REST
         /// <li><b>property_id</b> :  [in] Signal property identifier. The value can be one of the values of the enumeration.</li>
         /// </ul>
         /// </summary>
-        [RESTRoute(Method = HttpMethod.POST, PathInfo = @"^/signalbasegetinteger")]
-        public void Handle_SignalBaseGetInteger_1_Default(HttpListenerContext context)
+        [RestRoute(HttpMethod = HttpMethod.POST, PathInfo = @"^/signalbasegetinteger$")]
+        public IHttpContext Handle_SignalBaseGetInteger_1_Default(IHttpContext context)
         {
-            this.SendJsonResponse(context, SignalBaseGetInteger_1(context, DEFAULT_CHART_ID));
+            return SendJsonResponse(context, SignalBaseGetInteger_1);
         }
 
-        private JObject SignalBaseGetInteger_1(HttpListenerContext context, long chartId)
+        private async Task<JObject> SignalBaseGetInteger_1(MQLRestContext context)
         {
-            MQLCommandManager mqlCommandManager = DLLObjectWrapper.getInstance().getMQLCommandManager(chartId);
-            JObject payload = this.GetJsonPayload(context.Request);
-            JObject result = new JObject();
-            if (payload == null)
-            {
-                result["result"] = PARSE_ERROR;
-                return result;
-            }
+            var payload = context.JsonPayload;
+            var result = context.Result;
+            if (PayloadNotValid(context))
+                return context.Result;
             List<Object> parameters = new List<Object>();
-            parameters.Add(payload["property_id"]);
-            int id = mqlCommandManager.ExecCommand(MQLCommand.SignalBaseGetInteger_1, parameters); // MQLCommand ENUM = 133
-            while (mqlCommandManager.IsCommandRunning(id)) ; // block while command is running
-            try
-            {
-                mqlCommandManager.throwExceptionIfErrorResponse(id);
-                result["result"] = Convert.ToInt64(mqlCommandManager.GetCommandResult(id));
-            }
-            catch (Exception e)
-            {
-                result["error"] = MQLExceptions.convertRESTException(e.ToString());
-            }
+            ParamAdd(context, parameters, "property_id");
+            await ExecCommandAsync(context, MQLCommand.SignalBaseGetInteger_1, parameters); // MQLCommand ENUM = 133
+
+            result["result"] = Convert.ToInt64(GetCommandResult(context));
 
             return result;
         }
@@ -7640,11 +5984,10 @@ namespace MQL4CSharp.Base.REST
         /// <li><b>property_id</b> :  [in] Signal property identifier. The value can be one of the values of the enumeration.</li>
         /// </ul>
         /// </summary>
-        [RESTRoute(Method = HttpMethod.POST, PathInfo = @"^/[0-9]+/signalbasegetstring")]
-        public void Handle_SignalBaseGetString_1(HttpListenerContext context)
+        [RestRoute(HttpMethod = HttpMethod.POST, PathInfo = @"^/[0-9]+/signalbasegetstring$")]
+        public IHttpContext Handle_SignalBaseGetString_1(IHttpContext context)
         {
-            long chartid = Int64.Parse(context.Request.Url.Segments[1].Replace("/", ""));
-            this.SendJsonResponse(context, SignalBaseGetString_1(context, chartid));
+            return SendJsonResponse(context, GetChartId(context), SignalBaseGetString_1);
         }
 
         /// <summary>
@@ -7656,35 +5999,23 @@ namespace MQL4CSharp.Base.REST
         /// <li><b>property_id</b> :  [in] Signal property identifier. The value can be one of the values of the enumeration.</li>
         /// </ul>
         /// </summary>
-        [RESTRoute(Method = HttpMethod.POST, PathInfo = @"^/signalbasegetstring")]
-        public void Handle_SignalBaseGetString_1_Default(HttpListenerContext context)
+        [RestRoute(HttpMethod = HttpMethod.POST, PathInfo = @"^/signalbasegetstring$")]
+        public IHttpContext Handle_SignalBaseGetString_1_Default(IHttpContext context)
         {
-            this.SendJsonResponse(context, SignalBaseGetString_1(context, DEFAULT_CHART_ID));
+            return SendJsonResponse(context, SignalBaseGetString_1);
         }
 
-        private JObject SignalBaseGetString_1(HttpListenerContext context, long chartId)
+        private async Task<JObject> SignalBaseGetString_1(MQLRestContext context)
         {
-            MQLCommandManager mqlCommandManager = DLLObjectWrapper.getInstance().getMQLCommandManager(chartId);
-            JObject payload = this.GetJsonPayload(context.Request);
-            JObject result = new JObject();
-            if (payload == null)
-            {
-                result["result"] = PARSE_ERROR;
-                return result;
-            }
+            var payload = context.JsonPayload;
+            var result = context.Result;
+            if (PayloadNotValid(context))
+                return context.Result;
             List<Object> parameters = new List<Object>();
-            parameters.Add(payload["property_id"]);
-            int id = mqlCommandManager.ExecCommand(MQLCommand.SignalBaseGetString_1, parameters); // MQLCommand ENUM = 134
-            while (mqlCommandManager.IsCommandRunning(id)) ; // block while command is running
-            try
-            {
-                mqlCommandManager.throwExceptionIfErrorResponse(id);
-                result["result"] = (string)mqlCommandManager.GetCommandResult(id);
-            }
-            catch (Exception e)
-            {
-                result["error"] = MQLExceptions.convertRESTException(e.ToString());
-            }
+            ParamAdd(context, parameters, "property_id");
+            await ExecCommandAsync(context, MQLCommand.SignalBaseGetString_1, parameters); // MQLCommand ENUM = 134
+
+            result["result"] = (string)GetCommandResult(context);
 
             return result;
         }
@@ -7697,11 +6028,10 @@ namespace MQL4CSharp.Base.REST
         /// <li><b>index</b> :  [in] Signal index in base of trading signals.</li>
         /// </ul>
         /// </summary>
-        [RESTRoute(Method = HttpMethod.POST, PathInfo = @"^/[0-9]+/signalbaseselect")]
-        public void Handle_SignalBaseSelect_1(HttpListenerContext context)
+        [RestRoute(HttpMethod = HttpMethod.POST, PathInfo = @"^/[0-9]+/signalbaseselect$")]
+        public IHttpContext Handle_SignalBaseSelect_1(IHttpContext context)
         {
-            long chartid = Int64.Parse(context.Request.Url.Segments[1].Replace("/", ""));
-            this.SendJsonResponse(context, SignalBaseSelect_1(context, chartid));
+            return SendJsonResponse(context, GetChartId(context), SignalBaseSelect_1);
         }
 
         /// <summary>
@@ -7713,35 +6043,23 @@ namespace MQL4CSharp.Base.REST
         /// <li><b>index</b> :  [in] Signal index in base of trading signals.</li>
         /// </ul>
         /// </summary>
-        [RESTRoute(Method = HttpMethod.POST, PathInfo = @"^/signalbaseselect")]
-        public void Handle_SignalBaseSelect_1_Default(HttpListenerContext context)
+        [RestRoute(HttpMethod = HttpMethod.POST, PathInfo = @"^/signalbaseselect$")]
+        public IHttpContext Handle_SignalBaseSelect_1_Default(IHttpContext context)
         {
-            this.SendJsonResponse(context, SignalBaseSelect_1(context, DEFAULT_CHART_ID));
+            return SendJsonResponse(context, SignalBaseSelect_1);
         }
 
-        private JObject SignalBaseSelect_1(HttpListenerContext context, long chartId)
+        private async Task<JObject> SignalBaseSelect_1(MQLRestContext context)
         {
-            MQLCommandManager mqlCommandManager = DLLObjectWrapper.getInstance().getMQLCommandManager(chartId);
-            JObject payload = this.GetJsonPayload(context.Request);
-            JObject result = new JObject();
-            if (payload == null)
-            {
-                result["result"] = PARSE_ERROR;
-                return result;
-            }
+            var payload = context.JsonPayload;
+            var result = context.Result;
+            if (PayloadNotValid(context))
+                return context.Result;
             List<Object> parameters = new List<Object>();
-            parameters.Add(payload["index"]);
-            int id = mqlCommandManager.ExecCommand(MQLCommand.SignalBaseSelect_1, parameters); // MQLCommand ENUM = 135
-            while (mqlCommandManager.IsCommandRunning(id)) ; // block while command is running
-            try
-            {
-                mqlCommandManager.throwExceptionIfErrorResponse(id);
-                result["result"] = (bool)mqlCommandManager.GetCommandResult(id);
-            }
-            catch (Exception e)
-            {
-                result["error"] = MQLExceptions.convertRESTException(e.ToString());
-            }
+            ParamAdd(context, parameters, "index");
+            await ExecCommandAsync(context, MQLCommand.SignalBaseSelect_1, parameters); // MQLCommand ENUM = 135
+
+            result["result"] = (bool)GetCommandResult(context);
 
             return result;
         }
@@ -7753,11 +6071,10 @@ namespace MQL4CSharp.Base.REST
         /// <ul>
         /// </ul>
         /// </summary>
-        [RESTRoute(Method = HttpMethod.POST, PathInfo = @"^/[0-9]+/signalbasetotal")]
-        public void Handle_SignalBaseTotal_1(HttpListenerContext context)
+        [RestRoute(HttpMethod = HttpMethod.POST, PathInfo = @"^/[0-9]+/signalbasetotal$")]
+        public IHttpContext Handle_SignalBaseTotal_1(IHttpContext context)
         {
-            long chartid = Int64.Parse(context.Request.Url.Segments[1].Replace("/", ""));
-            this.SendJsonResponse(context, SignalBaseTotal_1(context, chartid));
+            return SendJsonResponse(context, GetChartId(context), SignalBaseTotal_1);
         }
 
         /// <summary>
@@ -7768,29 +6085,20 @@ namespace MQL4CSharp.Base.REST
         /// <ul>
         /// </ul>
         /// </summary>
-        [RESTRoute(Method = HttpMethod.POST, PathInfo = @"^/signalbasetotal")]
-        public void Handle_SignalBaseTotal_1_Default(HttpListenerContext context)
+        [RestRoute(HttpMethod = HttpMethod.POST, PathInfo = @"^/signalbasetotal$")]
+        public IHttpContext Handle_SignalBaseTotal_1_Default(IHttpContext context)
         {
-            this.SendJsonResponse(context, SignalBaseTotal_1(context, DEFAULT_CHART_ID));
+            return SendJsonResponse(context, SignalBaseTotal_1);
         }
 
-        private JObject SignalBaseTotal_1(HttpListenerContext context, long chartId)
+        private async Task<JObject> SignalBaseTotal_1(MQLRestContext context)
         {
-            MQLCommandManager mqlCommandManager = DLLObjectWrapper.getInstance().getMQLCommandManager(chartId);
-            JObject payload = this.GetJsonPayload(context.Request);
-            JObject result = new JObject();
+            var payload = context.JsonPayload;
+            var result = context.Result;
             List<Object> parameters = new List<Object>();
-            int id = mqlCommandManager.ExecCommand(MQLCommand.SignalBaseTotal_1, parameters); // MQLCommand ENUM = 136
-            while (mqlCommandManager.IsCommandRunning(id)) ; // block while command is running
-            try
-            {
-                mqlCommandManager.throwExceptionIfErrorResponse(id);
-                result["result"] = Convert.ToInt32(mqlCommandManager.GetCommandResult(id));
-            }
-            catch (Exception e)
-            {
-                result["error"] = MQLExceptions.convertRESTException(e.ToString());
-            }
+            await ExecCommandAsync(context, MQLCommand.SignalBaseTotal_1, parameters); // MQLCommand ENUM = 136
+
+            result["result"] = Convert.ToInt32(GetCommandResult(context));
 
             return result;
         }
@@ -7803,11 +6111,10 @@ namespace MQL4CSharp.Base.REST
         /// <li><b>property_id</b> :  [in] Signal copy settings property identifier. The value can be one of the values of the enumeration.</li>
         /// </ul>
         /// </summary>
-        [RESTRoute(Method = HttpMethod.POST, PathInfo = @"^/[0-9]+/signalinfogetdouble")]
-        public void Handle_SignalInfoGetDouble_1(HttpListenerContext context)
+        [RestRoute(HttpMethod = HttpMethod.POST, PathInfo = @"^/[0-9]+/signalinfogetdouble$")]
+        public IHttpContext Handle_SignalInfoGetDouble_1(IHttpContext context)
         {
-            long chartid = Int64.Parse(context.Request.Url.Segments[1].Replace("/", ""));
-            this.SendJsonResponse(context, SignalInfoGetDouble_1(context, chartid));
+            return SendJsonResponse(context, GetChartId(context), SignalInfoGetDouble_1);
         }
 
         /// <summary>
@@ -7819,35 +6126,23 @@ namespace MQL4CSharp.Base.REST
         /// <li><b>property_id</b> :  [in] Signal copy settings property identifier. The value can be one of the values of the enumeration.</li>
         /// </ul>
         /// </summary>
-        [RESTRoute(Method = HttpMethod.POST, PathInfo = @"^/signalinfogetdouble")]
-        public void Handle_SignalInfoGetDouble_1_Default(HttpListenerContext context)
+        [RestRoute(HttpMethod = HttpMethod.POST, PathInfo = @"^/signalinfogetdouble$")]
+        public IHttpContext Handle_SignalInfoGetDouble_1_Default(IHttpContext context)
         {
-            this.SendJsonResponse(context, SignalInfoGetDouble_1(context, DEFAULT_CHART_ID));
+            return SendJsonResponse(context, SignalInfoGetDouble_1);
         }
 
-        private JObject SignalInfoGetDouble_1(HttpListenerContext context, long chartId)
+        private async Task<JObject> SignalInfoGetDouble_1(MQLRestContext context)
         {
-            MQLCommandManager mqlCommandManager = DLLObjectWrapper.getInstance().getMQLCommandManager(chartId);
-            JObject payload = this.GetJsonPayload(context.Request);
-            JObject result = new JObject();
-            if (payload == null)
-            {
-                result["result"] = PARSE_ERROR;
-                return result;
-            }
+            var payload = context.JsonPayload;
+            var result = context.Result;
+            if (PayloadNotValid(context))
+                return context.Result;
             List<Object> parameters = new List<Object>();
-            parameters.Add(payload["property_id"]);
-            int id = mqlCommandManager.ExecCommand(MQLCommand.SignalInfoGetDouble_1, parameters); // MQLCommand ENUM = 137
-            while (mqlCommandManager.IsCommandRunning(id)) ; // block while command is running
-            try
-            {
-                mqlCommandManager.throwExceptionIfErrorResponse(id);
-                result["result"] = Convert.ToDecimal(mqlCommandManager.GetCommandResult(id));
-            }
-            catch (Exception e)
-            {
-                result["error"] = MQLExceptions.convertRESTException(e.ToString());
-            }
+            ParamAdd(context, parameters, "property_id");
+            await ExecCommandAsync(context, MQLCommand.SignalInfoGetDouble_1, parameters); // MQLCommand ENUM = 137
+
+            result["result"] = Convert.ToDecimal(GetCommandResult(context));
 
             return result;
         }
@@ -7860,11 +6155,10 @@ namespace MQL4CSharp.Base.REST
         /// <li><b>property_id</b> :  [in] Signal copy settings property identifier. The value can be one of the values of the enumeration.</li>
         /// </ul>
         /// </summary>
-        [RESTRoute(Method = HttpMethod.POST, PathInfo = @"^/[0-9]+/signalinfogetinteger")]
-        public void Handle_SignalInfoGetInteger_1(HttpListenerContext context)
+        [RestRoute(HttpMethod = HttpMethod.POST, PathInfo = @"^/[0-9]+/signalinfogetinteger$")]
+        public IHttpContext Handle_SignalInfoGetInteger_1(IHttpContext context)
         {
-            long chartid = Int64.Parse(context.Request.Url.Segments[1].Replace("/", ""));
-            this.SendJsonResponse(context, SignalInfoGetInteger_1(context, chartid));
+            return SendJsonResponse(context, GetChartId(context), SignalInfoGetInteger_1);
         }
 
         /// <summary>
@@ -7876,35 +6170,23 @@ namespace MQL4CSharp.Base.REST
         /// <li><b>property_id</b> :  [in] Signal copy settings property identifier. The value can be one of the values of the enumeration.</li>
         /// </ul>
         /// </summary>
-        [RESTRoute(Method = HttpMethod.POST, PathInfo = @"^/signalinfogetinteger")]
-        public void Handle_SignalInfoGetInteger_1_Default(HttpListenerContext context)
+        [RestRoute(HttpMethod = HttpMethod.POST, PathInfo = @"^/signalinfogetinteger$")]
+        public IHttpContext Handle_SignalInfoGetInteger_1_Default(IHttpContext context)
         {
-            this.SendJsonResponse(context, SignalInfoGetInteger_1(context, DEFAULT_CHART_ID));
+            return SendJsonResponse(context, SignalInfoGetInteger_1);
         }
 
-        private JObject SignalInfoGetInteger_1(HttpListenerContext context, long chartId)
+        private async Task<JObject> SignalInfoGetInteger_1(MQLRestContext context)
         {
-            MQLCommandManager mqlCommandManager = DLLObjectWrapper.getInstance().getMQLCommandManager(chartId);
-            JObject payload = this.GetJsonPayload(context.Request);
-            JObject result = new JObject();
-            if (payload == null)
-            {
-                result["result"] = PARSE_ERROR;
-                return result;
-            }
+            var payload = context.JsonPayload;
+            var result = context.Result;
+            if (PayloadNotValid(context))
+                return context.Result;
             List<Object> parameters = new List<Object>();
-            parameters.Add(payload["property_id"]);
-            int id = mqlCommandManager.ExecCommand(MQLCommand.SignalInfoGetInteger_1, parameters); // MQLCommand ENUM = 138
-            while (mqlCommandManager.IsCommandRunning(id)) ; // block while command is running
-            try
-            {
-                mqlCommandManager.throwExceptionIfErrorResponse(id);
-                result["result"] = Convert.ToInt64(mqlCommandManager.GetCommandResult(id));
-            }
-            catch (Exception e)
-            {
-                result["error"] = MQLExceptions.convertRESTException(e.ToString());
-            }
+            ParamAdd(context, parameters, "property_id");
+            await ExecCommandAsync(context, MQLCommand.SignalInfoGetInteger_1, parameters); // MQLCommand ENUM = 138
+
+            result["result"] = Convert.ToInt64(GetCommandResult(context));
 
             return result;
         }
@@ -7917,11 +6199,10 @@ namespace MQL4CSharp.Base.REST
         /// <li><b>property_id</b> :  [in] Signal copy settings property identifier. The value can be one of the values of the enumeration.</li>
         /// </ul>
         /// </summary>
-        [RESTRoute(Method = HttpMethod.POST, PathInfo = @"^/[0-9]+/signalinfogetstring")]
-        public void Handle_SignalInfoGetString_1(HttpListenerContext context)
+        [RestRoute(HttpMethod = HttpMethod.POST, PathInfo = @"^/[0-9]+/signalinfogetstring$")]
+        public IHttpContext Handle_SignalInfoGetString_1(IHttpContext context)
         {
-            long chartid = Int64.Parse(context.Request.Url.Segments[1].Replace("/", ""));
-            this.SendJsonResponse(context, SignalInfoGetString_1(context, chartid));
+            return SendJsonResponse(context, GetChartId(context), SignalInfoGetString_1);
         }
 
         /// <summary>
@@ -7933,35 +6214,23 @@ namespace MQL4CSharp.Base.REST
         /// <li><b>property_id</b> :  [in] Signal copy settings property identifier. The value can be one of the values of the enumeration.</li>
         /// </ul>
         /// </summary>
-        [RESTRoute(Method = HttpMethod.POST, PathInfo = @"^/signalinfogetstring")]
-        public void Handle_SignalInfoGetString_1_Default(HttpListenerContext context)
+        [RestRoute(HttpMethod = HttpMethod.POST, PathInfo = @"^/signalinfogetstring$")]
+        public IHttpContext Handle_SignalInfoGetString_1_Default(IHttpContext context)
         {
-            this.SendJsonResponse(context, SignalInfoGetString_1(context, DEFAULT_CHART_ID));
+            return SendJsonResponse(context, SignalInfoGetString_1);
         }
 
-        private JObject SignalInfoGetString_1(HttpListenerContext context, long chartId)
+        private async Task<JObject> SignalInfoGetString_1(MQLRestContext context)
         {
-            MQLCommandManager mqlCommandManager = DLLObjectWrapper.getInstance().getMQLCommandManager(chartId);
-            JObject payload = this.GetJsonPayload(context.Request);
-            JObject result = new JObject();
-            if (payload == null)
-            {
-                result["result"] = PARSE_ERROR;
-                return result;
-            }
+            var payload = context.JsonPayload;
+            var result = context.Result;
+            if (PayloadNotValid(context))
+                return context.Result;
             List<Object> parameters = new List<Object>();
-            parameters.Add(payload["property_id"]);
-            int id = mqlCommandManager.ExecCommand(MQLCommand.SignalInfoGetString_1, parameters); // MQLCommand ENUM = 139
-            while (mqlCommandManager.IsCommandRunning(id)) ; // block while command is running
-            try
-            {
-                mqlCommandManager.throwExceptionIfErrorResponse(id);
-                result["result"] = (string)mqlCommandManager.GetCommandResult(id);
-            }
-            catch (Exception e)
-            {
-                result["error"] = MQLExceptions.convertRESTException(e.ToString());
-            }
+            ParamAdd(context, parameters, "property_id");
+            await ExecCommandAsync(context, MQLCommand.SignalInfoGetString_1, parameters); // MQLCommand ENUM = 139
+
+            result["result"] = (string)GetCommandResult(context);
 
             return result;
         }
@@ -7975,11 +6244,10 @@ namespace MQL4CSharp.Base.REST
         /// <li><b>value</b> :  [in] The value of signal copy settings property.</li>
         /// </ul>
         /// </summary>
-        [RESTRoute(Method = HttpMethod.POST, PathInfo = @"^/[0-9]+/signalinfosetdouble")]
-        public void Handle_SignalInfoSetDouble_1(HttpListenerContext context)
+        [RestRoute(HttpMethod = HttpMethod.POST, PathInfo = @"^/[0-9]+/signalinfosetdouble$")]
+        public IHttpContext Handle_SignalInfoSetDouble_1(IHttpContext context)
         {
-            long chartid = Int64.Parse(context.Request.Url.Segments[1].Replace("/", ""));
-            this.SendJsonResponse(context, SignalInfoSetDouble_1(context, chartid));
+            return SendJsonResponse(context, GetChartId(context), SignalInfoSetDouble_1);
         }
 
         /// <summary>
@@ -7992,36 +6260,24 @@ namespace MQL4CSharp.Base.REST
         /// <li><b>value</b> :  [in] The value of signal copy settings property.</li>
         /// </ul>
         /// </summary>
-        [RESTRoute(Method = HttpMethod.POST, PathInfo = @"^/signalinfosetdouble")]
-        public void Handle_SignalInfoSetDouble_1_Default(HttpListenerContext context)
+        [RestRoute(HttpMethod = HttpMethod.POST, PathInfo = @"^/signalinfosetdouble$")]
+        public IHttpContext Handle_SignalInfoSetDouble_1_Default(IHttpContext context)
         {
-            this.SendJsonResponse(context, SignalInfoSetDouble_1(context, DEFAULT_CHART_ID));
+            return SendJsonResponse(context, SignalInfoSetDouble_1);
         }
 
-        private JObject SignalInfoSetDouble_1(HttpListenerContext context, long chartId)
+        private async Task<JObject> SignalInfoSetDouble_1(MQLRestContext context)
         {
-            MQLCommandManager mqlCommandManager = DLLObjectWrapper.getInstance().getMQLCommandManager(chartId);
-            JObject payload = this.GetJsonPayload(context.Request);
-            JObject result = new JObject();
-            if (payload == null)
-            {
-                result["result"] = PARSE_ERROR;
-                return result;
-            }
+            var payload = context.JsonPayload;
+            var result = context.Result;
+            if (PayloadNotValid(context))
+                return context.Result;
             List<Object> parameters = new List<Object>();
-            parameters.Add(payload["property_id"]);
-            parameters.Add(payload["value"]);
-            int id = mqlCommandManager.ExecCommand(MQLCommand.SignalInfoSetDouble_1, parameters); // MQLCommand ENUM = 140
-            while (mqlCommandManager.IsCommandRunning(id)) ; // block while command is running
-            try
-            {
-                mqlCommandManager.throwExceptionIfErrorResponse(id);
-                result["result"] = (bool)mqlCommandManager.GetCommandResult(id);
-            }
-            catch (Exception e)
-            {
-                result["error"] = MQLExceptions.convertRESTException(e.ToString());
-            }
+            ParamAdd(context, parameters, "property_id");
+            ParamAdd(context, parameters, "value");
+            await ExecCommandAsync(context, MQLCommand.SignalInfoSetDouble_1, parameters); // MQLCommand ENUM = 140
+
+            result["result"] = (bool)GetCommandResult(context);
 
             return result;
         }
@@ -8035,11 +6291,10 @@ namespace MQL4CSharp.Base.REST
         /// <li><b>value</b> :  [in] The value of signal copy settings property.</li>
         /// </ul>
         /// </summary>
-        [RESTRoute(Method = HttpMethod.POST, PathInfo = @"^/[0-9]+/signalinfosetinteger")]
-        public void Handle_SignalInfoSetInteger_1(HttpListenerContext context)
+        [RestRoute(HttpMethod = HttpMethod.POST, PathInfo = @"^/[0-9]+/signalinfosetinteger$")]
+        public IHttpContext Handle_SignalInfoSetInteger_1(IHttpContext context)
         {
-            long chartid = Int64.Parse(context.Request.Url.Segments[1].Replace("/", ""));
-            this.SendJsonResponse(context, SignalInfoSetInteger_1(context, chartid));
+            return SendJsonResponse(context, GetChartId(context), SignalInfoSetInteger_1);
         }
 
         /// <summary>
@@ -8052,36 +6307,24 @@ namespace MQL4CSharp.Base.REST
         /// <li><b>value</b> :  [in] The value of signal copy settings property.</li>
         /// </ul>
         /// </summary>
-        [RESTRoute(Method = HttpMethod.POST, PathInfo = @"^/signalinfosetinteger")]
-        public void Handle_SignalInfoSetInteger_1_Default(HttpListenerContext context)
+        [RestRoute(HttpMethod = HttpMethod.POST, PathInfo = @"^/signalinfosetinteger$")]
+        public IHttpContext Handle_SignalInfoSetInteger_1_Default(IHttpContext context)
         {
-            this.SendJsonResponse(context, SignalInfoSetInteger_1(context, DEFAULT_CHART_ID));
+            return SendJsonResponse(context, SignalInfoSetInteger_1);
         }
 
-        private JObject SignalInfoSetInteger_1(HttpListenerContext context, long chartId)
+        private async Task<JObject> SignalInfoSetInteger_1(MQLRestContext context)
         {
-            MQLCommandManager mqlCommandManager = DLLObjectWrapper.getInstance().getMQLCommandManager(chartId);
-            JObject payload = this.GetJsonPayload(context.Request);
-            JObject result = new JObject();
-            if (payload == null)
-            {
-                result["result"] = PARSE_ERROR;
-                return result;
-            }
+            var payload = context.JsonPayload;
+            var result = context.Result;
+            if (PayloadNotValid(context))
+                return context.Result;
             List<Object> parameters = new List<Object>();
-            parameters.Add(payload["property_id"]);
-            parameters.Add(payload["value"]);
-            int id = mqlCommandManager.ExecCommand(MQLCommand.SignalInfoSetInteger_1, parameters); // MQLCommand ENUM = 141
-            while (mqlCommandManager.IsCommandRunning(id)) ; // block while command is running
-            try
-            {
-                mqlCommandManager.throwExceptionIfErrorResponse(id);
-                result["result"] = (bool)mqlCommandManager.GetCommandResult(id);
-            }
-            catch (Exception e)
-            {
-                result["error"] = MQLExceptions.convertRESTException(e.ToString());
-            }
+            ParamAdd(context, parameters, "property_id");
+            ParamAdd(context, parameters, "value");
+            await ExecCommandAsync(context, MQLCommand.SignalInfoSetInteger_1, parameters); // MQLCommand ENUM = 141
+
+            result["result"] = (bool)GetCommandResult(context);
 
             return result;
         }
@@ -8094,11 +6337,10 @@ namespace MQL4CSharp.Base.REST
         /// <li><b>signal_id</b> :  [in] Signal identifier.</li>
         /// </ul>
         /// </summary>
-        [RESTRoute(Method = HttpMethod.POST, PathInfo = @"^/[0-9]+/signalsubscribe")]
-        public void Handle_SignalSubscribe_1(HttpListenerContext context)
+        [RestRoute(HttpMethod = HttpMethod.POST, PathInfo = @"^/[0-9]+/signalsubscribe$")]
+        public IHttpContext Handle_SignalSubscribe_1(IHttpContext context)
         {
-            long chartid = Int64.Parse(context.Request.Url.Segments[1].Replace("/", ""));
-            this.SendJsonResponse(context, SignalSubscribe_1(context, chartid));
+            return SendJsonResponse(context, GetChartId(context), SignalSubscribe_1);
         }
 
         /// <summary>
@@ -8110,35 +6352,23 @@ namespace MQL4CSharp.Base.REST
         /// <li><b>signal_id</b> :  [in] Signal identifier.</li>
         /// </ul>
         /// </summary>
-        [RESTRoute(Method = HttpMethod.POST, PathInfo = @"^/signalsubscribe")]
-        public void Handle_SignalSubscribe_1_Default(HttpListenerContext context)
+        [RestRoute(HttpMethod = HttpMethod.POST, PathInfo = @"^/signalsubscribe$")]
+        public IHttpContext Handle_SignalSubscribe_1_Default(IHttpContext context)
         {
-            this.SendJsonResponse(context, SignalSubscribe_1(context, DEFAULT_CHART_ID));
+            return SendJsonResponse(context, SignalSubscribe_1);
         }
 
-        private JObject SignalSubscribe_1(HttpListenerContext context, long chartId)
+        private async Task<JObject> SignalSubscribe_1(MQLRestContext context)
         {
-            MQLCommandManager mqlCommandManager = DLLObjectWrapper.getInstance().getMQLCommandManager(chartId);
-            JObject payload = this.GetJsonPayload(context.Request);
-            JObject result = new JObject();
-            if (payload == null)
-            {
-                result["result"] = PARSE_ERROR;
-                return result;
-            }
+            var payload = context.JsonPayload;
+            var result = context.Result;
+            if (PayloadNotValid(context))
+                return context.Result;
             List<Object> parameters = new List<Object>();
-            parameters.Add(payload["signal_id"]);
-            int id = mqlCommandManager.ExecCommand(MQLCommand.SignalSubscribe_1, parameters); // MQLCommand ENUM = 142
-            while (mqlCommandManager.IsCommandRunning(id)) ; // block while command is running
-            try
-            {
-                mqlCommandManager.throwExceptionIfErrorResponse(id);
-                result["result"] = (bool)mqlCommandManager.GetCommandResult(id);
-            }
-            catch (Exception e)
-            {
-                result["error"] = MQLExceptions.convertRESTException(e.ToString());
-            }
+            ParamAdd(context, parameters, "signal_id");
+            await ExecCommandAsync(context, MQLCommand.SignalSubscribe_1, parameters); // MQLCommand ENUM = 142
+
+            result["result"] = (bool)GetCommandResult(context);
 
             return result;
         }
@@ -8150,11 +6380,10 @@ namespace MQL4CSharp.Base.REST
         /// <ul>
         /// </ul>
         /// </summary>
-        [RESTRoute(Method = HttpMethod.POST, PathInfo = @"^/[0-9]+/signalunsubscribe")]
-        public void Handle_SignalUnsubscribe_1(HttpListenerContext context)
+        [RestRoute(HttpMethod = HttpMethod.POST, PathInfo = @"^/[0-9]+/signalunsubscribe$")]
+        public IHttpContext Handle_SignalUnsubscribe_1(IHttpContext context)
         {
-            long chartid = Int64.Parse(context.Request.Url.Segments[1].Replace("/", ""));
-            this.SendJsonResponse(context, SignalUnsubscribe_1(context, chartid));
+            return SendJsonResponse(context, GetChartId(context), SignalUnsubscribe_1);
         }
 
         /// <summary>
@@ -8165,29 +6394,20 @@ namespace MQL4CSharp.Base.REST
         /// <ul>
         /// </ul>
         /// </summary>
-        [RESTRoute(Method = HttpMethod.POST, PathInfo = @"^/signalunsubscribe")]
-        public void Handle_SignalUnsubscribe_1_Default(HttpListenerContext context)
+        [RestRoute(HttpMethod = HttpMethod.POST, PathInfo = @"^/signalunsubscribe$")]
+        public IHttpContext Handle_SignalUnsubscribe_1_Default(IHttpContext context)
         {
-            this.SendJsonResponse(context, SignalUnsubscribe_1(context, DEFAULT_CHART_ID));
+            return SendJsonResponse(context, SignalUnsubscribe_1);
         }
 
-        private JObject SignalUnsubscribe_1(HttpListenerContext context, long chartId)
+        private async Task<JObject> SignalUnsubscribe_1(MQLRestContext context)
         {
-            MQLCommandManager mqlCommandManager = DLLObjectWrapper.getInstance().getMQLCommandManager(chartId);
-            JObject payload = this.GetJsonPayload(context.Request);
-            JObject result = new JObject();
+            var payload = context.JsonPayload;
+            var result = context.Result;
             List<Object> parameters = new List<Object>();
-            int id = mqlCommandManager.ExecCommand(MQLCommand.SignalUnsubscribe_1, parameters); // MQLCommand ENUM = 143
-            while (mqlCommandManager.IsCommandRunning(id)) ; // block while command is running
-            try
-            {
-                mqlCommandManager.throwExceptionIfErrorResponse(id);
-                result["result"] = (bool)mqlCommandManager.GetCommandResult(id);
-            }
-            catch (Exception e)
-            {
-                result["error"] = MQLExceptions.convertRESTException(e.ToString());
-            }
+            await ExecCommandAsync(context, MQLCommand.SignalUnsubscribe_1, parameters); // MQLCommand ENUM = 143
+
+            result["result"] = (bool)GetCommandResult(context);
 
             return result;
         }
@@ -8200,11 +6420,10 @@ namespace MQL4CSharp.Base.REST
         /// <li><b>name</b> :  [in] Global variable name.</li>
         /// </ul>
         /// </summary>
-        [RESTRoute(Method = HttpMethod.POST, PathInfo = @"^/[0-9]+/globalvariablecheck")]
-        public void Handle_GlobalVariableCheck_1(HttpListenerContext context)
+        [RestRoute(HttpMethod = HttpMethod.POST, PathInfo = @"^/[0-9]+/globalvariablecheck$")]
+        public IHttpContext Handle_GlobalVariableCheck_1(IHttpContext context)
         {
-            long chartid = Int64.Parse(context.Request.Url.Segments[1].Replace("/", ""));
-            this.SendJsonResponse(context, GlobalVariableCheck_1(context, chartid));
+            return SendJsonResponse(context, GetChartId(context), GlobalVariableCheck_1);
         }
 
         /// <summary>
@@ -8216,35 +6435,23 @@ namespace MQL4CSharp.Base.REST
         /// <li><b>name</b> :  [in] Global variable name.</li>
         /// </ul>
         /// </summary>
-        [RESTRoute(Method = HttpMethod.POST, PathInfo = @"^/globalvariablecheck")]
-        public void Handle_GlobalVariableCheck_1_Default(HttpListenerContext context)
+        [RestRoute(HttpMethod = HttpMethod.POST, PathInfo = @"^/globalvariablecheck$")]
+        public IHttpContext Handle_GlobalVariableCheck_1_Default(IHttpContext context)
         {
-            this.SendJsonResponse(context, GlobalVariableCheck_1(context, DEFAULT_CHART_ID));
+            return SendJsonResponse(context, GlobalVariableCheck_1);
         }
 
-        private JObject GlobalVariableCheck_1(HttpListenerContext context, long chartId)
+        private async Task<JObject> GlobalVariableCheck_1(MQLRestContext context)
         {
-            MQLCommandManager mqlCommandManager = DLLObjectWrapper.getInstance().getMQLCommandManager(chartId);
-            JObject payload = this.GetJsonPayload(context.Request);
-            JObject result = new JObject();
-            if (payload == null)
-            {
-                result["result"] = PARSE_ERROR;
-                return result;
-            }
+            var payload = context.JsonPayload;
+            var result = context.Result;
+            if (PayloadNotValid(context))
+                return context.Result;
             List<Object> parameters = new List<Object>();
-            parameters.Add(payload["name"]);
-            int id = mqlCommandManager.ExecCommand(MQLCommand.GlobalVariableCheck_1, parameters); // MQLCommand ENUM = 144
-            while (mqlCommandManager.IsCommandRunning(id)) ; // block while command is running
-            try
-            {
-                mqlCommandManager.throwExceptionIfErrorResponse(id);
-                result["result"] = (bool)mqlCommandManager.GetCommandResult(id);
-            }
-            catch (Exception e)
-            {
-                result["error"] = MQLExceptions.convertRESTException(e.ToString());
-            }
+            ParamAdd(context, parameters, "name");
+            await ExecCommandAsync(context, MQLCommand.GlobalVariableCheck_1, parameters); // MQLCommand ENUM = 144
+
+            result["result"] = (bool)GetCommandResult(context);
 
             return result;
         }
@@ -8257,11 +6464,10 @@ namespace MQL4CSharp.Base.REST
         /// <li><b>name</b> :  [in] Name of the global variable.</li>
         /// </ul>
         /// </summary>
-        [RESTRoute(Method = HttpMethod.POST, PathInfo = @"^/[0-9]+/globalvariabletime")]
-        public void Handle_GlobalVariableTime_1(HttpListenerContext context)
+        [RestRoute(HttpMethod = HttpMethod.POST, PathInfo = @"^/[0-9]+/globalvariabletime$")]
+        public IHttpContext Handle_GlobalVariableTime_1(IHttpContext context)
         {
-            long chartid = Int64.Parse(context.Request.Url.Segments[1].Replace("/", ""));
-            this.SendJsonResponse(context, GlobalVariableTime_1(context, chartid));
+            return SendJsonResponse(context, GetChartId(context), GlobalVariableTime_1);
         }
 
         /// <summary>
@@ -8273,35 +6479,23 @@ namespace MQL4CSharp.Base.REST
         /// <li><b>name</b> :  [in] Name of the global variable.</li>
         /// </ul>
         /// </summary>
-        [RESTRoute(Method = HttpMethod.POST, PathInfo = @"^/globalvariabletime")]
-        public void Handle_GlobalVariableTime_1_Default(HttpListenerContext context)
+        [RestRoute(HttpMethod = HttpMethod.POST, PathInfo = @"^/globalvariabletime$")]
+        public IHttpContext Handle_GlobalVariableTime_1_Default(IHttpContext context)
         {
-            this.SendJsonResponse(context, GlobalVariableTime_1(context, DEFAULT_CHART_ID));
+            return SendJsonResponse(context, GlobalVariableTime_1);
         }
 
-        private JObject GlobalVariableTime_1(HttpListenerContext context, long chartId)
+        private async Task<JObject> GlobalVariableTime_1(MQLRestContext context)
         {
-            MQLCommandManager mqlCommandManager = DLLObjectWrapper.getInstance().getMQLCommandManager(chartId);
-            JObject payload = this.GetJsonPayload(context.Request);
-            JObject result = new JObject();
-            if (payload == null)
-            {
-                result["result"] = PARSE_ERROR;
-                return result;
-            }
+            var payload = context.JsonPayload;
+            var result = context.Result;
+            if (PayloadNotValid(context))
+                return context.Result;
             List<Object> parameters = new List<Object>();
-            parameters.Add(payload["name"]);
-            int id = mqlCommandManager.ExecCommand(MQLCommand.GlobalVariableTime_1, parameters); // MQLCommand ENUM = 145
-            while (mqlCommandManager.IsCommandRunning(id)) ; // block while command is running
-            try
-            {
-                mqlCommandManager.throwExceptionIfErrorResponse(id);
-                result["result"] = (DateTime)mqlCommandManager.GetCommandResult(id);
-            }
-            catch (Exception e)
-            {
-                result["error"] = MQLExceptions.convertRESTException(e.ToString());
-            }
+            ParamAdd(context, parameters, "name");
+            await ExecCommandAsync(context, MQLCommand.GlobalVariableTime_1, parameters); // MQLCommand ENUM = 145
+
+            result["result"] = (DateTime)GetCommandResult(context);
 
             return result;
         }
@@ -8314,11 +6508,10 @@ namespace MQL4CSharp.Base.REST
         /// <li><b>name</b> :  [in] Global variable name.</li>
         /// </ul>
         /// </summary>
-        [RESTRoute(Method = HttpMethod.POST, PathInfo = @"^/[0-9]+/globalvariabledel")]
-        public void Handle_GlobalVariableDel_1(HttpListenerContext context)
+        [RestRoute(HttpMethod = HttpMethod.POST, PathInfo = @"^/[0-9]+/globalvariabledel$")]
+        public IHttpContext Handle_GlobalVariableDel_1(IHttpContext context)
         {
-            long chartid = Int64.Parse(context.Request.Url.Segments[1].Replace("/", ""));
-            this.SendJsonResponse(context, GlobalVariableDel_1(context, chartid));
+            return SendJsonResponse(context, GetChartId(context), GlobalVariableDel_1);
         }
 
         /// <summary>
@@ -8330,35 +6523,23 @@ namespace MQL4CSharp.Base.REST
         /// <li><b>name</b> :  [in] Global variable name.</li>
         /// </ul>
         /// </summary>
-        [RESTRoute(Method = HttpMethod.POST, PathInfo = @"^/globalvariabledel")]
-        public void Handle_GlobalVariableDel_1_Default(HttpListenerContext context)
+        [RestRoute(HttpMethod = HttpMethod.POST, PathInfo = @"^/globalvariabledel$")]
+        public IHttpContext Handle_GlobalVariableDel_1_Default(IHttpContext context)
         {
-            this.SendJsonResponse(context, GlobalVariableDel_1(context, DEFAULT_CHART_ID));
+            return SendJsonResponse(context, GlobalVariableDel_1);
         }
 
-        private JObject GlobalVariableDel_1(HttpListenerContext context, long chartId)
+        private async Task<JObject> GlobalVariableDel_1(MQLRestContext context)
         {
-            MQLCommandManager mqlCommandManager = DLLObjectWrapper.getInstance().getMQLCommandManager(chartId);
-            JObject payload = this.GetJsonPayload(context.Request);
-            JObject result = new JObject();
-            if (payload == null)
-            {
-                result["result"] = PARSE_ERROR;
-                return result;
-            }
+            var payload = context.JsonPayload;
+            var result = context.Result;
+            if (PayloadNotValid(context))
+                return context.Result;
             List<Object> parameters = new List<Object>();
-            parameters.Add(payload["name"]);
-            int id = mqlCommandManager.ExecCommand(MQLCommand.GlobalVariableDel_1, parameters); // MQLCommand ENUM = 146
-            while (mqlCommandManager.IsCommandRunning(id)) ; // block while command is running
-            try
-            {
-                mqlCommandManager.throwExceptionIfErrorResponse(id);
-                result["result"] = (bool)mqlCommandManager.GetCommandResult(id);
-            }
-            catch (Exception e)
-            {
-                result["error"] = MQLExceptions.convertRESTException(e.ToString());
-            }
+            ParamAdd(context, parameters, "name");
+            await ExecCommandAsync(context, MQLCommand.GlobalVariableDel_1, parameters); // MQLCommand ENUM = 146
+
+            result["result"] = (bool)GetCommandResult(context);
 
             return result;
         }
@@ -8371,11 +6552,10 @@ namespace MQL4CSharp.Base.REST
         /// <li><b>name</b> :  [in] Global variable name.</li>
         /// </ul>
         /// </summary>
-        [RESTRoute(Method = HttpMethod.POST, PathInfo = @"^/[0-9]+/globalvariableget")]
-        public void Handle_GlobalVariableGet_1(HttpListenerContext context)
+        [RestRoute(HttpMethod = HttpMethod.POST, PathInfo = @"^/[0-9]+/globalvariableget$")]
+        public IHttpContext Handle_GlobalVariableGet_1(IHttpContext context)
         {
-            long chartid = Int64.Parse(context.Request.Url.Segments[1].Replace("/", ""));
-            this.SendJsonResponse(context, GlobalVariableGet_1(context, chartid));
+            return SendJsonResponse(context, GetChartId(context), GlobalVariableGet_1);
         }
 
         /// <summary>
@@ -8387,35 +6567,23 @@ namespace MQL4CSharp.Base.REST
         /// <li><b>name</b> :  [in] Global variable name.</li>
         /// </ul>
         /// </summary>
-        [RESTRoute(Method = HttpMethod.POST, PathInfo = @"^/globalvariableget")]
-        public void Handle_GlobalVariableGet_1_Default(HttpListenerContext context)
+        [RestRoute(HttpMethod = HttpMethod.POST, PathInfo = @"^/globalvariableget$")]
+        public IHttpContext Handle_GlobalVariableGet_1_Default(IHttpContext context)
         {
-            this.SendJsonResponse(context, GlobalVariableGet_1(context, DEFAULT_CHART_ID));
+            return SendJsonResponse(context, GlobalVariableGet_1);
         }
 
-        private JObject GlobalVariableGet_1(HttpListenerContext context, long chartId)
+        private async Task<JObject> GlobalVariableGet_1(MQLRestContext context)
         {
-            MQLCommandManager mqlCommandManager = DLLObjectWrapper.getInstance().getMQLCommandManager(chartId);
-            JObject payload = this.GetJsonPayload(context.Request);
-            JObject result = new JObject();
-            if (payload == null)
-            {
-                result["result"] = PARSE_ERROR;
-                return result;
-            }
+            var payload = context.JsonPayload;
+            var result = context.Result;
+            if (PayloadNotValid(context))
+                return context.Result;
             List<Object> parameters = new List<Object>();
-            parameters.Add(payload["name"]);
-            int id = mqlCommandManager.ExecCommand(MQLCommand.GlobalVariableGet_1, parameters); // MQLCommand ENUM = 147
-            while (mqlCommandManager.IsCommandRunning(id)) ; // block while command is running
-            try
-            {
-                mqlCommandManager.throwExceptionIfErrorResponse(id);
-                result["result"] = Convert.ToDecimal(mqlCommandManager.GetCommandResult(id));
-            }
-            catch (Exception e)
-            {
-                result["error"] = MQLExceptions.convertRESTException(e.ToString());
-            }
+            ParamAdd(context, parameters, "name");
+            await ExecCommandAsync(context, MQLCommand.GlobalVariableGet_1, parameters); // MQLCommand ENUM = 147
+
+            result["result"] = Convert.ToDecimal(GetCommandResult(context));
 
             return result;
         }
@@ -8428,11 +6596,10 @@ namespace MQL4CSharp.Base.REST
         /// <li><b>index</b> :  [in] Sequence number in the list of global variables. It should be greater than or equal to 0 and less than .</li>
         /// </ul>
         /// </summary>
-        [RESTRoute(Method = HttpMethod.POST, PathInfo = @"^/[0-9]+/globalvariablename")]
-        public void Handle_GlobalVariableName_1(HttpListenerContext context)
+        [RestRoute(HttpMethod = HttpMethod.POST, PathInfo = @"^/[0-9]+/globalvariablename$")]
+        public IHttpContext Handle_GlobalVariableName_1(IHttpContext context)
         {
-            long chartid = Int64.Parse(context.Request.Url.Segments[1].Replace("/", ""));
-            this.SendJsonResponse(context, GlobalVariableName_1(context, chartid));
+            return SendJsonResponse(context, GetChartId(context), GlobalVariableName_1);
         }
 
         /// <summary>
@@ -8444,35 +6611,23 @@ namespace MQL4CSharp.Base.REST
         /// <li><b>index</b> :  [in] Sequence number in the list of global variables. It should be greater than or equal to 0 and less than .</li>
         /// </ul>
         /// </summary>
-        [RESTRoute(Method = HttpMethod.POST, PathInfo = @"^/globalvariablename")]
-        public void Handle_GlobalVariableName_1_Default(HttpListenerContext context)
+        [RestRoute(HttpMethod = HttpMethod.POST, PathInfo = @"^/globalvariablename$")]
+        public IHttpContext Handle_GlobalVariableName_1_Default(IHttpContext context)
         {
-            this.SendJsonResponse(context, GlobalVariableName_1(context, DEFAULT_CHART_ID));
+            return SendJsonResponse(context, GlobalVariableName_1);
         }
 
-        private JObject GlobalVariableName_1(HttpListenerContext context, long chartId)
+        private async Task<JObject> GlobalVariableName_1(MQLRestContext context)
         {
-            MQLCommandManager mqlCommandManager = DLLObjectWrapper.getInstance().getMQLCommandManager(chartId);
-            JObject payload = this.GetJsonPayload(context.Request);
-            JObject result = new JObject();
-            if (payload == null)
-            {
-                result["result"] = PARSE_ERROR;
-                return result;
-            }
+            var payload = context.JsonPayload;
+            var result = context.Result;
+            if (PayloadNotValid(context))
+                return context.Result;
             List<Object> parameters = new List<Object>();
-            parameters.Add(payload["index"]);
-            int id = mqlCommandManager.ExecCommand(MQLCommand.GlobalVariableName_1, parameters); // MQLCommand ENUM = 148
-            while (mqlCommandManager.IsCommandRunning(id)) ; // block while command is running
-            try
-            {
-                mqlCommandManager.throwExceptionIfErrorResponse(id);
-                result["result"] = (string)mqlCommandManager.GetCommandResult(id);
-            }
-            catch (Exception e)
-            {
-                result["error"] = MQLExceptions.convertRESTException(e.ToString());
-            }
+            ParamAdd(context, parameters, "index");
+            await ExecCommandAsync(context, MQLCommand.GlobalVariableName_1, parameters); // MQLCommand ENUM = 148
+
+            result["result"] = (string)GetCommandResult(context);
 
             return result;
         }
@@ -8486,11 +6641,10 @@ namespace MQL4CSharp.Base.REST
         /// <li><b>value</b> :  [in] The new numerical value.</li>
         /// </ul>
         /// </summary>
-        [RESTRoute(Method = HttpMethod.POST, PathInfo = @"^/[0-9]+/globalvariableset")]
-        public void Handle_GlobalVariableSet_1(HttpListenerContext context)
+        [RestRoute(HttpMethod = HttpMethod.POST, PathInfo = @"^/[0-9]+/globalvariableset$")]
+        public IHttpContext Handle_GlobalVariableSet_1(IHttpContext context)
         {
-            long chartid = Int64.Parse(context.Request.Url.Segments[1].Replace("/", ""));
-            this.SendJsonResponse(context, GlobalVariableSet_1(context, chartid));
+            return SendJsonResponse(context, GetChartId(context), GlobalVariableSet_1);
         }
 
         /// <summary>
@@ -8503,36 +6657,24 @@ namespace MQL4CSharp.Base.REST
         /// <li><b>value</b> :  [in] The new numerical value.</li>
         /// </ul>
         /// </summary>
-        [RESTRoute(Method = HttpMethod.POST, PathInfo = @"^/globalvariableset")]
-        public void Handle_GlobalVariableSet_1_Default(HttpListenerContext context)
+        [RestRoute(HttpMethod = HttpMethod.POST, PathInfo = @"^/globalvariableset$")]
+        public IHttpContext Handle_GlobalVariableSet_1_Default(IHttpContext context)
         {
-            this.SendJsonResponse(context, GlobalVariableSet_1(context, DEFAULT_CHART_ID));
+            return SendJsonResponse(context, GlobalVariableSet_1);
         }
 
-        private JObject GlobalVariableSet_1(HttpListenerContext context, long chartId)
+        private async Task<JObject> GlobalVariableSet_1(MQLRestContext context)
         {
-            MQLCommandManager mqlCommandManager = DLLObjectWrapper.getInstance().getMQLCommandManager(chartId);
-            JObject payload = this.GetJsonPayload(context.Request);
-            JObject result = new JObject();
-            if (payload == null)
-            {
-                result["result"] = PARSE_ERROR;
-                return result;
-            }
+            var payload = context.JsonPayload;
+            var result = context.Result;
+            if (PayloadNotValid(context))
+                return context.Result;
             List<Object> parameters = new List<Object>();
-            parameters.Add(payload["name"]);
-            parameters.Add(payload["value"]);
-            int id = mqlCommandManager.ExecCommand(MQLCommand.GlobalVariableSet_1, parameters); // MQLCommand ENUM = 149
-            while (mqlCommandManager.IsCommandRunning(id)) ; // block while command is running
-            try
-            {
-                mqlCommandManager.throwExceptionIfErrorResponse(id);
-                result["result"] = (DateTime)mqlCommandManager.GetCommandResult(id);
-            }
-            catch (Exception e)
-            {
-                result["error"] = MQLExceptions.convertRESTException(e.ToString());
-            }
+            ParamAdd(context, parameters, "name");
+            ParamAdd(context, parameters, "value");
+            await ExecCommandAsync(context, MQLCommand.GlobalVariableSet_1, parameters); // MQLCommand ENUM = 149
+
+            result["result"] = (DateTime)GetCommandResult(context);
 
             return result;
         }
@@ -8544,11 +6686,10 @@ namespace MQL4CSharp.Base.REST
         /// <ul>
         /// </ul>
         /// </summary>
-        [RESTRoute(Method = HttpMethod.POST, PathInfo = @"^/[0-9]+/globalvariablesflush")]
-        public void Handle_GlobalVariablesFlush_1(HttpListenerContext context)
+        [RestRoute(HttpMethod = HttpMethod.POST, PathInfo = @"^/[0-9]+/globalvariablesflush$")]
+        public IHttpContext Handle_GlobalVariablesFlush_1(IHttpContext context)
         {
-            long chartid = Int64.Parse(context.Request.Url.Segments[1].Replace("/", ""));
-            this.SendJsonResponse(context, GlobalVariablesFlush_1(context, chartid));
+            return SendJsonResponse(context, GetChartId(context), GlobalVariablesFlush_1);
         }
 
         /// <summary>
@@ -8559,29 +6700,20 @@ namespace MQL4CSharp.Base.REST
         /// <ul>
         /// </ul>
         /// </summary>
-        [RESTRoute(Method = HttpMethod.POST, PathInfo = @"^/globalvariablesflush")]
-        public void Handle_GlobalVariablesFlush_1_Default(HttpListenerContext context)
+        [RestRoute(HttpMethod = HttpMethod.POST, PathInfo = @"^/globalvariablesflush$")]
+        public IHttpContext Handle_GlobalVariablesFlush_1_Default(IHttpContext context)
         {
-            this.SendJsonResponse(context, GlobalVariablesFlush_1(context, DEFAULT_CHART_ID));
+            return SendJsonResponse(context, GlobalVariablesFlush_1);
         }
 
-        private JObject GlobalVariablesFlush_1(HttpListenerContext context, long chartId)
+        private async Task<JObject> GlobalVariablesFlush_1(MQLRestContext context)
         {
-            MQLCommandManager mqlCommandManager = DLLObjectWrapper.getInstance().getMQLCommandManager(chartId);
-            JObject payload = this.GetJsonPayload(context.Request);
-            JObject result = new JObject();
+            var payload = context.JsonPayload;
+            var result = context.Result;
             List<Object> parameters = new List<Object>();
-            int id = mqlCommandManager.ExecCommand(MQLCommand.GlobalVariablesFlush_1, parameters); // MQLCommand ENUM = 150
-            while (mqlCommandManager.IsCommandRunning(id)) ; // block while command is running
-            try
-            {
-                mqlCommandManager.throwExceptionIfErrorResponse(id);
-                result["result"] = "";
-            }
-            catch (Exception e)
-            {
-                result["error"] = MQLExceptions.convertRESTException(e.ToString());
-            }
+            await ExecCommandAsync(context, MQLCommand.GlobalVariablesFlush_1, parameters); // MQLCommand ENUM = 150
+
+            result["result"] = "";
 
             return result;
         }
@@ -8594,11 +6726,10 @@ namespace MQL4CSharp.Base.REST
         /// <li><b>name</b> :  [in] The name of a temporary global variable.</li>
         /// </ul>
         /// </summary>
-        [RESTRoute(Method = HttpMethod.POST, PathInfo = @"^/[0-9]+/globalvariabletemp")]
-        public void Handle_GlobalVariableTemp_1(HttpListenerContext context)
+        [RestRoute(HttpMethod = HttpMethod.POST, PathInfo = @"^/[0-9]+/globalvariabletemp$")]
+        public IHttpContext Handle_GlobalVariableTemp_1(IHttpContext context)
         {
-            long chartid = Int64.Parse(context.Request.Url.Segments[1].Replace("/", ""));
-            this.SendJsonResponse(context, GlobalVariableTemp_1(context, chartid));
+            return SendJsonResponse(context, GetChartId(context), GlobalVariableTemp_1);
         }
 
         /// <summary>
@@ -8610,35 +6741,23 @@ namespace MQL4CSharp.Base.REST
         /// <li><b>name</b> :  [in] The name of a temporary global variable.</li>
         /// </ul>
         /// </summary>
-        [RESTRoute(Method = HttpMethod.POST, PathInfo = @"^/globalvariabletemp")]
-        public void Handle_GlobalVariableTemp_1_Default(HttpListenerContext context)
+        [RestRoute(HttpMethod = HttpMethod.POST, PathInfo = @"^/globalvariabletemp$")]
+        public IHttpContext Handle_GlobalVariableTemp_1_Default(IHttpContext context)
         {
-            this.SendJsonResponse(context, GlobalVariableTemp_1(context, DEFAULT_CHART_ID));
+            return SendJsonResponse(context, GlobalVariableTemp_1);
         }
 
-        private JObject GlobalVariableTemp_1(HttpListenerContext context, long chartId)
+        private async Task<JObject> GlobalVariableTemp_1(MQLRestContext context)
         {
-            MQLCommandManager mqlCommandManager = DLLObjectWrapper.getInstance().getMQLCommandManager(chartId);
-            JObject payload = this.GetJsonPayload(context.Request);
-            JObject result = new JObject();
-            if (payload == null)
-            {
-                result["result"] = PARSE_ERROR;
-                return result;
-            }
+            var payload = context.JsonPayload;
+            var result = context.Result;
+            if (PayloadNotValid(context))
+                return context.Result;
             List<Object> parameters = new List<Object>();
-            parameters.Add(payload["name"]);
-            int id = mqlCommandManager.ExecCommand(MQLCommand.GlobalVariableTemp_1, parameters); // MQLCommand ENUM = 151
-            while (mqlCommandManager.IsCommandRunning(id)) ; // block while command is running
-            try
-            {
-                mqlCommandManager.throwExceptionIfErrorResponse(id);
-                result["result"] = (bool)mqlCommandManager.GetCommandResult(id);
-            }
-            catch (Exception e)
-            {
-                result["error"] = MQLExceptions.convertRESTException(e.ToString());
-            }
+            ParamAdd(context, parameters, "name");
+            await ExecCommandAsync(context, MQLCommand.GlobalVariableTemp_1, parameters); // MQLCommand ENUM = 151
+
+            result["result"] = (bool)GetCommandResult(context);
 
             return result;
         }
@@ -8653,11 +6772,10 @@ namespace MQL4CSharp.Base.REST
         /// <li><b>check_value</b> :  [in] The value to check the current value of the global variable.</li>
         /// </ul>
         /// </summary>
-        [RESTRoute(Method = HttpMethod.POST, PathInfo = @"^/[0-9]+/globalvariablesetoncondition")]
-        public void Handle_GlobalVariableSetOnCondition_1(HttpListenerContext context)
+        [RestRoute(HttpMethod = HttpMethod.POST, PathInfo = @"^/[0-9]+/globalvariablesetoncondition$")]
+        public IHttpContext Handle_GlobalVariableSetOnCondition_1(IHttpContext context)
         {
-            long chartid = Int64.Parse(context.Request.Url.Segments[1].Replace("/", ""));
-            this.SendJsonResponse(context, GlobalVariableSetOnCondition_1(context, chartid));
+            return SendJsonResponse(context, GetChartId(context), GlobalVariableSetOnCondition_1);
         }
 
         /// <summary>
@@ -8671,37 +6789,25 @@ namespace MQL4CSharp.Base.REST
         /// <li><b>check_value</b> :  [in] The value to check the current value of the global variable.</li>
         /// </ul>
         /// </summary>
-        [RESTRoute(Method = HttpMethod.POST, PathInfo = @"^/globalvariablesetoncondition")]
-        public void Handle_GlobalVariableSetOnCondition_1_Default(HttpListenerContext context)
+        [RestRoute(HttpMethod = HttpMethod.POST, PathInfo = @"^/globalvariablesetoncondition$")]
+        public IHttpContext Handle_GlobalVariableSetOnCondition_1_Default(IHttpContext context)
         {
-            this.SendJsonResponse(context, GlobalVariableSetOnCondition_1(context, DEFAULT_CHART_ID));
+            return SendJsonResponse(context, GlobalVariableSetOnCondition_1);
         }
 
-        private JObject GlobalVariableSetOnCondition_1(HttpListenerContext context, long chartId)
+        private async Task<JObject> GlobalVariableSetOnCondition_1(MQLRestContext context)
         {
-            MQLCommandManager mqlCommandManager = DLLObjectWrapper.getInstance().getMQLCommandManager(chartId);
-            JObject payload = this.GetJsonPayload(context.Request);
-            JObject result = new JObject();
-            if (payload == null)
-            {
-                result["result"] = PARSE_ERROR;
-                return result;
-            }
+            var payload = context.JsonPayload;
+            var result = context.Result;
+            if (PayloadNotValid(context))
+                return context.Result;
             List<Object> parameters = new List<Object>();
-            parameters.Add(payload["name"]);
-            parameters.Add(payload["value"]);
-            parameters.Add(payload["check_value"]);
-            int id = mqlCommandManager.ExecCommand(MQLCommand.GlobalVariableSetOnCondition_1, parameters); // MQLCommand ENUM = 152
-            while (mqlCommandManager.IsCommandRunning(id)) ; // block while command is running
-            try
-            {
-                mqlCommandManager.throwExceptionIfErrorResponse(id);
-                result["result"] = (bool)mqlCommandManager.GetCommandResult(id);
-            }
-            catch (Exception e)
-            {
-                result["error"] = MQLExceptions.convertRESTException(e.ToString());
-            }
+            ParamAdd(context, parameters, "name");
+            ParamAdd(context, parameters, "value");
+            ParamAdd(context, parameters, "check_value");
+            await ExecCommandAsync(context, MQLCommand.GlobalVariableSetOnCondition_1, parameters); // MQLCommand ENUM = 152
+
+            result["result"] = (bool)GetCommandResult(context);
 
             return result;
         }
@@ -8715,11 +6821,10 @@ namespace MQL4CSharp.Base.REST
         /// <li><b>limit_data</b> :  [in] Optional parameter. Date to select global variables by the time of their last modification. The function removes global variables, which were changed before this date. If the parameter is zero, then all variables that meet the first criterion (prefix) are deleted.</li>
         /// </ul>
         /// </summary>
-        [RESTRoute(Method = HttpMethod.POST, PathInfo = @"^/[0-9]+/globalvariablesdeleteall")]
-        public void Handle_GlobalVariablesDeleteAll_1(HttpListenerContext context)
+        [RestRoute(HttpMethod = HttpMethod.POST, PathInfo = @"^/[0-9]+/globalvariablesdeleteall$")]
+        public IHttpContext Handle_GlobalVariablesDeleteAll_1(IHttpContext context)
         {
-            long chartid = Int64.Parse(context.Request.Url.Segments[1].Replace("/", ""));
-            this.SendJsonResponse(context, GlobalVariablesDeleteAll_1(context, chartid));
+            return SendJsonResponse(context, GetChartId(context), GlobalVariablesDeleteAll_1);
         }
 
         /// <summary>
@@ -8732,36 +6837,24 @@ namespace MQL4CSharp.Base.REST
         /// <li><b>limit_data</b> :  [in] Optional parameter. Date to select global variables by the time of their last modification. The function removes global variables, which were changed before this date. If the parameter is zero, then all variables that meet the first criterion (prefix) are deleted.</li>
         /// </ul>
         /// </summary>
-        [RESTRoute(Method = HttpMethod.POST, PathInfo = @"^/globalvariablesdeleteall")]
-        public void Handle_GlobalVariablesDeleteAll_1_Default(HttpListenerContext context)
+        [RestRoute(HttpMethod = HttpMethod.POST, PathInfo = @"^/globalvariablesdeleteall$")]
+        public IHttpContext Handle_GlobalVariablesDeleteAll_1_Default(IHttpContext context)
         {
-            this.SendJsonResponse(context, GlobalVariablesDeleteAll_1(context, DEFAULT_CHART_ID));
+            return SendJsonResponse(context, GlobalVariablesDeleteAll_1);
         }
 
-        private JObject GlobalVariablesDeleteAll_1(HttpListenerContext context, long chartId)
+        private async Task<JObject> GlobalVariablesDeleteAll_1(MQLRestContext context)
         {
-            MQLCommandManager mqlCommandManager = DLLObjectWrapper.getInstance().getMQLCommandManager(chartId);
-            JObject payload = this.GetJsonPayload(context.Request);
-            JObject result = new JObject();
-            if (payload == null)
-            {
-                result["result"] = PARSE_ERROR;
-                return result;
-            }
+            var payload = context.JsonPayload;
+            var result = context.Result;
+            if (PayloadNotValid(context))
+                return context.Result;
             List<Object> parameters = new List<Object>();
-            parameters.Add(payload["prefix_name"]);
-            parameters.Add(payload["limit_data"]);
-            int id = mqlCommandManager.ExecCommand(MQLCommand.GlobalVariablesDeleteAll_1, parameters); // MQLCommand ENUM = 153
-            while (mqlCommandManager.IsCommandRunning(id)) ; // block while command is running
-            try
-            {
-                mqlCommandManager.throwExceptionIfErrorResponse(id);
-                result["result"] = Convert.ToInt32(mqlCommandManager.GetCommandResult(id));
-            }
-            catch (Exception e)
-            {
-                result["error"] = MQLExceptions.convertRESTException(e.ToString());
-            }
+            ParamAdd(context, parameters, "prefix_name");
+            ParamAdd(context, parameters, "limit_data");
+            await ExecCommandAsync(context, MQLCommand.GlobalVariablesDeleteAll_1, parameters); // MQLCommand ENUM = 153
+
+            result["result"] = Convert.ToInt32(GetCommandResult(context));
 
             return result;
         }
@@ -8773,11 +6866,10 @@ namespace MQL4CSharp.Base.REST
         /// <ul>
         /// </ul>
         /// </summary>
-        [RESTRoute(Method = HttpMethod.POST, PathInfo = @"^/[0-9]+/globalvariablestotal")]
-        public void Handle_GlobalVariablesTotal_1(HttpListenerContext context)
+        [RestRoute(HttpMethod = HttpMethod.POST, PathInfo = @"^/[0-9]+/globalvariablestotal$")]
+        public IHttpContext Handle_GlobalVariablesTotal_1(IHttpContext context)
         {
-            long chartid = Int64.Parse(context.Request.Url.Segments[1].Replace("/", ""));
-            this.SendJsonResponse(context, GlobalVariablesTotal_1(context, chartid));
+            return SendJsonResponse(context, GetChartId(context), GlobalVariablesTotal_1);
         }
 
         /// <summary>
@@ -8788,29 +6880,20 @@ namespace MQL4CSharp.Base.REST
         /// <ul>
         /// </ul>
         /// </summary>
-        [RESTRoute(Method = HttpMethod.POST, PathInfo = @"^/globalvariablestotal")]
-        public void Handle_GlobalVariablesTotal_1_Default(HttpListenerContext context)
+        [RestRoute(HttpMethod = HttpMethod.POST, PathInfo = @"^/globalvariablestotal$")]
+        public IHttpContext Handle_GlobalVariablesTotal_1_Default(IHttpContext context)
         {
-            this.SendJsonResponse(context, GlobalVariablesTotal_1(context, DEFAULT_CHART_ID));
+            return SendJsonResponse(context, GlobalVariablesTotal_1);
         }
 
-        private JObject GlobalVariablesTotal_1(HttpListenerContext context, long chartId)
+        private async Task<JObject> GlobalVariablesTotal_1(MQLRestContext context)
         {
-            MQLCommandManager mqlCommandManager = DLLObjectWrapper.getInstance().getMQLCommandManager(chartId);
-            JObject payload = this.GetJsonPayload(context.Request);
-            JObject result = new JObject();
+            var payload = context.JsonPayload;
+            var result = context.Result;
             List<Object> parameters = new List<Object>();
-            int id = mqlCommandManager.ExecCommand(MQLCommand.GlobalVariablesTotal_1, parameters); // MQLCommand ENUM = 154
-            while (mqlCommandManager.IsCommandRunning(id)) ; // block while command is running
-            try
-            {
-                mqlCommandManager.throwExceptionIfErrorResponse(id);
-                result["result"] = Convert.ToInt32(mqlCommandManager.GetCommandResult(id));
-            }
-            catch (Exception e)
-            {
-                result["error"] = MQLExceptions.convertRESTException(e.ToString());
-            }
+            await ExecCommandAsync(context, MQLCommand.GlobalVariablesTotal_1, parameters); // MQLCommand ENUM = 154
+
+            result["result"] = Convert.ToInt32(GetCommandResult(context));
 
             return result;
         }
@@ -8823,11 +6906,10 @@ namespace MQL4CSharp.Base.REST
         /// <li><b>hide</b> :  [in] Hiding flag.</li>
         /// </ul>
         /// </summary>
-        [RESTRoute(Method = HttpMethod.POST, PathInfo = @"^/[0-9]+/hidetestindicators")]
-        public void Handle_HideTestIndicators_1(HttpListenerContext context)
+        [RestRoute(HttpMethod = HttpMethod.POST, PathInfo = @"^/[0-9]+/hidetestindicators$")]
+        public IHttpContext Handle_HideTestIndicators_1(IHttpContext context)
         {
-            long chartid = Int64.Parse(context.Request.Url.Segments[1].Replace("/", ""));
-            this.SendJsonResponse(context, HideTestIndicators_1(context, chartid));
+            return SendJsonResponse(context, GetChartId(context), HideTestIndicators_1);
         }
 
         /// <summary>
@@ -8839,35 +6921,23 @@ namespace MQL4CSharp.Base.REST
         /// <li><b>hide</b> :  [in] Hiding flag.</li>
         /// </ul>
         /// </summary>
-        [RESTRoute(Method = HttpMethod.POST, PathInfo = @"^/hidetestindicators")]
-        public void Handle_HideTestIndicators_1_Default(HttpListenerContext context)
+        [RestRoute(HttpMethod = HttpMethod.POST, PathInfo = @"^/hidetestindicators$")]
+        public IHttpContext Handle_HideTestIndicators_1_Default(IHttpContext context)
         {
-            this.SendJsonResponse(context, HideTestIndicators_1(context, DEFAULT_CHART_ID));
+            return SendJsonResponse(context, HideTestIndicators_1);
         }
 
-        private JObject HideTestIndicators_1(HttpListenerContext context, long chartId)
+        private async Task<JObject> HideTestIndicators_1(MQLRestContext context)
         {
-            MQLCommandManager mqlCommandManager = DLLObjectWrapper.getInstance().getMQLCommandManager(chartId);
-            JObject payload = this.GetJsonPayload(context.Request);
-            JObject result = new JObject();
-            if (payload == null)
-            {
-                result["result"] = PARSE_ERROR;
-                return result;
-            }
+            var payload = context.JsonPayload;
+            var result = context.Result;
+            if (PayloadNotValid(context))
+                return context.Result;
             List<Object> parameters = new List<Object>();
-            parameters.Add(payload["hide"]);
-            int id = mqlCommandManager.ExecCommand(MQLCommand.HideTestIndicators_1, parameters); // MQLCommand ENUM = 155
-            while (mqlCommandManager.IsCommandRunning(id)) ; // block while command is running
-            try
-            {
-                mqlCommandManager.throwExceptionIfErrorResponse(id);
-                result["result"] = "";
-            }
-            catch (Exception e)
-            {
-                result["error"] = MQLExceptions.convertRESTException(e.ToString());
-            }
+            ParamAdd(context, parameters, "hide");
+            await ExecCommandAsync(context, MQLCommand.HideTestIndicators_1, parameters); // MQLCommand ENUM = 155
+
+            result["result"] = "";
 
             return result;
         }
@@ -8881,11 +6951,10 @@ namespace MQL4CSharp.Base.REST
         /// <li><b>prop_value</b> :  [in] Value of property.</li>
         /// </ul>
         /// </summary>
-        [RESTRoute(Method = HttpMethod.POST, PathInfo = @"^/[0-9]+/indicatorsetdouble")]
-        public void Handle_IndicatorSetDouble_1(HttpListenerContext context)
+        [RestRoute(HttpMethod = HttpMethod.POST, PathInfo = @"^/[0-9]+/indicatorsetdouble$")]
+        public IHttpContext Handle_IndicatorSetDouble_1(IHttpContext context)
         {
-            long chartid = Int64.Parse(context.Request.Url.Segments[1].Replace("/", ""));
-            this.SendJsonResponse(context, IndicatorSetDouble_1(context, chartid));
+            return SendJsonResponse(context, GetChartId(context), IndicatorSetDouble_1);
         }
 
         /// <summary>
@@ -8898,36 +6967,24 @@ namespace MQL4CSharp.Base.REST
         /// <li><b>prop_value</b> :  [in] Value of property.</li>
         /// </ul>
         /// </summary>
-        [RESTRoute(Method = HttpMethod.POST, PathInfo = @"^/indicatorsetdouble")]
-        public void Handle_IndicatorSetDouble_1_Default(HttpListenerContext context)
+        [RestRoute(HttpMethod = HttpMethod.POST, PathInfo = @"^/indicatorsetdouble$")]
+        public IHttpContext Handle_IndicatorSetDouble_1_Default(IHttpContext context)
         {
-            this.SendJsonResponse(context, IndicatorSetDouble_1(context, DEFAULT_CHART_ID));
+            return SendJsonResponse(context, IndicatorSetDouble_1);
         }
 
-        private JObject IndicatorSetDouble_1(HttpListenerContext context, long chartId)
+        private async Task<JObject> IndicatorSetDouble_1(MQLRestContext context)
         {
-            MQLCommandManager mqlCommandManager = DLLObjectWrapper.getInstance().getMQLCommandManager(chartId);
-            JObject payload = this.GetJsonPayload(context.Request);
-            JObject result = new JObject();
-            if (payload == null)
-            {
-                result["result"] = PARSE_ERROR;
-                return result;
-            }
+            var payload = context.JsonPayload;
+            var result = context.Result;
+            if (PayloadNotValid(context))
+                return context.Result;
             List<Object> parameters = new List<Object>();
-            parameters.Add(payload["prop_id"]);
-            parameters.Add(payload["prop_value"]);
-            int id = mqlCommandManager.ExecCommand(MQLCommand.IndicatorSetDouble_1, parameters); // MQLCommand ENUM = 156
-            while (mqlCommandManager.IsCommandRunning(id)) ; // block while command is running
-            try
-            {
-                mqlCommandManager.throwExceptionIfErrorResponse(id);
-                result["result"] = (bool)mqlCommandManager.GetCommandResult(id);
-            }
-            catch (Exception e)
-            {
-                result["error"] = MQLExceptions.convertRESTException(e.ToString());
-            }
+            ParamAdd(context, parameters, "prop_id");
+            ParamAdd(context, parameters, "prop_value");
+            await ExecCommandAsync(context, MQLCommand.IndicatorSetDouble_1, parameters); // MQLCommand ENUM = 156
+
+            result["result"] = (bool)GetCommandResult(context);
 
             return result;
         }
@@ -8942,11 +6999,10 @@ namespace MQL4CSharp.Base.REST
         /// <li><b>prop_value</b> :  [in] Value of property.</li>
         /// </ul>
         /// </summary>
-        [RESTRoute(Method = HttpMethod.POST, PathInfo = @"^/[0-9]+/indicatorsetdouble")]
-        public void Handle_IndicatorSetDouble_2(HttpListenerContext context)
+        [RestRoute(HttpMethod = HttpMethod.POST, PathInfo = @"^/[0-9]+/indicatorsetdouble$")]
+        public IHttpContext Handle_IndicatorSetDouble_2(IHttpContext context)
         {
-            long chartid = Int64.Parse(context.Request.Url.Segments[1].Replace("/", ""));
-            this.SendJsonResponse(context, IndicatorSetDouble_2(context, chartid));
+            return SendJsonResponse(context, GetChartId(context), IndicatorSetDouble_2);
         }
 
         /// <summary>
@@ -8960,37 +7016,25 @@ namespace MQL4CSharp.Base.REST
         /// <li><b>prop_value</b> :  [in] Value of property.</li>
         /// </ul>
         /// </summary>
-        [RESTRoute(Method = HttpMethod.POST, PathInfo = @"^/indicatorsetdouble")]
-        public void Handle_IndicatorSetDouble_2_Default(HttpListenerContext context)
+        [RestRoute(HttpMethod = HttpMethod.POST, PathInfo = @"^/indicatorsetdouble$")]
+        public IHttpContext Handle_IndicatorSetDouble_2_Default(IHttpContext context)
         {
-            this.SendJsonResponse(context, IndicatorSetDouble_2(context, DEFAULT_CHART_ID));
+            return SendJsonResponse(context, IndicatorSetDouble_2);
         }
 
-        private JObject IndicatorSetDouble_2(HttpListenerContext context, long chartId)
+        private async Task<JObject> IndicatorSetDouble_2(MQLRestContext context)
         {
-            MQLCommandManager mqlCommandManager = DLLObjectWrapper.getInstance().getMQLCommandManager(chartId);
-            JObject payload = this.GetJsonPayload(context.Request);
-            JObject result = new JObject();
-            if (payload == null)
-            {
-                result["result"] = PARSE_ERROR;
-                return result;
-            }
+            var payload = context.JsonPayload;
+            var result = context.Result;
+            if (PayloadNotValid(context))
+                return context.Result;
             List<Object> parameters = new List<Object>();
-            parameters.Add(payload["prop_id"]);
-            parameters.Add(payload["prop_modifier"]);
-            parameters.Add(payload["prop_value"]);
-            int id = mqlCommandManager.ExecCommand(MQLCommand.IndicatorSetDouble_2, parameters); // MQLCommand ENUM = 156
-            while (mqlCommandManager.IsCommandRunning(id)) ; // block while command is running
-            try
-            {
-                mqlCommandManager.throwExceptionIfErrorResponse(id);
-                result["result"] = (bool)mqlCommandManager.GetCommandResult(id);
-            }
-            catch (Exception e)
-            {
-                result["error"] = MQLExceptions.convertRESTException(e.ToString());
-            }
+            ParamAdd(context, parameters, "prop_id");
+            ParamAdd(context, parameters, "prop_modifier");
+            ParamAdd(context, parameters, "prop_value");
+            await ExecCommandAsync(context, MQLCommand.IndicatorSetDouble_2, parameters); // MQLCommand ENUM = 156
+
+            result["result"] = (bool)GetCommandResult(context);
 
             return result;
         }
@@ -9004,11 +7048,10 @@ namespace MQL4CSharp.Base.REST
         /// <li><b>prop_value</b> :  [in] Value of property.</li>
         /// </ul>
         /// </summary>
-        [RESTRoute(Method = HttpMethod.POST, PathInfo = @"^/[0-9]+/indicatorsetinteger")]
-        public void Handle_IndicatorSetInteger_1(HttpListenerContext context)
+        [RestRoute(HttpMethod = HttpMethod.POST, PathInfo = @"^/[0-9]+/indicatorsetinteger$")]
+        public IHttpContext Handle_IndicatorSetInteger_1(IHttpContext context)
         {
-            long chartid = Int64.Parse(context.Request.Url.Segments[1].Replace("/", ""));
-            this.SendJsonResponse(context, IndicatorSetInteger_1(context, chartid));
+            return SendJsonResponse(context, GetChartId(context), IndicatorSetInteger_1);
         }
 
         /// <summary>
@@ -9021,36 +7064,24 @@ namespace MQL4CSharp.Base.REST
         /// <li><b>prop_value</b> :  [in] Value of property.</li>
         /// </ul>
         /// </summary>
-        [RESTRoute(Method = HttpMethod.POST, PathInfo = @"^/indicatorsetinteger")]
-        public void Handle_IndicatorSetInteger_1_Default(HttpListenerContext context)
+        [RestRoute(HttpMethod = HttpMethod.POST, PathInfo = @"^/indicatorsetinteger$")]
+        public IHttpContext Handle_IndicatorSetInteger_1_Default(IHttpContext context)
         {
-            this.SendJsonResponse(context, IndicatorSetInteger_1(context, DEFAULT_CHART_ID));
+            return SendJsonResponse(context, IndicatorSetInteger_1);
         }
 
-        private JObject IndicatorSetInteger_1(HttpListenerContext context, long chartId)
+        private async Task<JObject> IndicatorSetInteger_1(MQLRestContext context)
         {
-            MQLCommandManager mqlCommandManager = DLLObjectWrapper.getInstance().getMQLCommandManager(chartId);
-            JObject payload = this.GetJsonPayload(context.Request);
-            JObject result = new JObject();
-            if (payload == null)
-            {
-                result["result"] = PARSE_ERROR;
-                return result;
-            }
+            var payload = context.JsonPayload;
+            var result = context.Result;
+            if (PayloadNotValid(context))
+                return context.Result;
             List<Object> parameters = new List<Object>();
-            parameters.Add(payload["prop_id"]);
-            parameters.Add(payload["prop_value"]);
-            int id = mqlCommandManager.ExecCommand(MQLCommand.IndicatorSetInteger_1, parameters); // MQLCommand ENUM = 157
-            while (mqlCommandManager.IsCommandRunning(id)) ; // block while command is running
-            try
-            {
-                mqlCommandManager.throwExceptionIfErrorResponse(id);
-                result["result"] = (bool)mqlCommandManager.GetCommandResult(id);
-            }
-            catch (Exception e)
-            {
-                result["error"] = MQLExceptions.convertRESTException(e.ToString());
-            }
+            ParamAdd(context, parameters, "prop_id");
+            ParamAdd(context, parameters, "prop_value");
+            await ExecCommandAsync(context, MQLCommand.IndicatorSetInteger_1, parameters); // MQLCommand ENUM = 157
+
+            result["result"] = (bool)GetCommandResult(context);
 
             return result;
         }
@@ -9065,11 +7096,10 @@ namespace MQL4CSharp.Base.REST
         /// <li><b>prop_value</b> :  [in] Value of property.</li>
         /// </ul>
         /// </summary>
-        [RESTRoute(Method = HttpMethod.POST, PathInfo = @"^/[0-9]+/indicatorsetinteger")]
-        public void Handle_IndicatorSetInteger_2(HttpListenerContext context)
+        [RestRoute(HttpMethod = HttpMethod.POST, PathInfo = @"^/[0-9]+/indicatorsetinteger$")]
+        public IHttpContext Handle_IndicatorSetInteger_2(IHttpContext context)
         {
-            long chartid = Int64.Parse(context.Request.Url.Segments[1].Replace("/", ""));
-            this.SendJsonResponse(context, IndicatorSetInteger_2(context, chartid));
+            return SendJsonResponse(context, GetChartId(context), IndicatorSetInteger_2);
         }
 
         /// <summary>
@@ -9083,37 +7113,25 @@ namespace MQL4CSharp.Base.REST
         /// <li><b>prop_value</b> :  [in] Value of property.</li>
         /// </ul>
         /// </summary>
-        [RESTRoute(Method = HttpMethod.POST, PathInfo = @"^/indicatorsetinteger")]
-        public void Handle_IndicatorSetInteger_2_Default(HttpListenerContext context)
+        [RestRoute(HttpMethod = HttpMethod.POST, PathInfo = @"^/indicatorsetinteger$")]
+        public IHttpContext Handle_IndicatorSetInteger_2_Default(IHttpContext context)
         {
-            this.SendJsonResponse(context, IndicatorSetInteger_2(context, DEFAULT_CHART_ID));
+            return SendJsonResponse(context, IndicatorSetInteger_2);
         }
 
-        private JObject IndicatorSetInteger_2(HttpListenerContext context, long chartId)
+        private async Task<JObject> IndicatorSetInteger_2(MQLRestContext context)
         {
-            MQLCommandManager mqlCommandManager = DLLObjectWrapper.getInstance().getMQLCommandManager(chartId);
-            JObject payload = this.GetJsonPayload(context.Request);
-            JObject result = new JObject();
-            if (payload == null)
-            {
-                result["result"] = PARSE_ERROR;
-                return result;
-            }
+            var payload = context.JsonPayload;
+            var result = context.Result;
+            if (PayloadNotValid(context))
+                return context.Result;
             List<Object> parameters = new List<Object>();
-            parameters.Add(payload["prop_id"]);
-            parameters.Add(payload["prop_modifier"]);
-            parameters.Add(payload["prop_value"]);
-            int id = mqlCommandManager.ExecCommand(MQLCommand.IndicatorSetInteger_2, parameters); // MQLCommand ENUM = 157
-            while (mqlCommandManager.IsCommandRunning(id)) ; // block while command is running
-            try
-            {
-                mqlCommandManager.throwExceptionIfErrorResponse(id);
-                result["result"] = (bool)mqlCommandManager.GetCommandResult(id);
-            }
-            catch (Exception e)
-            {
-                result["error"] = MQLExceptions.convertRESTException(e.ToString());
-            }
+            ParamAdd(context, parameters, "prop_id");
+            ParamAdd(context, parameters, "prop_modifier");
+            ParamAdd(context, parameters, "prop_value");
+            await ExecCommandAsync(context, MQLCommand.IndicatorSetInteger_2, parameters); // MQLCommand ENUM = 157
+
+            result["result"] = (bool)GetCommandResult(context);
 
             return result;
         }
@@ -9127,11 +7145,10 @@ namespace MQL4CSharp.Base.REST
         /// <li><b>prop_value</b> :  [in] Value of property.</li>
         /// </ul>
         /// </summary>
-        [RESTRoute(Method = HttpMethod.POST, PathInfo = @"^/[0-9]+/indicatorsetstring")]
-        public void Handle_IndicatorSetString_1(HttpListenerContext context)
+        [RestRoute(HttpMethod = HttpMethod.POST, PathInfo = @"^/[0-9]+/indicatorsetstring$")]
+        public IHttpContext Handle_IndicatorSetString_1(IHttpContext context)
         {
-            long chartid = Int64.Parse(context.Request.Url.Segments[1].Replace("/", ""));
-            this.SendJsonResponse(context, IndicatorSetString_1(context, chartid));
+            return SendJsonResponse(context, GetChartId(context), IndicatorSetString_1);
         }
 
         /// <summary>
@@ -9144,36 +7161,24 @@ namespace MQL4CSharp.Base.REST
         /// <li><b>prop_value</b> :  [in] Value of property.</li>
         /// </ul>
         /// </summary>
-        [RESTRoute(Method = HttpMethod.POST, PathInfo = @"^/indicatorsetstring")]
-        public void Handle_IndicatorSetString_1_Default(HttpListenerContext context)
+        [RestRoute(HttpMethod = HttpMethod.POST, PathInfo = @"^/indicatorsetstring$")]
+        public IHttpContext Handle_IndicatorSetString_1_Default(IHttpContext context)
         {
-            this.SendJsonResponse(context, IndicatorSetString_1(context, DEFAULT_CHART_ID));
+            return SendJsonResponse(context, IndicatorSetString_1);
         }
 
-        private JObject IndicatorSetString_1(HttpListenerContext context, long chartId)
+        private async Task<JObject> IndicatorSetString_1(MQLRestContext context)
         {
-            MQLCommandManager mqlCommandManager = DLLObjectWrapper.getInstance().getMQLCommandManager(chartId);
-            JObject payload = this.GetJsonPayload(context.Request);
-            JObject result = new JObject();
-            if (payload == null)
-            {
-                result["result"] = PARSE_ERROR;
-                return result;
-            }
+            var payload = context.JsonPayload;
+            var result = context.Result;
+            if (PayloadNotValid(context))
+                return context.Result;
             List<Object> parameters = new List<Object>();
-            parameters.Add(payload["prop_id"]);
-            parameters.Add(payload["prop_value"]);
-            int id = mqlCommandManager.ExecCommand(MQLCommand.IndicatorSetString_1, parameters); // MQLCommand ENUM = 158
-            while (mqlCommandManager.IsCommandRunning(id)) ; // block while command is running
-            try
-            {
-                mqlCommandManager.throwExceptionIfErrorResponse(id);
-                result["result"] = (bool)mqlCommandManager.GetCommandResult(id);
-            }
-            catch (Exception e)
-            {
-                result["error"] = MQLExceptions.convertRESTException(e.ToString());
-            }
+            ParamAdd(context, parameters, "prop_id");
+            ParamAdd(context, parameters, "prop_value");
+            await ExecCommandAsync(context, MQLCommand.IndicatorSetString_1, parameters); // MQLCommand ENUM = 158
+
+            result["result"] = (bool)GetCommandResult(context);
 
             return result;
         }
@@ -9188,11 +7193,10 @@ namespace MQL4CSharp.Base.REST
         /// <li><b>prop_value</b> :  [in] Value of property.</li>
         /// </ul>
         /// </summary>
-        [RESTRoute(Method = HttpMethod.POST, PathInfo = @"^/[0-9]+/indicatorsetstring")]
-        public void Handle_IndicatorSetString_2(HttpListenerContext context)
+        [RestRoute(HttpMethod = HttpMethod.POST, PathInfo = @"^/[0-9]+/indicatorsetstring$")]
+        public IHttpContext Handle_IndicatorSetString_2(IHttpContext context)
         {
-            long chartid = Int64.Parse(context.Request.Url.Segments[1].Replace("/", ""));
-            this.SendJsonResponse(context, IndicatorSetString_2(context, chartid));
+            return SendJsonResponse(context, GetChartId(context), IndicatorSetString_2);
         }
 
         /// <summary>
@@ -9206,37 +7210,25 @@ namespace MQL4CSharp.Base.REST
         /// <li><b>prop_value</b> :  [in] Value of property.</li>
         /// </ul>
         /// </summary>
-        [RESTRoute(Method = HttpMethod.POST, PathInfo = @"^/indicatorsetstring")]
-        public void Handle_IndicatorSetString_2_Default(HttpListenerContext context)
+        [RestRoute(HttpMethod = HttpMethod.POST, PathInfo = @"^/indicatorsetstring$")]
+        public IHttpContext Handle_IndicatorSetString_2_Default(IHttpContext context)
         {
-            this.SendJsonResponse(context, IndicatorSetString_2(context, DEFAULT_CHART_ID));
+            return SendJsonResponse(context, IndicatorSetString_2);
         }
 
-        private JObject IndicatorSetString_2(HttpListenerContext context, long chartId)
+        private async Task<JObject> IndicatorSetString_2(MQLRestContext context)
         {
-            MQLCommandManager mqlCommandManager = DLLObjectWrapper.getInstance().getMQLCommandManager(chartId);
-            JObject payload = this.GetJsonPayload(context.Request);
-            JObject result = new JObject();
-            if (payload == null)
-            {
-                result["result"] = PARSE_ERROR;
-                return result;
-            }
+            var payload = context.JsonPayload;
+            var result = context.Result;
+            if (PayloadNotValid(context))
+                return context.Result;
             List<Object> parameters = new List<Object>();
-            parameters.Add(payload["prop_id"]);
-            parameters.Add(payload["prop_modifier"]);
-            parameters.Add(payload["prop_value"]);
-            int id = mqlCommandManager.ExecCommand(MQLCommand.IndicatorSetString_2, parameters); // MQLCommand ENUM = 158
-            while (mqlCommandManager.IsCommandRunning(id)) ; // block while command is running
-            try
-            {
-                mqlCommandManager.throwExceptionIfErrorResponse(id);
-                result["result"] = (bool)mqlCommandManager.GetCommandResult(id);
-            }
-            catch (Exception e)
-            {
-                result["error"] = MQLExceptions.convertRESTException(e.ToString());
-            }
+            ParamAdd(context, parameters, "prop_id");
+            ParamAdd(context, parameters, "prop_modifier");
+            ParamAdd(context, parameters, "prop_value");
+            await ExecCommandAsync(context, MQLCommand.IndicatorSetString_2, parameters); // MQLCommand ENUM = 158
+
+            result["result"] = (bool)GetCommandResult(context);
 
             return result;
         }
@@ -9249,11 +7241,10 @@ namespace MQL4CSharp.Base.REST
         /// <li><b>count</b> :  [in] Amount of buffers to be allocated. Should be within the range between indicator_buffers and 512 buffers.</li>
         /// </ul>
         /// </summary>
-        [RESTRoute(Method = HttpMethod.POST, PathInfo = @"^/[0-9]+/indicatorbuffers")]
-        public void Handle_IndicatorBuffers_1(HttpListenerContext context)
+        [RestRoute(HttpMethod = HttpMethod.POST, PathInfo = @"^/[0-9]+/indicatorbuffers$")]
+        public IHttpContext Handle_IndicatorBuffers_1(IHttpContext context)
         {
-            long chartid = Int64.Parse(context.Request.Url.Segments[1].Replace("/", ""));
-            this.SendJsonResponse(context, IndicatorBuffers_1(context, chartid));
+            return SendJsonResponse(context, GetChartId(context), IndicatorBuffers_1);
         }
 
         /// <summary>
@@ -9265,35 +7256,23 @@ namespace MQL4CSharp.Base.REST
         /// <li><b>count</b> :  [in] Amount of buffers to be allocated. Should be within the range between indicator_buffers and 512 buffers.</li>
         /// </ul>
         /// </summary>
-        [RESTRoute(Method = HttpMethod.POST, PathInfo = @"^/indicatorbuffers")]
-        public void Handle_IndicatorBuffers_1_Default(HttpListenerContext context)
+        [RestRoute(HttpMethod = HttpMethod.POST, PathInfo = @"^/indicatorbuffers$")]
+        public IHttpContext Handle_IndicatorBuffers_1_Default(IHttpContext context)
         {
-            this.SendJsonResponse(context, IndicatorBuffers_1(context, DEFAULT_CHART_ID));
+            return SendJsonResponse(context, IndicatorBuffers_1);
         }
 
-        private JObject IndicatorBuffers_1(HttpListenerContext context, long chartId)
+        private async Task<JObject> IndicatorBuffers_1(MQLRestContext context)
         {
-            MQLCommandManager mqlCommandManager = DLLObjectWrapper.getInstance().getMQLCommandManager(chartId);
-            JObject payload = this.GetJsonPayload(context.Request);
-            JObject result = new JObject();
-            if (payload == null)
-            {
-                result["result"] = PARSE_ERROR;
-                return result;
-            }
+            var payload = context.JsonPayload;
+            var result = context.Result;
+            if (PayloadNotValid(context))
+                return context.Result;
             List<Object> parameters = new List<Object>();
-            parameters.Add(payload["count"]);
-            int id = mqlCommandManager.ExecCommand(MQLCommand.IndicatorBuffers_1, parameters); // MQLCommand ENUM = 159
-            while (mqlCommandManager.IsCommandRunning(id)) ; // block while command is running
-            try
-            {
-                mqlCommandManager.throwExceptionIfErrorResponse(id);
-                result["result"] = (bool)mqlCommandManager.GetCommandResult(id);
-            }
-            catch (Exception e)
-            {
-                result["error"] = MQLExceptions.convertRESTException(e.ToString());
-            }
+            ParamAdd(context, parameters, "count");
+            await ExecCommandAsync(context, MQLCommand.IndicatorBuffers_1, parameters); // MQLCommand ENUM = 159
+
+            result["result"] = (bool)GetCommandResult(context);
 
             return result;
         }
@@ -9305,11 +7284,10 @@ namespace MQL4CSharp.Base.REST
         /// <ul>
         /// </ul>
         /// </summary>
-        [RESTRoute(Method = HttpMethod.POST, PathInfo = @"^/[0-9]+/indicatorcounted")]
-        public void Handle_IndicatorCounted_1(HttpListenerContext context)
+        [RestRoute(HttpMethod = HttpMethod.POST, PathInfo = @"^/[0-9]+/indicatorcounted$")]
+        public IHttpContext Handle_IndicatorCounted_1(IHttpContext context)
         {
-            long chartid = Int64.Parse(context.Request.Url.Segments[1].Replace("/", ""));
-            this.SendJsonResponse(context, IndicatorCounted_1(context, chartid));
+            return SendJsonResponse(context, GetChartId(context), IndicatorCounted_1);
         }
 
         /// <summary>
@@ -9320,29 +7298,20 @@ namespace MQL4CSharp.Base.REST
         /// <ul>
         /// </ul>
         /// </summary>
-        [RESTRoute(Method = HttpMethod.POST, PathInfo = @"^/indicatorcounted")]
-        public void Handle_IndicatorCounted_1_Default(HttpListenerContext context)
+        [RestRoute(HttpMethod = HttpMethod.POST, PathInfo = @"^/indicatorcounted$")]
+        public IHttpContext Handle_IndicatorCounted_1_Default(IHttpContext context)
         {
-            this.SendJsonResponse(context, IndicatorCounted_1(context, DEFAULT_CHART_ID));
+            return SendJsonResponse(context, IndicatorCounted_1);
         }
 
-        private JObject IndicatorCounted_1(HttpListenerContext context, long chartId)
+        private async Task<JObject> IndicatorCounted_1(MQLRestContext context)
         {
-            MQLCommandManager mqlCommandManager = DLLObjectWrapper.getInstance().getMQLCommandManager(chartId);
-            JObject payload = this.GetJsonPayload(context.Request);
-            JObject result = new JObject();
+            var payload = context.JsonPayload;
+            var result = context.Result;
             List<Object> parameters = new List<Object>();
-            int id = mqlCommandManager.ExecCommand(MQLCommand.IndicatorCounted_1, parameters); // MQLCommand ENUM = 160
-            while (mqlCommandManager.IsCommandRunning(id)) ; // block while command is running
-            try
-            {
-                mqlCommandManager.throwExceptionIfErrorResponse(id);
-                result["result"] = Convert.ToInt32(mqlCommandManager.GetCommandResult(id));
-            }
-            catch (Exception e)
-            {
-                result["error"] = MQLExceptions.convertRESTException(e.ToString());
-            }
+            await ExecCommandAsync(context, MQLCommand.IndicatorCounted_1, parameters); // MQLCommand ENUM = 160
+
+            result["result"] = Convert.ToInt32(GetCommandResult(context));
 
             return result;
         }
@@ -9355,11 +7324,10 @@ namespace MQL4CSharp.Base.REST
         /// <li><b>digits</b> :  [in] Precision format, the count of digits after decimal point.</li>
         /// </ul>
         /// </summary>
-        [RESTRoute(Method = HttpMethod.POST, PathInfo = @"^/[0-9]+/indicatordigits")]
-        public void Handle_IndicatorDigits_1(HttpListenerContext context)
+        [RestRoute(HttpMethod = HttpMethod.POST, PathInfo = @"^/[0-9]+/indicatordigits$")]
+        public IHttpContext Handle_IndicatorDigits_1(IHttpContext context)
         {
-            long chartid = Int64.Parse(context.Request.Url.Segments[1].Replace("/", ""));
-            this.SendJsonResponse(context, IndicatorDigits_1(context, chartid));
+            return SendJsonResponse(context, GetChartId(context), IndicatorDigits_1);
         }
 
         /// <summary>
@@ -9371,35 +7339,23 @@ namespace MQL4CSharp.Base.REST
         /// <li><b>digits</b> :  [in] Precision format, the count of digits after decimal point.</li>
         /// </ul>
         /// </summary>
-        [RESTRoute(Method = HttpMethod.POST, PathInfo = @"^/indicatordigits")]
-        public void Handle_IndicatorDigits_1_Default(HttpListenerContext context)
+        [RestRoute(HttpMethod = HttpMethod.POST, PathInfo = @"^/indicatordigits$")]
+        public IHttpContext Handle_IndicatorDigits_1_Default(IHttpContext context)
         {
-            this.SendJsonResponse(context, IndicatorDigits_1(context, DEFAULT_CHART_ID));
+            return SendJsonResponse(context, IndicatorDigits_1);
         }
 
-        private JObject IndicatorDigits_1(HttpListenerContext context, long chartId)
+        private async Task<JObject> IndicatorDigits_1(MQLRestContext context)
         {
-            MQLCommandManager mqlCommandManager = DLLObjectWrapper.getInstance().getMQLCommandManager(chartId);
-            JObject payload = this.GetJsonPayload(context.Request);
-            JObject result = new JObject();
-            if (payload == null)
-            {
-                result["result"] = PARSE_ERROR;
-                return result;
-            }
+            var payload = context.JsonPayload;
+            var result = context.Result;
+            if (PayloadNotValid(context))
+                return context.Result;
             List<Object> parameters = new List<Object>();
-            parameters.Add(payload["digits"]);
-            int id = mqlCommandManager.ExecCommand(MQLCommand.IndicatorDigits_1, parameters); // MQLCommand ENUM = 161
-            while (mqlCommandManager.IsCommandRunning(id)) ; // block while command is running
-            try
-            {
-                mqlCommandManager.throwExceptionIfErrorResponse(id);
-                result["result"] = "";
-            }
-            catch (Exception e)
-            {
-                result["error"] = MQLExceptions.convertRESTException(e.ToString());
-            }
+            ParamAdd(context, parameters, "digits");
+            await ExecCommandAsync(context, MQLCommand.IndicatorDigits_1, parameters); // MQLCommand ENUM = 161
+
+            result["result"] = "";
 
             return result;
         }
@@ -9412,11 +7368,10 @@ namespace MQL4CSharp.Base.REST
         /// <li><b>name</b> :  [in] New short name.</li>
         /// </ul>
         /// </summary>
-        [RESTRoute(Method = HttpMethod.POST, PathInfo = @"^/[0-9]+/indicatorshortname")]
-        public void Handle_IndicatorShortName_1(HttpListenerContext context)
+        [RestRoute(HttpMethod = HttpMethod.POST, PathInfo = @"^/[0-9]+/indicatorshortname$")]
+        public IHttpContext Handle_IndicatorShortName_1(IHttpContext context)
         {
-            long chartid = Int64.Parse(context.Request.Url.Segments[1].Replace("/", ""));
-            this.SendJsonResponse(context, IndicatorShortName_1(context, chartid));
+            return SendJsonResponse(context, GetChartId(context), IndicatorShortName_1);
         }
 
         /// <summary>
@@ -9428,35 +7383,23 @@ namespace MQL4CSharp.Base.REST
         /// <li><b>name</b> :  [in] New short name.</li>
         /// </ul>
         /// </summary>
-        [RESTRoute(Method = HttpMethod.POST, PathInfo = @"^/indicatorshortname")]
-        public void Handle_IndicatorShortName_1_Default(HttpListenerContext context)
+        [RestRoute(HttpMethod = HttpMethod.POST, PathInfo = @"^/indicatorshortname$")]
+        public IHttpContext Handle_IndicatorShortName_1_Default(IHttpContext context)
         {
-            this.SendJsonResponse(context, IndicatorShortName_1(context, DEFAULT_CHART_ID));
+            return SendJsonResponse(context, IndicatorShortName_1);
         }
 
-        private JObject IndicatorShortName_1(HttpListenerContext context, long chartId)
+        private async Task<JObject> IndicatorShortName_1(MQLRestContext context)
         {
-            MQLCommandManager mqlCommandManager = DLLObjectWrapper.getInstance().getMQLCommandManager(chartId);
-            JObject payload = this.GetJsonPayload(context.Request);
-            JObject result = new JObject();
-            if (payload == null)
-            {
-                result["result"] = PARSE_ERROR;
-                return result;
-            }
+            var payload = context.JsonPayload;
+            var result = context.Result;
+            if (PayloadNotValid(context))
+                return context.Result;
             List<Object> parameters = new List<Object>();
-            parameters.Add(payload["name"]);
-            int id = mqlCommandManager.ExecCommand(MQLCommand.IndicatorShortName_1, parameters); // MQLCommand ENUM = 162
-            while (mqlCommandManager.IsCommandRunning(id)) ; // block while command is running
-            try
-            {
-                mqlCommandManager.throwExceptionIfErrorResponse(id);
-                result["result"] = "";
-            }
-            catch (Exception e)
-            {
-                result["error"] = MQLExceptions.convertRESTException(e.ToString());
-            }
+            ParamAdd(context, parameters, "name");
+            await ExecCommandAsync(context, MQLCommand.IndicatorShortName_1, parameters); // MQLCommand ENUM = 162
+
+            result["result"] = "";
 
             return result;
         }
@@ -9470,11 +7413,10 @@ namespace MQL4CSharp.Base.REST
         /// <li><b>code</b> :  [in] Symbol code from or predefined .</li>
         /// </ul>
         /// </summary>
-        [RESTRoute(Method = HttpMethod.POST, PathInfo = @"^/[0-9]+/setindexarrow")]
-        public void Handle_SetIndexArrow_1(HttpListenerContext context)
+        [RestRoute(HttpMethod = HttpMethod.POST, PathInfo = @"^/[0-9]+/setindexarrow$")]
+        public IHttpContext Handle_SetIndexArrow_1(IHttpContext context)
         {
-            long chartid = Int64.Parse(context.Request.Url.Segments[1].Replace("/", ""));
-            this.SendJsonResponse(context, SetIndexArrow_1(context, chartid));
+            return SendJsonResponse(context, GetChartId(context), SetIndexArrow_1);
         }
 
         /// <summary>
@@ -9487,36 +7429,24 @@ namespace MQL4CSharp.Base.REST
         /// <li><b>code</b> :  [in] Symbol code from or predefined .</li>
         /// </ul>
         /// </summary>
-        [RESTRoute(Method = HttpMethod.POST, PathInfo = @"^/setindexarrow")]
-        public void Handle_SetIndexArrow_1_Default(HttpListenerContext context)
+        [RestRoute(HttpMethod = HttpMethod.POST, PathInfo = @"^/setindexarrow$")]
+        public IHttpContext Handle_SetIndexArrow_1_Default(IHttpContext context)
         {
-            this.SendJsonResponse(context, SetIndexArrow_1(context, DEFAULT_CHART_ID));
+            return SendJsonResponse(context, SetIndexArrow_1);
         }
 
-        private JObject SetIndexArrow_1(HttpListenerContext context, long chartId)
+        private async Task<JObject> SetIndexArrow_1(MQLRestContext context)
         {
-            MQLCommandManager mqlCommandManager = DLLObjectWrapper.getInstance().getMQLCommandManager(chartId);
-            JObject payload = this.GetJsonPayload(context.Request);
-            JObject result = new JObject();
-            if (payload == null)
-            {
-                result["result"] = PARSE_ERROR;
-                return result;
-            }
+            var payload = context.JsonPayload;
+            var result = context.Result;
+            if (PayloadNotValid(context))
+                return context.Result;
             List<Object> parameters = new List<Object>();
-            parameters.Add(payload["index"]);
-            parameters.Add(payload["code"]);
-            int id = mqlCommandManager.ExecCommand(MQLCommand.SetIndexArrow_1, parameters); // MQLCommand ENUM = 163
-            while (mqlCommandManager.IsCommandRunning(id)) ; // block while command is running
-            try
-            {
-                mqlCommandManager.throwExceptionIfErrorResponse(id);
-                result["result"] = "";
-            }
-            catch (Exception e)
-            {
-                result["error"] = MQLExceptions.convertRESTException(e.ToString());
-            }
+            ParamAdd(context, parameters, "index");
+            ParamAdd(context, parameters, "code");
+            await ExecCommandAsync(context, MQLCommand.SetIndexArrow_1, parameters); // MQLCommand ENUM = 163
+
+            result["result"] = "";
 
             return result;
         }
@@ -9530,11 +7460,10 @@ namespace MQL4CSharp.Base.REST
         /// <li><b>begin</b> :  [in] First drawing bar position number.</li>
         /// </ul>
         /// </summary>
-        [RESTRoute(Method = HttpMethod.POST, PathInfo = @"^/[0-9]+/setindexdrawbegin")]
-        public void Handle_SetIndexDrawBegin_1(HttpListenerContext context)
+        [RestRoute(HttpMethod = HttpMethod.POST, PathInfo = @"^/[0-9]+/setindexdrawbegin$")]
+        public IHttpContext Handle_SetIndexDrawBegin_1(IHttpContext context)
         {
-            long chartid = Int64.Parse(context.Request.Url.Segments[1].Replace("/", ""));
-            this.SendJsonResponse(context, SetIndexDrawBegin_1(context, chartid));
+            return SendJsonResponse(context, GetChartId(context), SetIndexDrawBegin_1);
         }
 
         /// <summary>
@@ -9547,36 +7476,24 @@ namespace MQL4CSharp.Base.REST
         /// <li><b>begin</b> :  [in] First drawing bar position number.</li>
         /// </ul>
         /// </summary>
-        [RESTRoute(Method = HttpMethod.POST, PathInfo = @"^/setindexdrawbegin")]
-        public void Handle_SetIndexDrawBegin_1_Default(HttpListenerContext context)
+        [RestRoute(HttpMethod = HttpMethod.POST, PathInfo = @"^/setindexdrawbegin$")]
+        public IHttpContext Handle_SetIndexDrawBegin_1_Default(IHttpContext context)
         {
-            this.SendJsonResponse(context, SetIndexDrawBegin_1(context, DEFAULT_CHART_ID));
+            return SendJsonResponse(context, SetIndexDrawBegin_1);
         }
 
-        private JObject SetIndexDrawBegin_1(HttpListenerContext context, long chartId)
+        private async Task<JObject> SetIndexDrawBegin_1(MQLRestContext context)
         {
-            MQLCommandManager mqlCommandManager = DLLObjectWrapper.getInstance().getMQLCommandManager(chartId);
-            JObject payload = this.GetJsonPayload(context.Request);
-            JObject result = new JObject();
-            if (payload == null)
-            {
-                result["result"] = PARSE_ERROR;
-                return result;
-            }
+            var payload = context.JsonPayload;
+            var result = context.Result;
+            if (PayloadNotValid(context))
+                return context.Result;
             List<Object> parameters = new List<Object>();
-            parameters.Add(payload["index"]);
-            parameters.Add(payload["begin"]);
-            int id = mqlCommandManager.ExecCommand(MQLCommand.SetIndexDrawBegin_1, parameters); // MQLCommand ENUM = 164
-            while (mqlCommandManager.IsCommandRunning(id)) ; // block while command is running
-            try
-            {
-                mqlCommandManager.throwExceptionIfErrorResponse(id);
-                result["result"] = "";
-            }
-            catch (Exception e)
-            {
-                result["error"] = MQLExceptions.convertRESTException(e.ToString());
-            }
+            ParamAdd(context, parameters, "index");
+            ParamAdd(context, parameters, "begin");
+            await ExecCommandAsync(context, MQLCommand.SetIndexDrawBegin_1, parameters); // MQLCommand ENUM = 164
+
+            result["result"] = "";
 
             return result;
         }
@@ -9590,11 +7507,10 @@ namespace MQL4CSharp.Base.REST
         /// <li><b>value</b> :  [in] New "empty" value.</li>
         /// </ul>
         /// </summary>
-        [RESTRoute(Method = HttpMethod.POST, PathInfo = @"^/[0-9]+/setindexemptyvalue")]
-        public void Handle_SetIndexEmptyValue_1(HttpListenerContext context)
+        [RestRoute(HttpMethod = HttpMethod.POST, PathInfo = @"^/[0-9]+/setindexemptyvalue$")]
+        public IHttpContext Handle_SetIndexEmptyValue_1(IHttpContext context)
         {
-            long chartid = Int64.Parse(context.Request.Url.Segments[1].Replace("/", ""));
-            this.SendJsonResponse(context, SetIndexEmptyValue_1(context, chartid));
+            return SendJsonResponse(context, GetChartId(context), SetIndexEmptyValue_1);
         }
 
         /// <summary>
@@ -9607,36 +7523,24 @@ namespace MQL4CSharp.Base.REST
         /// <li><b>value</b> :  [in] New "empty" value.</li>
         /// </ul>
         /// </summary>
-        [RESTRoute(Method = HttpMethod.POST, PathInfo = @"^/setindexemptyvalue")]
-        public void Handle_SetIndexEmptyValue_1_Default(HttpListenerContext context)
+        [RestRoute(HttpMethod = HttpMethod.POST, PathInfo = @"^/setindexemptyvalue$")]
+        public IHttpContext Handle_SetIndexEmptyValue_1_Default(IHttpContext context)
         {
-            this.SendJsonResponse(context, SetIndexEmptyValue_1(context, DEFAULT_CHART_ID));
+            return SendJsonResponse(context, SetIndexEmptyValue_1);
         }
 
-        private JObject SetIndexEmptyValue_1(HttpListenerContext context, long chartId)
+        private async Task<JObject> SetIndexEmptyValue_1(MQLRestContext context)
         {
-            MQLCommandManager mqlCommandManager = DLLObjectWrapper.getInstance().getMQLCommandManager(chartId);
-            JObject payload = this.GetJsonPayload(context.Request);
-            JObject result = new JObject();
-            if (payload == null)
-            {
-                result["result"] = PARSE_ERROR;
-                return result;
-            }
+            var payload = context.JsonPayload;
+            var result = context.Result;
+            if (PayloadNotValid(context))
+                return context.Result;
             List<Object> parameters = new List<Object>();
-            parameters.Add(payload["index"]);
-            parameters.Add(payload["value"]);
-            int id = mqlCommandManager.ExecCommand(MQLCommand.SetIndexEmptyValue_1, parameters); // MQLCommand ENUM = 165
-            while (mqlCommandManager.IsCommandRunning(id)) ; // block while command is running
-            try
-            {
-                mqlCommandManager.throwExceptionIfErrorResponse(id);
-                result["result"] = "";
-            }
-            catch (Exception e)
-            {
-                result["error"] = MQLExceptions.convertRESTException(e.ToString());
-            }
+            ParamAdd(context, parameters, "index");
+            ParamAdd(context, parameters, "value");
+            await ExecCommandAsync(context, MQLCommand.SetIndexEmptyValue_1, parameters); // MQLCommand ENUM = 165
+
+            result["result"] = "";
 
             return result;
         }
@@ -9650,11 +7554,10 @@ namespace MQL4CSharp.Base.REST
         /// <li><b>text</b> :  [in] Label text. NULL means that index value is not shown in the DataWindow.</li>
         /// </ul>
         /// </summary>
-        [RESTRoute(Method = HttpMethod.POST, PathInfo = @"^/[0-9]+/setindexlabel")]
-        public void Handle_SetIndexLabel_1(HttpListenerContext context)
+        [RestRoute(HttpMethod = HttpMethod.POST, PathInfo = @"^/[0-9]+/setindexlabel$")]
+        public IHttpContext Handle_SetIndexLabel_1(IHttpContext context)
         {
-            long chartid = Int64.Parse(context.Request.Url.Segments[1].Replace("/", ""));
-            this.SendJsonResponse(context, SetIndexLabel_1(context, chartid));
+            return SendJsonResponse(context, GetChartId(context), SetIndexLabel_1);
         }
 
         /// <summary>
@@ -9667,36 +7570,24 @@ namespace MQL4CSharp.Base.REST
         /// <li><b>text</b> :  [in] Label text. NULL means that index value is not shown in the DataWindow.</li>
         /// </ul>
         /// </summary>
-        [RESTRoute(Method = HttpMethod.POST, PathInfo = @"^/setindexlabel")]
-        public void Handle_SetIndexLabel_1_Default(HttpListenerContext context)
+        [RestRoute(HttpMethod = HttpMethod.POST, PathInfo = @"^/setindexlabel$")]
+        public IHttpContext Handle_SetIndexLabel_1_Default(IHttpContext context)
         {
-            this.SendJsonResponse(context, SetIndexLabel_1(context, DEFAULT_CHART_ID));
+            return SendJsonResponse(context, SetIndexLabel_1);
         }
 
-        private JObject SetIndexLabel_1(HttpListenerContext context, long chartId)
+        private async Task<JObject> SetIndexLabel_1(MQLRestContext context)
         {
-            MQLCommandManager mqlCommandManager = DLLObjectWrapper.getInstance().getMQLCommandManager(chartId);
-            JObject payload = this.GetJsonPayload(context.Request);
-            JObject result = new JObject();
-            if (payload == null)
-            {
-                result["result"] = PARSE_ERROR;
-                return result;
-            }
+            var payload = context.JsonPayload;
+            var result = context.Result;
+            if (PayloadNotValid(context))
+                return context.Result;
             List<Object> parameters = new List<Object>();
-            parameters.Add(payload["index"]);
-            parameters.Add(payload["text"]);
-            int id = mqlCommandManager.ExecCommand(MQLCommand.SetIndexLabel_1, parameters); // MQLCommand ENUM = 166
-            while (mqlCommandManager.IsCommandRunning(id)) ; // block while command is running
-            try
-            {
-                mqlCommandManager.throwExceptionIfErrorResponse(id);
-                result["result"] = "";
-            }
-            catch (Exception e)
-            {
-                result["error"] = MQLExceptions.convertRESTException(e.ToString());
-            }
+            ParamAdd(context, parameters, "index");
+            ParamAdd(context, parameters, "text");
+            await ExecCommandAsync(context, MQLCommand.SetIndexLabel_1, parameters); // MQLCommand ENUM = 166
+
+            result["result"] = "";
 
             return result;
         }
@@ -9710,11 +7601,10 @@ namespace MQL4CSharp.Base.REST
         /// <li><b>shift</b> :  [in] Shift value in bars.</li>
         /// </ul>
         /// </summary>
-        [RESTRoute(Method = HttpMethod.POST, PathInfo = @"^/[0-9]+/setindexshift")]
-        public void Handle_SetIndexShift_1(HttpListenerContext context)
+        [RestRoute(HttpMethod = HttpMethod.POST, PathInfo = @"^/[0-9]+/setindexshift$")]
+        public IHttpContext Handle_SetIndexShift_1(IHttpContext context)
         {
-            long chartid = Int64.Parse(context.Request.Url.Segments[1].Replace("/", ""));
-            this.SendJsonResponse(context, SetIndexShift_1(context, chartid));
+            return SendJsonResponse(context, GetChartId(context), SetIndexShift_1);
         }
 
         /// <summary>
@@ -9727,36 +7617,24 @@ namespace MQL4CSharp.Base.REST
         /// <li><b>shift</b> :  [in] Shift value in bars.</li>
         /// </ul>
         /// </summary>
-        [RESTRoute(Method = HttpMethod.POST, PathInfo = @"^/setindexshift")]
-        public void Handle_SetIndexShift_1_Default(HttpListenerContext context)
+        [RestRoute(HttpMethod = HttpMethod.POST, PathInfo = @"^/setindexshift$")]
+        public IHttpContext Handle_SetIndexShift_1_Default(IHttpContext context)
         {
-            this.SendJsonResponse(context, SetIndexShift_1(context, DEFAULT_CHART_ID));
+            return SendJsonResponse(context, SetIndexShift_1);
         }
 
-        private JObject SetIndexShift_1(HttpListenerContext context, long chartId)
+        private async Task<JObject> SetIndexShift_1(MQLRestContext context)
         {
-            MQLCommandManager mqlCommandManager = DLLObjectWrapper.getInstance().getMQLCommandManager(chartId);
-            JObject payload = this.GetJsonPayload(context.Request);
-            JObject result = new JObject();
-            if (payload == null)
-            {
-                result["result"] = PARSE_ERROR;
-                return result;
-            }
+            var payload = context.JsonPayload;
+            var result = context.Result;
+            if (PayloadNotValid(context))
+                return context.Result;
             List<Object> parameters = new List<Object>();
-            parameters.Add(payload["index"]);
-            parameters.Add(payload["shift"]);
-            int id = mqlCommandManager.ExecCommand(MQLCommand.SetIndexShift_1, parameters); // MQLCommand ENUM = 167
-            while (mqlCommandManager.IsCommandRunning(id)) ; // block while command is running
-            try
-            {
-                mqlCommandManager.throwExceptionIfErrorResponse(id);
-                result["result"] = "";
-            }
-            catch (Exception e)
-            {
-                result["error"] = MQLExceptions.convertRESTException(e.ToString());
-            }
+            ParamAdd(context, parameters, "index");
+            ParamAdd(context, parameters, "shift");
+            await ExecCommandAsync(context, MQLCommand.SetIndexShift_1, parameters); // MQLCommand ENUM = 167
+
+            result["result"] = "";
 
             return result;
         }
@@ -9773,11 +7651,10 @@ namespace MQL4CSharp.Base.REST
         /// <li><b>clr</b> :  [in] Line color. Absence of this parameter means that the color will not be changed.</li>
         /// </ul>
         /// </summary>
-        [RESTRoute(Method = HttpMethod.POST, PathInfo = @"^/[0-9]+/setindexstyle")]
-        public void Handle_SetIndexStyle_1(HttpListenerContext context)
+        [RestRoute(HttpMethod = HttpMethod.POST, PathInfo = @"^/[0-9]+/setindexstyle$")]
+        public IHttpContext Handle_SetIndexStyle_1(IHttpContext context)
         {
-            long chartid = Int64.Parse(context.Request.Url.Segments[1].Replace("/", ""));
-            this.SendJsonResponse(context, SetIndexStyle_1(context, chartid));
+            return SendJsonResponse(context, GetChartId(context), SetIndexStyle_1);
         }
 
         /// <summary>
@@ -9793,39 +7670,27 @@ namespace MQL4CSharp.Base.REST
         /// <li><b>clr</b> :  [in] Line color. Absence of this parameter means that the color will not be changed.</li>
         /// </ul>
         /// </summary>
-        [RESTRoute(Method = HttpMethod.POST, PathInfo = @"^/setindexstyle")]
-        public void Handle_SetIndexStyle_1_Default(HttpListenerContext context)
+        [RestRoute(HttpMethod = HttpMethod.POST, PathInfo = @"^/setindexstyle$")]
+        public IHttpContext Handle_SetIndexStyle_1_Default(IHttpContext context)
         {
-            this.SendJsonResponse(context, SetIndexStyle_1(context, DEFAULT_CHART_ID));
+            return SendJsonResponse(context, SetIndexStyle_1);
         }
 
-        private JObject SetIndexStyle_1(HttpListenerContext context, long chartId)
+        private async Task<JObject> SetIndexStyle_1(MQLRestContext context)
         {
-            MQLCommandManager mqlCommandManager = DLLObjectWrapper.getInstance().getMQLCommandManager(chartId);
-            JObject payload = this.GetJsonPayload(context.Request);
-            JObject result = new JObject();
-            if (payload == null)
-            {
-                result["result"] = PARSE_ERROR;
-                return result;
-            }
+            var payload = context.JsonPayload;
+            var result = context.Result;
+            if (PayloadNotValid(context))
+                return context.Result;
             List<Object> parameters = new List<Object>();
-            parameters.Add(payload["index"]);
-            parameters.Add(payload["type"]);
-            parameters.Add(payload["style"]);
-            parameters.Add(payload["width"]);
-            parameters.Add(payload["clr"]);
-            int id = mqlCommandManager.ExecCommand(MQLCommand.SetIndexStyle_1, parameters); // MQLCommand ENUM = 168
-            while (mqlCommandManager.IsCommandRunning(id)) ; // block while command is running
-            try
-            {
-                mqlCommandManager.throwExceptionIfErrorResponse(id);
-                result["result"] = "";
-            }
-            catch (Exception e)
-            {
-                result["error"] = MQLExceptions.convertRESTException(e.ToString());
-            }
+            ParamAdd(context, parameters, "index");
+            ParamAdd(context, parameters, "type");
+            ParamAdd(context, parameters, "style");
+            ParamAdd(context, parameters, "width");
+            ParamAdd(context, parameters, "clr");
+            await ExecCommandAsync(context, MQLCommand.SetIndexStyle_1, parameters); // MQLCommand ENUM = 168
+
+            result["result"] = "";
 
             return result;
         }
@@ -9840,11 +7705,10 @@ namespace MQL4CSharp.Base.REST
         /// <li><b>clr</b> :  [in] Line color. Empty value CLR_NONE means that the color will not be changed.</li>
         /// </ul>
         /// </summary>
-        [RESTRoute(Method = HttpMethod.POST, PathInfo = @"^/[0-9]+/setlevelstyle")]
-        public void Handle_SetLevelStyle_1(HttpListenerContext context)
+        [RestRoute(HttpMethod = HttpMethod.POST, PathInfo = @"^/[0-9]+/setlevelstyle$")]
+        public IHttpContext Handle_SetLevelStyle_1(IHttpContext context)
         {
-            long chartid = Int64.Parse(context.Request.Url.Segments[1].Replace("/", ""));
-            this.SendJsonResponse(context, SetLevelStyle_1(context, chartid));
+            return SendJsonResponse(context, GetChartId(context), SetLevelStyle_1);
         }
 
         /// <summary>
@@ -9858,37 +7722,25 @@ namespace MQL4CSharp.Base.REST
         /// <li><b>clr</b> :  [in] Line color. Empty value CLR_NONE means that the color will not be changed.</li>
         /// </ul>
         /// </summary>
-        [RESTRoute(Method = HttpMethod.POST, PathInfo = @"^/setlevelstyle")]
-        public void Handle_SetLevelStyle_1_Default(HttpListenerContext context)
+        [RestRoute(HttpMethod = HttpMethod.POST, PathInfo = @"^/setlevelstyle$")]
+        public IHttpContext Handle_SetLevelStyle_1_Default(IHttpContext context)
         {
-            this.SendJsonResponse(context, SetLevelStyle_1(context, DEFAULT_CHART_ID));
+            return SendJsonResponse(context, SetLevelStyle_1);
         }
 
-        private JObject SetLevelStyle_1(HttpListenerContext context, long chartId)
+        private async Task<JObject> SetLevelStyle_1(MQLRestContext context)
         {
-            MQLCommandManager mqlCommandManager = DLLObjectWrapper.getInstance().getMQLCommandManager(chartId);
-            JObject payload = this.GetJsonPayload(context.Request);
-            JObject result = new JObject();
-            if (payload == null)
-            {
-                result["result"] = PARSE_ERROR;
-                return result;
-            }
+            var payload = context.JsonPayload;
+            var result = context.Result;
+            if (PayloadNotValid(context))
+                return context.Result;
             List<Object> parameters = new List<Object>();
-            parameters.Add(payload["draw_style"]);
-            parameters.Add(payload["line_width"]);
-            parameters.Add(payload["clr"]);
-            int id = mqlCommandManager.ExecCommand(MQLCommand.SetLevelStyle_1, parameters); // MQLCommand ENUM = 169
-            while (mqlCommandManager.IsCommandRunning(id)) ; // block while command is running
-            try
-            {
-                mqlCommandManager.throwExceptionIfErrorResponse(id);
-                result["result"] = "";
-            }
-            catch (Exception e)
-            {
-                result["error"] = MQLExceptions.convertRESTException(e.ToString());
-            }
+            ParamAdd(context, parameters, "draw_style");
+            ParamAdd(context, parameters, "line_width");
+            ParamAdd(context, parameters, "clr");
+            await ExecCommandAsync(context, MQLCommand.SetLevelStyle_1, parameters); // MQLCommand ENUM = 169
+
+            result["result"] = "";
 
             return result;
         }
@@ -9902,11 +7754,10 @@ namespace MQL4CSharp.Base.REST
         /// <li><b>value</b> :  [in] Value for the given indicator level.</li>
         /// </ul>
         /// </summary>
-        [RESTRoute(Method = HttpMethod.POST, PathInfo = @"^/[0-9]+/setlevelvalue")]
-        public void Handle_SetLevelValue_1(HttpListenerContext context)
+        [RestRoute(HttpMethod = HttpMethod.POST, PathInfo = @"^/[0-9]+/setlevelvalue$")]
+        public IHttpContext Handle_SetLevelValue_1(IHttpContext context)
         {
-            long chartid = Int64.Parse(context.Request.Url.Segments[1].Replace("/", ""));
-            this.SendJsonResponse(context, SetLevelValue_1(context, chartid));
+            return SendJsonResponse(context, GetChartId(context), SetLevelValue_1);
         }
 
         /// <summary>
@@ -9919,36 +7770,24 @@ namespace MQL4CSharp.Base.REST
         /// <li><b>value</b> :  [in] Value for the given indicator level.</li>
         /// </ul>
         /// </summary>
-        [RESTRoute(Method = HttpMethod.POST, PathInfo = @"^/setlevelvalue")]
-        public void Handle_SetLevelValue_1_Default(HttpListenerContext context)
+        [RestRoute(HttpMethod = HttpMethod.POST, PathInfo = @"^/setlevelvalue$")]
+        public IHttpContext Handle_SetLevelValue_1_Default(IHttpContext context)
         {
-            this.SendJsonResponse(context, SetLevelValue_1(context, DEFAULT_CHART_ID));
+            return SendJsonResponse(context, SetLevelValue_1);
         }
 
-        private JObject SetLevelValue_1(HttpListenerContext context, long chartId)
+        private async Task<JObject> SetLevelValue_1(MQLRestContext context)
         {
-            MQLCommandManager mqlCommandManager = DLLObjectWrapper.getInstance().getMQLCommandManager(chartId);
-            JObject payload = this.GetJsonPayload(context.Request);
-            JObject result = new JObject();
-            if (payload == null)
-            {
-                result["result"] = PARSE_ERROR;
-                return result;
-            }
+            var payload = context.JsonPayload;
+            var result = context.Result;
+            if (PayloadNotValid(context))
+                return context.Result;
             List<Object> parameters = new List<Object>();
-            parameters.Add(payload["level"]);
-            parameters.Add(payload["value"]);
-            int id = mqlCommandManager.ExecCommand(MQLCommand.SetLevelValue_1, parameters); // MQLCommand ENUM = 170
-            while (mqlCommandManager.IsCommandRunning(id)) ; // block while command is running
-            try
-            {
-                mqlCommandManager.throwExceptionIfErrorResponse(id);
-                result["result"] = "";
-            }
-            catch (Exception e)
-            {
-                result["error"] = MQLExceptions.convertRESTException(e.ToString());
-            }
+            ParamAdd(context, parameters, "level");
+            ParamAdd(context, parameters, "value");
+            await ExecCommandAsync(context, MQLCommand.SetLevelValue_1, parameters); // MQLCommand ENUM = 170
+
+            result["result"] = "";
 
             return result;
         }
@@ -9968,11 +7807,10 @@ namespace MQL4CSharp.Base.REST
         /// <li><b>priceN</b> :  [in] The price coordinate of the N-th anchor point.</li>
         /// </ul>
         /// </summary>
-        [RESTRoute(Method = HttpMethod.POST, PathInfo = @"^/[0-9]+/objectcreate")]
-        public void Handle_ObjectCreate_1(HttpListenerContext context)
+        [RestRoute(HttpMethod = HttpMethod.POST, PathInfo = @"^/[0-9]+/objectcreate$")]
+        public IHttpContext Handle_ObjectCreate_1(IHttpContext context)
         {
-            long chartid = Int64.Parse(context.Request.Url.Segments[1].Replace("/", ""));
-            this.SendJsonResponse(context, ObjectCreate_1(context, chartid));
+            return SendJsonResponse(context, GetChartId(context), ObjectCreate_1);
         }
 
         /// <summary>
@@ -9991,42 +7829,30 @@ namespace MQL4CSharp.Base.REST
         /// <li><b>priceN</b> :  [in] The price coordinate of the N-th anchor point.</li>
         /// </ul>
         /// </summary>
-        [RESTRoute(Method = HttpMethod.POST, PathInfo = @"^/objectcreate")]
-        public void Handle_ObjectCreate_1_Default(HttpListenerContext context)
+        [RestRoute(HttpMethod = HttpMethod.POST, PathInfo = @"^/objectcreate$")]
+        public IHttpContext Handle_ObjectCreate_1_Default(IHttpContext context)
         {
-            this.SendJsonResponse(context, ObjectCreate_1(context, DEFAULT_CHART_ID));
+            return SendJsonResponse(context, ObjectCreate_1);
         }
 
-        private JObject ObjectCreate_1(HttpListenerContext context, long chartId)
+        private async Task<JObject> ObjectCreate_1(MQLRestContext context)
         {
-            MQLCommandManager mqlCommandManager = DLLObjectWrapper.getInstance().getMQLCommandManager(chartId);
-            JObject payload = this.GetJsonPayload(context.Request);
-            JObject result = new JObject();
-            if (payload == null)
-            {
-                result["result"] = PARSE_ERROR;
-                return result;
-            }
+            var payload = context.JsonPayload;
+            var result = context.Result;
+            if (PayloadNotValid(context))
+                return context.Result;
             List<Object> parameters = new List<Object>();
-            parameters.Add(payload["chart_id"]);
-            parameters.Add(payload["object_name"]);
-            parameters.Add(payload["object_type"]);
-            parameters.Add(payload["sub_window"]);
-            parameters.Add(payload["time1"]);
-            parameters.Add(payload["price1"]);
-            parameters.Add(payload["timeN"]);
-            parameters.Add(payload["priceN"]);
-            int id = mqlCommandManager.ExecCommand(MQLCommand.ObjectCreate_1, parameters); // MQLCommand ENUM = 171
-            while (mqlCommandManager.IsCommandRunning(id)) ; // block while command is running
-            try
-            {
-                mqlCommandManager.throwExceptionIfErrorResponse(id);
-                result["result"] = (bool)mqlCommandManager.GetCommandResult(id);
-            }
-            catch (Exception e)
-            {
-                result["error"] = MQLExceptions.convertRESTException(e.ToString());
-            }
+            ParamAdd(context, parameters, "chart_id");
+            ParamAdd(context, parameters, "object_name");
+            ParamAdd(context, parameters, "object_type");
+            ParamAdd(context, parameters, "sub_window");
+            ParamAdd(context, parameters, "time1");
+            ParamAdd(context, parameters, "price1");
+            ParamAdd(context, parameters, "timeN");
+            ParamAdd(context, parameters, "priceN");
+            await ExecCommandAsync(context, MQLCommand.ObjectCreate_1, parameters); // MQLCommand ENUM = 171
+
+            result["result"] = (bool)GetCommandResult(context);
 
             return result;
         }
@@ -10047,11 +7873,10 @@ namespace MQL4CSharp.Base.REST
         /// <li><b>price3</b> :  [in] The price coordinate of the third anchor point.</li>
         /// </ul>
         /// </summary>
-        [RESTRoute(Method = HttpMethod.POST, PathInfo = @"^/[0-9]+/objectcreate")]
-        public void Handle_ObjectCreate_2(HttpListenerContext context)
+        [RestRoute(HttpMethod = HttpMethod.POST, PathInfo = @"^/[0-9]+/objectcreate$")]
+        public IHttpContext Handle_ObjectCreate_2(IHttpContext context)
         {
-            long chartid = Int64.Parse(context.Request.Url.Segments[1].Replace("/", ""));
-            this.SendJsonResponse(context, ObjectCreate_2(context, chartid));
+            return SendJsonResponse(context, GetChartId(context), ObjectCreate_2);
         }
 
         /// <summary>
@@ -10071,43 +7896,31 @@ namespace MQL4CSharp.Base.REST
         /// <li><b>price3</b> :  [in] The price coordinate of the third anchor point.</li>
         /// </ul>
         /// </summary>
-        [RESTRoute(Method = HttpMethod.POST, PathInfo = @"^/objectcreate")]
-        public void Handle_ObjectCreate_2_Default(HttpListenerContext context)
+        [RestRoute(HttpMethod = HttpMethod.POST, PathInfo = @"^/objectcreate$")]
+        public IHttpContext Handle_ObjectCreate_2_Default(IHttpContext context)
         {
-            this.SendJsonResponse(context, ObjectCreate_2(context, DEFAULT_CHART_ID));
+            return SendJsonResponse(context, ObjectCreate_2);
         }
 
-        private JObject ObjectCreate_2(HttpListenerContext context, long chartId)
+        private async Task<JObject> ObjectCreate_2(MQLRestContext context)
         {
-            MQLCommandManager mqlCommandManager = DLLObjectWrapper.getInstance().getMQLCommandManager(chartId);
-            JObject payload = this.GetJsonPayload(context.Request);
-            JObject result = new JObject();
-            if (payload == null)
-            {
-                result["result"] = PARSE_ERROR;
-                return result;
-            }
+            var payload = context.JsonPayload;
+            var result = context.Result;
+            if (PayloadNotValid(context))
+                return context.Result;
             List<Object> parameters = new List<Object>();
-            parameters.Add(payload["object_name"]);
-            parameters.Add(payload["object_type"]);
-            parameters.Add(payload["sub_window"]);
-            parameters.Add(payload["time1"]);
-            parameters.Add(payload["price1"]);
-            parameters.Add(payload["time2"]);
-            parameters.Add(payload["price2"]);
-            parameters.Add(payload["time3"]);
-            parameters.Add(payload["price3"]);
-            int id = mqlCommandManager.ExecCommand(MQLCommand.ObjectCreate_2, parameters); // MQLCommand ENUM = 171
-            while (mqlCommandManager.IsCommandRunning(id)) ; // block while command is running
-            try
-            {
-                mqlCommandManager.throwExceptionIfErrorResponse(id);
-                result["result"] = (bool)mqlCommandManager.GetCommandResult(id);
-            }
-            catch (Exception e)
-            {
-                result["error"] = MQLExceptions.convertRESTException(e.ToString());
-            }
+            ParamAdd(context, parameters, "object_name");
+            ParamAdd(context, parameters, "object_type");
+            ParamAdd(context, parameters, "sub_window");
+            ParamAdd(context, parameters, "time1");
+            ParamAdd(context, parameters, "price1");
+            ParamAdd(context, parameters, "time2");
+            ParamAdd(context, parameters, "price2");
+            ParamAdd(context, parameters, "time3");
+            ParamAdd(context, parameters, "price3");
+            await ExecCommandAsync(context, MQLCommand.ObjectCreate_2, parameters); // MQLCommand ENUM = 171
+
+            result["result"] = (bool)GetCommandResult(context);
 
             return result;
         }
@@ -10120,11 +7933,10 @@ namespace MQL4CSharp.Base.REST
         /// <li><b>object_index</b> :  [in] Object index. This value must be greater or equal to 0 and less than .</li>
         /// </ul>
         /// </summary>
-        [RESTRoute(Method = HttpMethod.POST, PathInfo = @"^/[0-9]+/objectname")]
-        public void Handle_ObjectName_1(HttpListenerContext context)
+        [RestRoute(HttpMethod = HttpMethod.POST, PathInfo = @"^/[0-9]+/objectname$")]
+        public IHttpContext Handle_ObjectName_1(IHttpContext context)
         {
-            long chartid = Int64.Parse(context.Request.Url.Segments[1].Replace("/", ""));
-            this.SendJsonResponse(context, ObjectName_1(context, chartid));
+            return SendJsonResponse(context, GetChartId(context), ObjectName_1);
         }
 
         /// <summary>
@@ -10136,35 +7948,23 @@ namespace MQL4CSharp.Base.REST
         /// <li><b>object_index</b> :  [in] Object index. This value must be greater or equal to 0 and less than .</li>
         /// </ul>
         /// </summary>
-        [RESTRoute(Method = HttpMethod.POST, PathInfo = @"^/objectname")]
-        public void Handle_ObjectName_1_Default(HttpListenerContext context)
+        [RestRoute(HttpMethod = HttpMethod.POST, PathInfo = @"^/objectname$")]
+        public IHttpContext Handle_ObjectName_1_Default(IHttpContext context)
         {
-            this.SendJsonResponse(context, ObjectName_1(context, DEFAULT_CHART_ID));
+            return SendJsonResponse(context, ObjectName_1);
         }
 
-        private JObject ObjectName_1(HttpListenerContext context, long chartId)
+        private async Task<JObject> ObjectName_1(MQLRestContext context)
         {
-            MQLCommandManager mqlCommandManager = DLLObjectWrapper.getInstance().getMQLCommandManager(chartId);
-            JObject payload = this.GetJsonPayload(context.Request);
-            JObject result = new JObject();
-            if (payload == null)
-            {
-                result["result"] = PARSE_ERROR;
-                return result;
-            }
+            var payload = context.JsonPayload;
+            var result = context.Result;
+            if (PayloadNotValid(context))
+                return context.Result;
             List<Object> parameters = new List<Object>();
-            parameters.Add(payload["object_index"]);
-            int id = mqlCommandManager.ExecCommand(MQLCommand.ObjectName_1, parameters); // MQLCommand ENUM = 172
-            while (mqlCommandManager.IsCommandRunning(id)) ; // block while command is running
-            try
-            {
-                mqlCommandManager.throwExceptionIfErrorResponse(id);
-                result["result"] = (string)mqlCommandManager.GetCommandResult(id);
-            }
-            catch (Exception e)
-            {
-                result["error"] = MQLExceptions.convertRESTException(e.ToString());
-            }
+            ParamAdd(context, parameters, "object_index");
+            await ExecCommandAsync(context, MQLCommand.ObjectName_1, parameters); // MQLCommand ENUM = 172
+
+            result["result"] = (string)GetCommandResult(context);
 
             return result;
         }
@@ -10178,11 +7978,10 @@ namespace MQL4CSharp.Base.REST
         /// <li><b>object_name</b> :  [in] Name of object to be deleted.</li>
         /// </ul>
         /// </summary>
-        [RESTRoute(Method = HttpMethod.POST, PathInfo = @"^/[0-9]+/objectdelete")]
-        public void Handle_ObjectDelete_1(HttpListenerContext context)
+        [RestRoute(HttpMethod = HttpMethod.POST, PathInfo = @"^/[0-9]+/objectdelete$")]
+        public IHttpContext Handle_ObjectDelete_1(IHttpContext context)
         {
-            long chartid = Int64.Parse(context.Request.Url.Segments[1].Replace("/", ""));
-            this.SendJsonResponse(context, ObjectDelete_1(context, chartid));
+            return SendJsonResponse(context, GetChartId(context), ObjectDelete_1);
         }
 
         /// <summary>
@@ -10195,36 +7994,24 @@ namespace MQL4CSharp.Base.REST
         /// <li><b>object_name</b> :  [in] Name of object to be deleted.</li>
         /// </ul>
         /// </summary>
-        [RESTRoute(Method = HttpMethod.POST, PathInfo = @"^/objectdelete")]
-        public void Handle_ObjectDelete_1_Default(HttpListenerContext context)
+        [RestRoute(HttpMethod = HttpMethod.POST, PathInfo = @"^/objectdelete$")]
+        public IHttpContext Handle_ObjectDelete_1_Default(IHttpContext context)
         {
-            this.SendJsonResponse(context, ObjectDelete_1(context, DEFAULT_CHART_ID));
+            return SendJsonResponse(context, ObjectDelete_1);
         }
 
-        private JObject ObjectDelete_1(HttpListenerContext context, long chartId)
+        private async Task<JObject> ObjectDelete_1(MQLRestContext context)
         {
-            MQLCommandManager mqlCommandManager = DLLObjectWrapper.getInstance().getMQLCommandManager(chartId);
-            JObject payload = this.GetJsonPayload(context.Request);
-            JObject result = new JObject();
-            if (payload == null)
-            {
-                result["result"] = PARSE_ERROR;
-                return result;
-            }
+            var payload = context.JsonPayload;
+            var result = context.Result;
+            if (PayloadNotValid(context))
+                return context.Result;
             List<Object> parameters = new List<Object>();
-            parameters.Add(payload["chart_id"]);
-            parameters.Add(payload["object_name"]);
-            int id = mqlCommandManager.ExecCommand(MQLCommand.ObjectDelete_1, parameters); // MQLCommand ENUM = 173
-            while (mqlCommandManager.IsCommandRunning(id)) ; // block while command is running
-            try
-            {
-                mqlCommandManager.throwExceptionIfErrorResponse(id);
-                result["result"] = (bool)mqlCommandManager.GetCommandResult(id);
-            }
-            catch (Exception e)
-            {
-                result["error"] = MQLExceptions.convertRESTException(e.ToString());
-            }
+            ParamAdd(context, parameters, "chart_id");
+            ParamAdd(context, parameters, "object_name");
+            await ExecCommandAsync(context, MQLCommand.ObjectDelete_1, parameters); // MQLCommand ENUM = 173
+
+            result["result"] = (bool)GetCommandResult(context);
 
             return result;
         }
@@ -10237,11 +8024,10 @@ namespace MQL4CSharp.Base.REST
         /// <li><b>object_name</b> :  [in] Name of object to be deleted.</li>
         /// </ul>
         /// </summary>
-        [RESTRoute(Method = HttpMethod.POST, PathInfo = @"^/[0-9]+/objectdelete")]
-        public void Handle_ObjectDelete_2(HttpListenerContext context)
+        [RestRoute(HttpMethod = HttpMethod.POST, PathInfo = @"^/[0-9]+/objectdelete$")]
+        public IHttpContext Handle_ObjectDelete_2(IHttpContext context)
         {
-            long chartid = Int64.Parse(context.Request.Url.Segments[1].Replace("/", ""));
-            this.SendJsonResponse(context, ObjectDelete_2(context, chartid));
+            return SendJsonResponse(context, GetChartId(context), ObjectDelete_2);
         }
 
         /// <summary>
@@ -10253,35 +8039,23 @@ namespace MQL4CSharp.Base.REST
         /// <li><b>object_name</b> :  [in] Name of object to be deleted.</li>
         /// </ul>
         /// </summary>
-        [RESTRoute(Method = HttpMethod.POST, PathInfo = @"^/objectdelete")]
-        public void Handle_ObjectDelete_2_Default(HttpListenerContext context)
+        [RestRoute(HttpMethod = HttpMethod.POST, PathInfo = @"^/objectdelete$")]
+        public IHttpContext Handle_ObjectDelete_2_Default(IHttpContext context)
         {
-            this.SendJsonResponse(context, ObjectDelete_2(context, DEFAULT_CHART_ID));
+            return SendJsonResponse(context, ObjectDelete_2);
         }
 
-        private JObject ObjectDelete_2(HttpListenerContext context, long chartId)
+        private async Task<JObject> ObjectDelete_2(MQLRestContext context)
         {
-            MQLCommandManager mqlCommandManager = DLLObjectWrapper.getInstance().getMQLCommandManager(chartId);
-            JObject payload = this.GetJsonPayload(context.Request);
-            JObject result = new JObject();
-            if (payload == null)
-            {
-                result["result"] = PARSE_ERROR;
-                return result;
-            }
+            var payload = context.JsonPayload;
+            var result = context.Result;
+            if (PayloadNotValid(context))
+                return context.Result;
             List<Object> parameters = new List<Object>();
-            parameters.Add(payload["object_name"]);
-            int id = mqlCommandManager.ExecCommand(MQLCommand.ObjectDelete_2, parameters); // MQLCommand ENUM = 173
-            while (mqlCommandManager.IsCommandRunning(id)) ; // block while command is running
-            try
-            {
-                mqlCommandManager.throwExceptionIfErrorResponse(id);
-                result["result"] = (bool)mqlCommandManager.GetCommandResult(id);
-            }
-            catch (Exception e)
-            {
-                result["error"] = MQLExceptions.convertRESTException(e.ToString());
-            }
+            ParamAdd(context, parameters, "object_name");
+            await ExecCommandAsync(context, MQLCommand.ObjectDelete_2, parameters); // MQLCommand ENUM = 173
+
+            result["result"] = (bool)GetCommandResult(context);
 
             return result;
         }
@@ -10296,11 +8070,10 @@ namespace MQL4CSharp.Base.REST
         /// <li><b>object_type</b> :  [in] Type of the object. The value can be one of the values of the enumeration. EMPTY (-1) means all types.</li>
         /// </ul>
         /// </summary>
-        [RESTRoute(Method = HttpMethod.POST, PathInfo = @"^/[0-9]+/objectsdeleteall")]
-        public void Handle_ObjectsDeleteAll_1(HttpListenerContext context)
+        [RestRoute(HttpMethod = HttpMethod.POST, PathInfo = @"^/[0-9]+/objectsdeleteall$")]
+        public IHttpContext Handle_ObjectsDeleteAll_1(IHttpContext context)
         {
-            long chartid = Int64.Parse(context.Request.Url.Segments[1].Replace("/", ""));
-            this.SendJsonResponse(context, ObjectsDeleteAll_1(context, chartid));
+            return SendJsonResponse(context, GetChartId(context), ObjectsDeleteAll_1);
         }
 
         /// <summary>
@@ -10314,37 +8087,25 @@ namespace MQL4CSharp.Base.REST
         /// <li><b>object_type</b> :  [in] Type of the object. The value can be one of the values of the enumeration. EMPTY (-1) means all types.</li>
         /// </ul>
         /// </summary>
-        [RESTRoute(Method = HttpMethod.POST, PathInfo = @"^/objectsdeleteall")]
-        public void Handle_ObjectsDeleteAll_1_Default(HttpListenerContext context)
+        [RestRoute(HttpMethod = HttpMethod.POST, PathInfo = @"^/objectsdeleteall$")]
+        public IHttpContext Handle_ObjectsDeleteAll_1_Default(IHttpContext context)
         {
-            this.SendJsonResponse(context, ObjectsDeleteAll_1(context, DEFAULT_CHART_ID));
+            return SendJsonResponse(context, ObjectsDeleteAll_1);
         }
 
-        private JObject ObjectsDeleteAll_1(HttpListenerContext context, long chartId)
+        private async Task<JObject> ObjectsDeleteAll_1(MQLRestContext context)
         {
-            MQLCommandManager mqlCommandManager = DLLObjectWrapper.getInstance().getMQLCommandManager(chartId);
-            JObject payload = this.GetJsonPayload(context.Request);
-            JObject result = new JObject();
-            if (payload == null)
-            {
-                result["result"] = PARSE_ERROR;
-                return result;
-            }
+            var payload = context.JsonPayload;
+            var result = context.Result;
+            if (PayloadNotValid(context))
+                return context.Result;
             List<Object> parameters = new List<Object>();
-            parameters.Add(payload["chart_id"]);
-            parameters.Add(payload["sub_window"]);
-            parameters.Add(payload["object_type"]);
-            int id = mqlCommandManager.ExecCommand(MQLCommand.ObjectsDeleteAll_1, parameters); // MQLCommand ENUM = 174
-            while (mqlCommandManager.IsCommandRunning(id)) ; // block while command is running
-            try
-            {
-                mqlCommandManager.throwExceptionIfErrorResponse(id);
-                result["result"] = Convert.ToInt32(mqlCommandManager.GetCommandResult(id));
-            }
-            catch (Exception e)
-            {
-                result["error"] = MQLExceptions.convertRESTException(e.ToString());
-            }
+            ParamAdd(context, parameters, "chart_id");
+            ParamAdd(context, parameters, "sub_window");
+            ParamAdd(context, parameters, "object_type");
+            await ExecCommandAsync(context, MQLCommand.ObjectsDeleteAll_1, parameters); // MQLCommand ENUM = 174
+
+            result["result"] = Convert.ToInt32(GetCommandResult(context));
 
             return result;
         }
@@ -10358,11 +8119,10 @@ namespace MQL4CSharp.Base.REST
         /// <li><b>object_type</b> :  [in] Type of the object. The value can be one of the values of the enumeration. EMPTY (-1) means all types.</li>
         /// </ul>
         /// </summary>
-        [RESTRoute(Method = HttpMethod.POST, PathInfo = @"^/[0-9]+/objectsdeleteall")]
-        public void Handle_ObjectsDeleteAll_2(HttpListenerContext context)
+        [RestRoute(HttpMethod = HttpMethod.POST, PathInfo = @"^/[0-9]+/objectsdeleteall$")]
+        public IHttpContext Handle_ObjectsDeleteAll_2(IHttpContext context)
         {
-            long chartid = Int64.Parse(context.Request.Url.Segments[1].Replace("/", ""));
-            this.SendJsonResponse(context, ObjectsDeleteAll_2(context, chartid));
+            return SendJsonResponse(context, GetChartId(context), ObjectsDeleteAll_2);
         }
 
         /// <summary>
@@ -10375,36 +8135,24 @@ namespace MQL4CSharp.Base.REST
         /// <li><b>object_type</b> :  [in] Type of the object. The value can be one of the values of the enumeration. EMPTY (-1) means all types.</li>
         /// </ul>
         /// </summary>
-        [RESTRoute(Method = HttpMethod.POST, PathInfo = @"^/objectsdeleteall")]
-        public void Handle_ObjectsDeleteAll_2_Default(HttpListenerContext context)
+        [RestRoute(HttpMethod = HttpMethod.POST, PathInfo = @"^/objectsdeleteall$")]
+        public IHttpContext Handle_ObjectsDeleteAll_2_Default(IHttpContext context)
         {
-            this.SendJsonResponse(context, ObjectsDeleteAll_2(context, DEFAULT_CHART_ID));
+            return SendJsonResponse(context, ObjectsDeleteAll_2);
         }
 
-        private JObject ObjectsDeleteAll_2(HttpListenerContext context, long chartId)
+        private async Task<JObject> ObjectsDeleteAll_2(MQLRestContext context)
         {
-            MQLCommandManager mqlCommandManager = DLLObjectWrapper.getInstance().getMQLCommandManager(chartId);
-            JObject payload = this.GetJsonPayload(context.Request);
-            JObject result = new JObject();
-            if (payload == null)
-            {
-                result["result"] = PARSE_ERROR;
-                return result;
-            }
+            var payload = context.JsonPayload;
+            var result = context.Result;
+            if (PayloadNotValid(context))
+                return context.Result;
             List<Object> parameters = new List<Object>();
-            parameters.Add(payload["sub_window"]);
-            parameters.Add(payload["object_type"]);
-            int id = mqlCommandManager.ExecCommand(MQLCommand.ObjectsDeleteAll_2, parameters); // MQLCommand ENUM = 174
-            while (mqlCommandManager.IsCommandRunning(id)) ; // block while command is running
-            try
-            {
-                mqlCommandManager.throwExceptionIfErrorResponse(id);
-                result["result"] = Convert.ToInt32(mqlCommandManager.GetCommandResult(id));
-            }
-            catch (Exception e)
-            {
-                result["error"] = MQLExceptions.convertRESTException(e.ToString());
-            }
+            ParamAdd(context, parameters, "sub_window");
+            ParamAdd(context, parameters, "object_type");
+            await ExecCommandAsync(context, MQLCommand.ObjectsDeleteAll_2, parameters); // MQLCommand ENUM = 174
+
+            result["result"] = Convert.ToInt32(GetCommandResult(context));
 
             return result;
         }
@@ -10420,11 +8168,10 @@ namespace MQL4CSharp.Base.REST
         /// <li><b>object_type</b> :  [in] Type of the object. The value can be one of the values of the enumeration. EMPTY (-1) means all types.</li>
         /// </ul>
         /// </summary>
-        [RESTRoute(Method = HttpMethod.POST, PathInfo = @"^/[0-9]+/objectsdeleteall")]
-        public void Handle_ObjectsDeleteAll_3(HttpListenerContext context)
+        [RestRoute(HttpMethod = HttpMethod.POST, PathInfo = @"^/[0-9]+/objectsdeleteall$")]
+        public IHttpContext Handle_ObjectsDeleteAll_3(IHttpContext context)
         {
-            long chartid = Int64.Parse(context.Request.Url.Segments[1].Replace("/", ""));
-            this.SendJsonResponse(context, ObjectsDeleteAll_3(context, chartid));
+            return SendJsonResponse(context, GetChartId(context), ObjectsDeleteAll_3);
         }
 
         /// <summary>
@@ -10439,38 +8186,26 @@ namespace MQL4CSharp.Base.REST
         /// <li><b>object_type</b> :  [in] Type of the object. The value can be one of the values of the enumeration. EMPTY (-1) means all types.</li>
         /// </ul>
         /// </summary>
-        [RESTRoute(Method = HttpMethod.POST, PathInfo = @"^/objectsdeleteall")]
-        public void Handle_ObjectsDeleteAll_3_Default(HttpListenerContext context)
+        [RestRoute(HttpMethod = HttpMethod.POST, PathInfo = @"^/objectsdeleteall$")]
+        public IHttpContext Handle_ObjectsDeleteAll_3_Default(IHttpContext context)
         {
-            this.SendJsonResponse(context, ObjectsDeleteAll_3(context, DEFAULT_CHART_ID));
+            return SendJsonResponse(context, ObjectsDeleteAll_3);
         }
 
-        private JObject ObjectsDeleteAll_3(HttpListenerContext context, long chartId)
+        private async Task<JObject> ObjectsDeleteAll_3(MQLRestContext context)
         {
-            MQLCommandManager mqlCommandManager = DLLObjectWrapper.getInstance().getMQLCommandManager(chartId);
-            JObject payload = this.GetJsonPayload(context.Request);
-            JObject result = new JObject();
-            if (payload == null)
-            {
-                result["result"] = PARSE_ERROR;
-                return result;
-            }
+            var payload = context.JsonPayload;
+            var result = context.Result;
+            if (PayloadNotValid(context))
+                return context.Result;
             List<Object> parameters = new List<Object>();
-            parameters.Add(payload["chart_id"]);
-            parameters.Add(payload["prefix"]);
-            parameters.Add(payload["sub_window"]);
-            parameters.Add(payload["object_type"]);
-            int id = mqlCommandManager.ExecCommand(MQLCommand.ObjectsDeleteAll_3, parameters); // MQLCommand ENUM = 174
-            while (mqlCommandManager.IsCommandRunning(id)) ; // block while command is running
-            try
-            {
-                mqlCommandManager.throwExceptionIfErrorResponse(id);
-                result["result"] = Convert.ToInt32(mqlCommandManager.GetCommandResult(id));
-            }
-            catch (Exception e)
-            {
-                result["error"] = MQLExceptions.convertRESTException(e.ToString());
-            }
+            ParamAdd(context, parameters, "chart_id");
+            ParamAdd(context, parameters, "prefix");
+            ParamAdd(context, parameters, "sub_window");
+            ParamAdd(context, parameters, "object_type");
+            await ExecCommandAsync(context, MQLCommand.ObjectsDeleteAll_3, parameters); // MQLCommand ENUM = 174
+
+            result["result"] = Convert.ToInt32(GetCommandResult(context));
 
             return result;
         }
@@ -10484,11 +8219,10 @@ namespace MQL4CSharp.Base.REST
         /// <li><b>object_name</b> :  [in] The name of the object to find.</li>
         /// </ul>
         /// </summary>
-        [RESTRoute(Method = HttpMethod.POST, PathInfo = @"^/[0-9]+/objectfind")]
-        public void Handle_ObjectFind_1(HttpListenerContext context)
+        [RestRoute(HttpMethod = HttpMethod.POST, PathInfo = @"^/[0-9]+/objectfind$")]
+        public IHttpContext Handle_ObjectFind_1(IHttpContext context)
         {
-            long chartid = Int64.Parse(context.Request.Url.Segments[1].Replace("/", ""));
-            this.SendJsonResponse(context, ObjectFind_1(context, chartid));
+            return SendJsonResponse(context, GetChartId(context), ObjectFind_1);
         }
 
         /// <summary>
@@ -10501,36 +8235,24 @@ namespace MQL4CSharp.Base.REST
         /// <li><b>object_name</b> :  [in] The name of the object to find.</li>
         /// </ul>
         /// </summary>
-        [RESTRoute(Method = HttpMethod.POST, PathInfo = @"^/objectfind")]
-        public void Handle_ObjectFind_1_Default(HttpListenerContext context)
+        [RestRoute(HttpMethod = HttpMethod.POST, PathInfo = @"^/objectfind$")]
+        public IHttpContext Handle_ObjectFind_1_Default(IHttpContext context)
         {
-            this.SendJsonResponse(context, ObjectFind_1(context, DEFAULT_CHART_ID));
+            return SendJsonResponse(context, ObjectFind_1);
         }
 
-        private JObject ObjectFind_1(HttpListenerContext context, long chartId)
+        private async Task<JObject> ObjectFind_1(MQLRestContext context)
         {
-            MQLCommandManager mqlCommandManager = DLLObjectWrapper.getInstance().getMQLCommandManager(chartId);
-            JObject payload = this.GetJsonPayload(context.Request);
-            JObject result = new JObject();
-            if (payload == null)
-            {
-                result["result"] = PARSE_ERROR;
-                return result;
-            }
+            var payload = context.JsonPayload;
+            var result = context.Result;
+            if (PayloadNotValid(context))
+                return context.Result;
             List<Object> parameters = new List<Object>();
-            parameters.Add(payload["chart_id"]);
-            parameters.Add(payload["object_name"]);
-            int id = mqlCommandManager.ExecCommand(MQLCommand.ObjectFind_1, parameters); // MQLCommand ENUM = 175
-            while (mqlCommandManager.IsCommandRunning(id)) ; // block while command is running
-            try
-            {
-                mqlCommandManager.throwExceptionIfErrorResponse(id);
-                result["result"] = Convert.ToInt32(mqlCommandManager.GetCommandResult(id));
-            }
-            catch (Exception e)
-            {
-                result["error"] = MQLExceptions.convertRESTException(e.ToString());
-            }
+            ParamAdd(context, parameters, "chart_id");
+            ParamAdd(context, parameters, "object_name");
+            await ExecCommandAsync(context, MQLCommand.ObjectFind_1, parameters); // MQLCommand ENUM = 175
+
+            result["result"] = Convert.ToInt32(GetCommandResult(context));
 
             return result;
         }
@@ -10543,11 +8265,10 @@ namespace MQL4CSharp.Base.REST
         /// <li><b>object_name</b> :  [in] The name of the object to find.</li>
         /// </ul>
         /// </summary>
-        [RESTRoute(Method = HttpMethod.POST, PathInfo = @"^/[0-9]+/objectfind")]
-        public void Handle_ObjectFind_2(HttpListenerContext context)
+        [RestRoute(HttpMethod = HttpMethod.POST, PathInfo = @"^/[0-9]+/objectfind$")]
+        public IHttpContext Handle_ObjectFind_2(IHttpContext context)
         {
-            long chartid = Int64.Parse(context.Request.Url.Segments[1].Replace("/", ""));
-            this.SendJsonResponse(context, ObjectFind_2(context, chartid));
+            return SendJsonResponse(context, GetChartId(context), ObjectFind_2);
         }
 
         /// <summary>
@@ -10559,35 +8280,23 @@ namespace MQL4CSharp.Base.REST
         /// <li><b>object_name</b> :  [in] The name of the object to find.</li>
         /// </ul>
         /// </summary>
-        [RESTRoute(Method = HttpMethod.POST, PathInfo = @"^/objectfind")]
-        public void Handle_ObjectFind_2_Default(HttpListenerContext context)
+        [RestRoute(HttpMethod = HttpMethod.POST, PathInfo = @"^/objectfind$")]
+        public IHttpContext Handle_ObjectFind_2_Default(IHttpContext context)
         {
-            this.SendJsonResponse(context, ObjectFind_2(context, DEFAULT_CHART_ID));
+            return SendJsonResponse(context, ObjectFind_2);
         }
 
-        private JObject ObjectFind_2(HttpListenerContext context, long chartId)
+        private async Task<JObject> ObjectFind_2(MQLRestContext context)
         {
-            MQLCommandManager mqlCommandManager = DLLObjectWrapper.getInstance().getMQLCommandManager(chartId);
-            JObject payload = this.GetJsonPayload(context.Request);
-            JObject result = new JObject();
-            if (payload == null)
-            {
-                result["result"] = PARSE_ERROR;
-                return result;
-            }
+            var payload = context.JsonPayload;
+            var result = context.Result;
+            if (PayloadNotValid(context))
+                return context.Result;
             List<Object> parameters = new List<Object>();
-            parameters.Add(payload["object_name"]);
-            int id = mqlCommandManager.ExecCommand(MQLCommand.ObjectFind_2, parameters); // MQLCommand ENUM = 175
-            while (mqlCommandManager.IsCommandRunning(id)) ; // block while command is running
-            try
-            {
-                mqlCommandManager.throwExceptionIfErrorResponse(id);
-                result["result"] = Convert.ToInt32(mqlCommandManager.GetCommandResult(id));
-            }
-            catch (Exception e)
-            {
-                result["error"] = MQLExceptions.convertRESTException(e.ToString());
-            }
+            ParamAdd(context, parameters, "object_name");
+            await ExecCommandAsync(context, MQLCommand.ObjectFind_2, parameters); // MQLCommand ENUM = 175
+
+            result["result"] = Convert.ToInt32(GetCommandResult(context));
 
             return result;
         }
@@ -10602,11 +8311,10 @@ namespace MQL4CSharp.Base.REST
         /// <li><b>line_id</b> :  [in] Line identifier.</li>
         /// </ul>
         /// </summary>
-        [RESTRoute(Method = HttpMethod.POST, PathInfo = @"^/[0-9]+/objectgettimebyvalue")]
-        public void Handle_ObjectGetTimeByValue_1(HttpListenerContext context)
+        [RestRoute(HttpMethod = HttpMethod.POST, PathInfo = @"^/[0-9]+/objectgettimebyvalue$")]
+        public IHttpContext Handle_ObjectGetTimeByValue_1(IHttpContext context)
         {
-            long chartid = Int64.Parse(context.Request.Url.Segments[1].Replace("/", ""));
-            this.SendJsonResponse(context, ObjectGetTimeByValue_1(context, chartid));
+            return SendJsonResponse(context, GetChartId(context), ObjectGetTimeByValue_1);
         }
 
         /// <summary>
@@ -10620,37 +8328,25 @@ namespace MQL4CSharp.Base.REST
         /// <li><b>line_id</b> :  [in] Line identifier.</li>
         /// </ul>
         /// </summary>
-        [RESTRoute(Method = HttpMethod.POST, PathInfo = @"^/objectgettimebyvalue")]
-        public void Handle_ObjectGetTimeByValue_1_Default(HttpListenerContext context)
+        [RestRoute(HttpMethod = HttpMethod.POST, PathInfo = @"^/objectgettimebyvalue$")]
+        public IHttpContext Handle_ObjectGetTimeByValue_1_Default(IHttpContext context)
         {
-            this.SendJsonResponse(context, ObjectGetTimeByValue_1(context, DEFAULT_CHART_ID));
+            return SendJsonResponse(context, ObjectGetTimeByValue_1);
         }
 
-        private JObject ObjectGetTimeByValue_1(HttpListenerContext context, long chartId)
+        private async Task<JObject> ObjectGetTimeByValue_1(MQLRestContext context)
         {
-            MQLCommandManager mqlCommandManager = DLLObjectWrapper.getInstance().getMQLCommandManager(chartId);
-            JObject payload = this.GetJsonPayload(context.Request);
-            JObject result = new JObject();
-            if (payload == null)
-            {
-                result["result"] = PARSE_ERROR;
-                return result;
-            }
+            var payload = context.JsonPayload;
+            var result = context.Result;
+            if (PayloadNotValid(context))
+                return context.Result;
             List<Object> parameters = new List<Object>();
-            parameters.Add(payload["object_name"]);
-            parameters.Add(payload["value"]);
-            parameters.Add(payload["line_id"]);
-            int id = mqlCommandManager.ExecCommand(MQLCommand.ObjectGetTimeByValue_1, parameters); // MQLCommand ENUM = 176
-            while (mqlCommandManager.IsCommandRunning(id)) ; // block while command is running
-            try
-            {
-                mqlCommandManager.throwExceptionIfErrorResponse(id);
-                result["result"] = (DateTime)mqlCommandManager.GetCommandResult(id);
-            }
-            catch (Exception e)
-            {
-                result["error"] = MQLExceptions.convertRESTException(e.ToString());
-            }
+            ParamAdd(context, parameters, "object_name");
+            ParamAdd(context, parameters, "value");
+            ParamAdd(context, parameters, "line_id");
+            await ExecCommandAsync(context, MQLCommand.ObjectGetTimeByValue_1, parameters); // MQLCommand ENUM = 176
+
+            result["result"] = (DateTime)GetCommandResult(context);
 
             return result;
         }
@@ -10666,11 +8362,10 @@ namespace MQL4CSharp.Base.REST
         /// <li><b>line_id</b> :  [in] Line identifier.</li>
         /// </ul>
         /// </summary>
-        [RESTRoute(Method = HttpMethod.POST, PathInfo = @"^/[0-9]+/objectgetvaluebytime")]
-        public void Handle_ObjectGetValueByTime_1(HttpListenerContext context)
+        [RestRoute(HttpMethod = HttpMethod.POST, PathInfo = @"^/[0-9]+/objectgetvaluebytime$")]
+        public IHttpContext Handle_ObjectGetValueByTime_1(IHttpContext context)
         {
-            long chartid = Int64.Parse(context.Request.Url.Segments[1].Replace("/", ""));
-            this.SendJsonResponse(context, ObjectGetValueByTime_1(context, chartid));
+            return SendJsonResponse(context, GetChartId(context), ObjectGetValueByTime_1);
         }
 
         /// <summary>
@@ -10685,38 +8380,26 @@ namespace MQL4CSharp.Base.REST
         /// <li><b>line_id</b> :  [in] Line identifier.</li>
         /// </ul>
         /// </summary>
-        [RESTRoute(Method = HttpMethod.POST, PathInfo = @"^/objectgetvaluebytime")]
-        public void Handle_ObjectGetValueByTime_1_Default(HttpListenerContext context)
+        [RestRoute(HttpMethod = HttpMethod.POST, PathInfo = @"^/objectgetvaluebytime$")]
+        public IHttpContext Handle_ObjectGetValueByTime_1_Default(IHttpContext context)
         {
-            this.SendJsonResponse(context, ObjectGetValueByTime_1(context, DEFAULT_CHART_ID));
+            return SendJsonResponse(context, ObjectGetValueByTime_1);
         }
 
-        private JObject ObjectGetValueByTime_1(HttpListenerContext context, long chartId)
+        private async Task<JObject> ObjectGetValueByTime_1(MQLRestContext context)
         {
-            MQLCommandManager mqlCommandManager = DLLObjectWrapper.getInstance().getMQLCommandManager(chartId);
-            JObject payload = this.GetJsonPayload(context.Request);
-            JObject result = new JObject();
-            if (payload == null)
-            {
-                result["result"] = PARSE_ERROR;
-                return result;
-            }
+            var payload = context.JsonPayload;
+            var result = context.Result;
+            if (PayloadNotValid(context))
+                return context.Result;
             List<Object> parameters = new List<Object>();
-            parameters.Add(payload["chart_id"]);
-            parameters.Add(payload["object_name"]);
-            parameters.Add(payload["time"]);
-            parameters.Add(payload["line_id"]);
-            int id = mqlCommandManager.ExecCommand(MQLCommand.ObjectGetValueByTime_1, parameters); // MQLCommand ENUM = 177
-            while (mqlCommandManager.IsCommandRunning(id)) ; // block while command is running
-            try
-            {
-                mqlCommandManager.throwExceptionIfErrorResponse(id);
-                result["result"] = Convert.ToDecimal(mqlCommandManager.GetCommandResult(id));
-            }
-            catch (Exception e)
-            {
-                result["error"] = MQLExceptions.convertRESTException(e.ToString());
-            }
+            ParamAdd(context, parameters, "chart_id");
+            ParamAdd(context, parameters, "object_name");
+            ParamAdd(context, parameters, "time");
+            ParamAdd(context, parameters, "line_id");
+            await ExecCommandAsync(context, MQLCommand.ObjectGetValueByTime_1, parameters); // MQLCommand ENUM = 177
+
+            result["result"] = Convert.ToDecimal(GetCommandResult(context));
 
             return result;
         }
@@ -10732,11 +8415,10 @@ namespace MQL4CSharp.Base.REST
         /// <li><b>price</b> :  [in] Price coordinate of the selected anchor point.</li>
         /// </ul>
         /// </summary>
-        [RESTRoute(Method = HttpMethod.POST, PathInfo = @"^/[0-9]+/objectmove")]
-        public void Handle_ObjectMove_1(HttpListenerContext context)
+        [RestRoute(HttpMethod = HttpMethod.POST, PathInfo = @"^/[0-9]+/objectmove$")]
+        public IHttpContext Handle_ObjectMove_1(IHttpContext context)
         {
-            long chartid = Int64.Parse(context.Request.Url.Segments[1].Replace("/", ""));
-            this.SendJsonResponse(context, ObjectMove_1(context, chartid));
+            return SendJsonResponse(context, GetChartId(context), ObjectMove_1);
         }
 
         /// <summary>
@@ -10751,38 +8433,26 @@ namespace MQL4CSharp.Base.REST
         /// <li><b>price</b> :  [in] Price coordinate of the selected anchor point.</li>
         /// </ul>
         /// </summary>
-        [RESTRoute(Method = HttpMethod.POST, PathInfo = @"^/objectmove")]
-        public void Handle_ObjectMove_1_Default(HttpListenerContext context)
+        [RestRoute(HttpMethod = HttpMethod.POST, PathInfo = @"^/objectmove$")]
+        public IHttpContext Handle_ObjectMove_1_Default(IHttpContext context)
         {
-            this.SendJsonResponse(context, ObjectMove_1(context, DEFAULT_CHART_ID));
+            return SendJsonResponse(context, ObjectMove_1);
         }
 
-        private JObject ObjectMove_1(HttpListenerContext context, long chartId)
+        private async Task<JObject> ObjectMove_1(MQLRestContext context)
         {
-            MQLCommandManager mqlCommandManager = DLLObjectWrapper.getInstance().getMQLCommandManager(chartId);
-            JObject payload = this.GetJsonPayload(context.Request);
-            JObject result = new JObject();
-            if (payload == null)
-            {
-                result["result"] = PARSE_ERROR;
-                return result;
-            }
+            var payload = context.JsonPayload;
+            var result = context.Result;
+            if (PayloadNotValid(context))
+                return context.Result;
             List<Object> parameters = new List<Object>();
-            parameters.Add(payload["object_name"]);
-            parameters.Add(payload["point_index"]);
-            parameters.Add(payload["time"]);
-            parameters.Add(payload["price"]);
-            int id = mqlCommandManager.ExecCommand(MQLCommand.ObjectMove_1, parameters); // MQLCommand ENUM = 178
-            while (mqlCommandManager.IsCommandRunning(id)) ; // block while command is running
-            try
-            {
-                mqlCommandManager.throwExceptionIfErrorResponse(id);
-                result["result"] = (bool)mqlCommandManager.GetCommandResult(id);
-            }
-            catch (Exception e)
-            {
-                result["error"] = MQLExceptions.convertRESTException(e.ToString());
-            }
+            ParamAdd(context, parameters, "object_name");
+            ParamAdd(context, parameters, "point_index");
+            ParamAdd(context, parameters, "time");
+            ParamAdd(context, parameters, "price");
+            await ExecCommandAsync(context, MQLCommand.ObjectMove_1, parameters); // MQLCommand ENUM = 178
+
+            result["result"] = (bool)GetCommandResult(context);
 
             return result;
         }
@@ -10797,11 +8467,10 @@ namespace MQL4CSharp.Base.REST
         /// <li><b>type</b> :  [in] Type of the object. The value can be one of the values of the enumeration. EMPTY(-1) means all types.</li>
         /// </ul>
         /// </summary>
-        [RESTRoute(Method = HttpMethod.POST, PathInfo = @"^/[0-9]+/objectstotal")]
-        public void Handle_ObjectsTotal_1(HttpListenerContext context)
+        [RestRoute(HttpMethod = HttpMethod.POST, PathInfo = @"^/[0-9]+/objectstotal$")]
+        public IHttpContext Handle_ObjectsTotal_1(IHttpContext context)
         {
-            long chartid = Int64.Parse(context.Request.Url.Segments[1].Replace("/", ""));
-            this.SendJsonResponse(context, ObjectsTotal_1(context, chartid));
+            return SendJsonResponse(context, GetChartId(context), ObjectsTotal_1);
         }
 
         /// <summary>
@@ -10815,37 +8484,25 @@ namespace MQL4CSharp.Base.REST
         /// <li><b>type</b> :  [in] Type of the object. The value can be one of the values of the enumeration. EMPTY(-1) means all types.</li>
         /// </ul>
         /// </summary>
-        [RESTRoute(Method = HttpMethod.POST, PathInfo = @"^/objectstotal")]
-        public void Handle_ObjectsTotal_1_Default(HttpListenerContext context)
+        [RestRoute(HttpMethod = HttpMethod.POST, PathInfo = @"^/objectstotal$")]
+        public IHttpContext Handle_ObjectsTotal_1_Default(IHttpContext context)
         {
-            this.SendJsonResponse(context, ObjectsTotal_1(context, DEFAULT_CHART_ID));
+            return SendJsonResponse(context, ObjectsTotal_1);
         }
 
-        private JObject ObjectsTotal_1(HttpListenerContext context, long chartId)
+        private async Task<JObject> ObjectsTotal_1(MQLRestContext context)
         {
-            MQLCommandManager mqlCommandManager = DLLObjectWrapper.getInstance().getMQLCommandManager(chartId);
-            JObject payload = this.GetJsonPayload(context.Request);
-            JObject result = new JObject();
-            if (payload == null)
-            {
-                result["result"] = PARSE_ERROR;
-                return result;
-            }
+            var payload = context.JsonPayload;
+            var result = context.Result;
+            if (PayloadNotValid(context))
+                return context.Result;
             List<Object> parameters = new List<Object>();
-            parameters.Add(payload["chart_id"]);
-            parameters.Add(payload["sub_window"]);
-            parameters.Add(payload["type"]);
-            int id = mqlCommandManager.ExecCommand(MQLCommand.ObjectsTotal_1, parameters); // MQLCommand ENUM = 179
-            while (mqlCommandManager.IsCommandRunning(id)) ; // block while command is running
-            try
-            {
-                mqlCommandManager.throwExceptionIfErrorResponse(id);
-                result["result"] = Convert.ToInt32(mqlCommandManager.GetCommandResult(id));
-            }
-            catch (Exception e)
-            {
-                result["error"] = MQLExceptions.convertRESTException(e.ToString());
-            }
+            ParamAdd(context, parameters, "chart_id");
+            ParamAdd(context, parameters, "sub_window");
+            ParamAdd(context, parameters, "type");
+            await ExecCommandAsync(context, MQLCommand.ObjectsTotal_1, parameters); // MQLCommand ENUM = 179
+
+            result["result"] = Convert.ToInt32(GetCommandResult(context));
 
             return result;
         }
@@ -10858,11 +8515,10 @@ namespace MQL4CSharp.Base.REST
         /// <li><b>type</b> :  [in] Type of the object. The value can be one of the values of the enumeration. EMPTY(-1) means all types.</li>
         /// </ul>
         /// </summary>
-        [RESTRoute(Method = HttpMethod.POST, PathInfo = @"^/[0-9]+/objectstotal")]
-        public void Handle_ObjectsTotal_2(HttpListenerContext context)
+        [RestRoute(HttpMethod = HttpMethod.POST, PathInfo = @"^/[0-9]+/objectstotal$")]
+        public IHttpContext Handle_ObjectsTotal_2(IHttpContext context)
         {
-            long chartid = Int64.Parse(context.Request.Url.Segments[1].Replace("/", ""));
-            this.SendJsonResponse(context, ObjectsTotal_2(context, chartid));
+            return SendJsonResponse(context, GetChartId(context), ObjectsTotal_2);
         }
 
         /// <summary>
@@ -10874,35 +8530,23 @@ namespace MQL4CSharp.Base.REST
         /// <li><b>type</b> :  [in] Type of the object. The value can be one of the values of the enumeration. EMPTY(-1) means all types.</li>
         /// </ul>
         /// </summary>
-        [RESTRoute(Method = HttpMethod.POST, PathInfo = @"^/objectstotal")]
-        public void Handle_ObjectsTotal_2_Default(HttpListenerContext context)
+        [RestRoute(HttpMethod = HttpMethod.POST, PathInfo = @"^/objectstotal$")]
+        public IHttpContext Handle_ObjectsTotal_2_Default(IHttpContext context)
         {
-            this.SendJsonResponse(context, ObjectsTotal_2(context, DEFAULT_CHART_ID));
+            return SendJsonResponse(context, ObjectsTotal_2);
         }
 
-        private JObject ObjectsTotal_2(HttpListenerContext context, long chartId)
+        private async Task<JObject> ObjectsTotal_2(MQLRestContext context)
         {
-            MQLCommandManager mqlCommandManager = DLLObjectWrapper.getInstance().getMQLCommandManager(chartId);
-            JObject payload = this.GetJsonPayload(context.Request);
-            JObject result = new JObject();
-            if (payload == null)
-            {
-                result["result"] = PARSE_ERROR;
-                return result;
-            }
+            var payload = context.JsonPayload;
+            var result = context.Result;
+            if (PayloadNotValid(context))
+                return context.Result;
             List<Object> parameters = new List<Object>();
-            parameters.Add(payload["type"]);
-            int id = mqlCommandManager.ExecCommand(MQLCommand.ObjectsTotal_2, parameters); // MQLCommand ENUM = 179
-            while (mqlCommandManager.IsCommandRunning(id)) ; // block while command is running
-            try
-            {
-                mqlCommandManager.throwExceptionIfErrorResponse(id);
-                result["result"] = Convert.ToInt32(mqlCommandManager.GetCommandResult(id));
-            }
-            catch (Exception e)
-            {
-                result["error"] = MQLExceptions.convertRESTException(e.ToString());
-            }
+            ParamAdd(context, parameters, "type");
+            await ExecCommandAsync(context, MQLCommand.ObjectsTotal_2, parameters); // MQLCommand ENUM = 179
+
+            result["result"] = Convert.ToInt32(GetCommandResult(context));
 
             return result;
         }
@@ -10918,11 +8562,10 @@ namespace MQL4CSharp.Base.REST
         /// <li><b>prop_modifier</b> :  [in] Modifier of the specified property. For the first variant, the default modifier value is equal to 0. Most properties do not require a modifier. It denotes the number of the level in and in the graphical object Andrew's pitchfork. The numeration of levels starts from zero.</li>
         /// </ul>
         /// </summary>
-        [RESTRoute(Method = HttpMethod.POST, PathInfo = @"^/[0-9]+/objectgetdouble")]
-        public void Handle_ObjectGetDouble_1(HttpListenerContext context)
+        [RestRoute(HttpMethod = HttpMethod.POST, PathInfo = @"^/[0-9]+/objectgetdouble$")]
+        public IHttpContext Handle_ObjectGetDouble_1(IHttpContext context)
         {
-            long chartid = Int64.Parse(context.Request.Url.Segments[1].Replace("/", ""));
-            this.SendJsonResponse(context, ObjectGetDouble_1(context, chartid));
+            return SendJsonResponse(context, GetChartId(context), ObjectGetDouble_1);
         }
 
         /// <summary>
@@ -10937,38 +8580,26 @@ namespace MQL4CSharp.Base.REST
         /// <li><b>prop_modifier</b> :  [in] Modifier of the specified property. For the first variant, the default modifier value is equal to 0. Most properties do not require a modifier. It denotes the number of the level in and in the graphical object Andrew's pitchfork. The numeration of levels starts from zero.</li>
         /// </ul>
         /// </summary>
-        [RESTRoute(Method = HttpMethod.POST, PathInfo = @"^/objectgetdouble")]
-        public void Handle_ObjectGetDouble_1_Default(HttpListenerContext context)
+        [RestRoute(HttpMethod = HttpMethod.POST, PathInfo = @"^/objectgetdouble$")]
+        public IHttpContext Handle_ObjectGetDouble_1_Default(IHttpContext context)
         {
-            this.SendJsonResponse(context, ObjectGetDouble_1(context, DEFAULT_CHART_ID));
+            return SendJsonResponse(context, ObjectGetDouble_1);
         }
 
-        private JObject ObjectGetDouble_1(HttpListenerContext context, long chartId)
+        private async Task<JObject> ObjectGetDouble_1(MQLRestContext context)
         {
-            MQLCommandManager mqlCommandManager = DLLObjectWrapper.getInstance().getMQLCommandManager(chartId);
-            JObject payload = this.GetJsonPayload(context.Request);
-            JObject result = new JObject();
-            if (payload == null)
-            {
-                result["result"] = PARSE_ERROR;
-                return result;
-            }
+            var payload = context.JsonPayload;
+            var result = context.Result;
+            if (PayloadNotValid(context))
+                return context.Result;
             List<Object> parameters = new List<Object>();
-            parameters.Add(payload["chart_id"]);
-            parameters.Add(payload["object_name"]);
-            parameters.Add(payload["prop_id"]);
-            parameters.Add(payload["prop_modifier"]);
-            int id = mqlCommandManager.ExecCommand(MQLCommand.ObjectGetDouble_1, parameters); // MQLCommand ENUM = 180
-            while (mqlCommandManager.IsCommandRunning(id)) ; // block while command is running
-            try
-            {
-                mqlCommandManager.throwExceptionIfErrorResponse(id);
-                result["result"] = Convert.ToDecimal(mqlCommandManager.GetCommandResult(id));
-            }
-            catch (Exception e)
-            {
-                result["error"] = MQLExceptions.convertRESTException(e.ToString());
-            }
+            ParamAdd(context, parameters, "chart_id");
+            ParamAdd(context, parameters, "object_name");
+            ParamAdd(context, parameters, "prop_id");
+            ParamAdd(context, parameters, "prop_modifier");
+            await ExecCommandAsync(context, MQLCommand.ObjectGetDouble_1, parameters); // MQLCommand ENUM = 180
+
+            result["result"] = Convert.ToDecimal(GetCommandResult(context));
 
             return result;
         }
@@ -10984,11 +8615,10 @@ namespace MQL4CSharp.Base.REST
         /// <li><b>prop_modifier</b> :  [in] Modifier of the specified property. For the first variant, the default modifier value is equal to 0. Most properties do not require a modifier. It denotes the number of the level in and in the graphical object Andrew's pitchfork. The numeration of levels starts from zero.</li>
         /// </ul>
         /// </summary>
-        [RESTRoute(Method = HttpMethod.POST, PathInfo = @"^/[0-9]+/objectgetinteger")]
-        public void Handle_ObjectGetInteger_1(HttpListenerContext context)
+        [RestRoute(HttpMethod = HttpMethod.POST, PathInfo = @"^/[0-9]+/objectgetinteger$")]
+        public IHttpContext Handle_ObjectGetInteger_1(IHttpContext context)
         {
-            long chartid = Int64.Parse(context.Request.Url.Segments[1].Replace("/", ""));
-            this.SendJsonResponse(context, ObjectGetInteger_1(context, chartid));
+            return SendJsonResponse(context, GetChartId(context), ObjectGetInteger_1);
         }
 
         /// <summary>
@@ -11003,38 +8633,26 @@ namespace MQL4CSharp.Base.REST
         /// <li><b>prop_modifier</b> :  [in] Modifier of the specified property. For the first variant, the default modifier value is equal to 0. Most properties do not require a modifier. It denotes the number of the level in and in the graphical object Andrew's pitchfork. The numeration of levels starts from zero.</li>
         /// </ul>
         /// </summary>
-        [RESTRoute(Method = HttpMethod.POST, PathInfo = @"^/objectgetinteger")]
-        public void Handle_ObjectGetInteger_1_Default(HttpListenerContext context)
+        [RestRoute(HttpMethod = HttpMethod.POST, PathInfo = @"^/objectgetinteger$")]
+        public IHttpContext Handle_ObjectGetInteger_1_Default(IHttpContext context)
         {
-            this.SendJsonResponse(context, ObjectGetInteger_1(context, DEFAULT_CHART_ID));
+            return SendJsonResponse(context, ObjectGetInteger_1);
         }
 
-        private JObject ObjectGetInteger_1(HttpListenerContext context, long chartId)
+        private async Task<JObject> ObjectGetInteger_1(MQLRestContext context)
         {
-            MQLCommandManager mqlCommandManager = DLLObjectWrapper.getInstance().getMQLCommandManager(chartId);
-            JObject payload = this.GetJsonPayload(context.Request);
-            JObject result = new JObject();
-            if (payload == null)
-            {
-                result["result"] = PARSE_ERROR;
-                return result;
-            }
+            var payload = context.JsonPayload;
+            var result = context.Result;
+            if (PayloadNotValid(context))
+                return context.Result;
             List<Object> parameters = new List<Object>();
-            parameters.Add(payload["chart_id"]);
-            parameters.Add(payload["object_name"]);
-            parameters.Add(payload["prop_id"]);
-            parameters.Add(payload["prop_modifier"]);
-            int id = mqlCommandManager.ExecCommand(MQLCommand.ObjectGetInteger_1, parameters); // MQLCommand ENUM = 181
-            while (mqlCommandManager.IsCommandRunning(id)) ; // block while command is running
-            try
-            {
-                mqlCommandManager.throwExceptionIfErrorResponse(id);
-                result["result"] = Convert.ToInt64(mqlCommandManager.GetCommandResult(id));
-            }
-            catch (Exception e)
-            {
-                result["error"] = MQLExceptions.convertRESTException(e.ToString());
-            }
+            ParamAdd(context, parameters, "chart_id");
+            ParamAdd(context, parameters, "object_name");
+            ParamAdd(context, parameters, "prop_id");
+            ParamAdd(context, parameters, "prop_modifier");
+            await ExecCommandAsync(context, MQLCommand.ObjectGetInteger_1, parameters); // MQLCommand ENUM = 181
+
+            result["result"] = Convert.ToInt64(GetCommandResult(context));
 
             return result;
         }
@@ -11050,11 +8668,10 @@ namespace MQL4CSharp.Base.REST
         /// <li><b>prop_modifier</b> :  [in] Modifier of the specified property. For the first variant, the default modifier value is equal to 0. Most properties do not require a modifier. It denotes the number of the level in and in the graphical object Andrew's pitchfork. The numeration of levels starts from zero.</li>
         /// </ul>
         /// </summary>
-        [RESTRoute(Method = HttpMethod.POST, PathInfo = @"^/[0-9]+/objectgetstring")]
-        public void Handle_ObjectGetString_1(HttpListenerContext context)
+        [RestRoute(HttpMethod = HttpMethod.POST, PathInfo = @"^/[0-9]+/objectgetstring$")]
+        public IHttpContext Handle_ObjectGetString_1(IHttpContext context)
         {
-            long chartid = Int64.Parse(context.Request.Url.Segments[1].Replace("/", ""));
-            this.SendJsonResponse(context, ObjectGetString_1(context, chartid));
+            return SendJsonResponse(context, GetChartId(context), ObjectGetString_1);
         }
 
         /// <summary>
@@ -11069,38 +8686,26 @@ namespace MQL4CSharp.Base.REST
         /// <li><b>prop_modifier</b> :  [in] Modifier of the specified property. For the first variant, the default modifier value is equal to 0. Most properties do not require a modifier. It denotes the number of the level in and in the graphical object Andrew's pitchfork. The numeration of levels starts from zero.</li>
         /// </ul>
         /// </summary>
-        [RESTRoute(Method = HttpMethod.POST, PathInfo = @"^/objectgetstring")]
-        public void Handle_ObjectGetString_1_Default(HttpListenerContext context)
+        [RestRoute(HttpMethod = HttpMethod.POST, PathInfo = @"^/objectgetstring$")]
+        public IHttpContext Handle_ObjectGetString_1_Default(IHttpContext context)
         {
-            this.SendJsonResponse(context, ObjectGetString_1(context, DEFAULT_CHART_ID));
+            return SendJsonResponse(context, ObjectGetString_1);
         }
 
-        private JObject ObjectGetString_1(HttpListenerContext context, long chartId)
+        private async Task<JObject> ObjectGetString_1(MQLRestContext context)
         {
-            MQLCommandManager mqlCommandManager = DLLObjectWrapper.getInstance().getMQLCommandManager(chartId);
-            JObject payload = this.GetJsonPayload(context.Request);
-            JObject result = new JObject();
-            if (payload == null)
-            {
-                result["result"] = PARSE_ERROR;
-                return result;
-            }
+            var payload = context.JsonPayload;
+            var result = context.Result;
+            if (PayloadNotValid(context))
+                return context.Result;
             List<Object> parameters = new List<Object>();
-            parameters.Add(payload["chart_id"]);
-            parameters.Add(payload["object_name"]);
-            parameters.Add(payload["prop_id"]);
-            parameters.Add(payload["prop_modifier"]);
-            int id = mqlCommandManager.ExecCommand(MQLCommand.ObjectGetString_1, parameters); // MQLCommand ENUM = 182
-            while (mqlCommandManager.IsCommandRunning(id)) ; // block while command is running
-            try
-            {
-                mqlCommandManager.throwExceptionIfErrorResponse(id);
-                result["result"] = (string)mqlCommandManager.GetCommandResult(id);
-            }
-            catch (Exception e)
-            {
-                result["error"] = MQLExceptions.convertRESTException(e.ToString());
-            }
+            ParamAdd(context, parameters, "chart_id");
+            ParamAdd(context, parameters, "object_name");
+            ParamAdd(context, parameters, "prop_id");
+            ParamAdd(context, parameters, "prop_modifier");
+            await ExecCommandAsync(context, MQLCommand.ObjectGetString_1, parameters); // MQLCommand ENUM = 182
+
+            result["result"] = (string)GetCommandResult(context);
 
             return result;
         }
@@ -11116,11 +8721,10 @@ namespace MQL4CSharp.Base.REST
         /// <li><b>prop_value</b> :  [in] The value of the property.</li>
         /// </ul>
         /// </summary>
-        [RESTRoute(Method = HttpMethod.POST, PathInfo = @"^/[0-9]+/objectsetdouble")]
-        public void Handle_ObjectSetDouble_1(HttpListenerContext context)
+        [RestRoute(HttpMethod = HttpMethod.POST, PathInfo = @"^/[0-9]+/objectsetdouble$")]
+        public IHttpContext Handle_ObjectSetDouble_1(IHttpContext context)
         {
-            long chartid = Int64.Parse(context.Request.Url.Segments[1].Replace("/", ""));
-            this.SendJsonResponse(context, ObjectSetDouble_1(context, chartid));
+            return SendJsonResponse(context, GetChartId(context), ObjectSetDouble_1);
         }
 
         /// <summary>
@@ -11135,38 +8739,26 @@ namespace MQL4CSharp.Base.REST
         /// <li><b>prop_value</b> :  [in] The value of the property.</li>
         /// </ul>
         /// </summary>
-        [RESTRoute(Method = HttpMethod.POST, PathInfo = @"^/objectsetdouble")]
-        public void Handle_ObjectSetDouble_1_Default(HttpListenerContext context)
+        [RestRoute(HttpMethod = HttpMethod.POST, PathInfo = @"^/objectsetdouble$")]
+        public IHttpContext Handle_ObjectSetDouble_1_Default(IHttpContext context)
         {
-            this.SendJsonResponse(context, ObjectSetDouble_1(context, DEFAULT_CHART_ID));
+            return SendJsonResponse(context, ObjectSetDouble_1);
         }
 
-        private JObject ObjectSetDouble_1(HttpListenerContext context, long chartId)
+        private async Task<JObject> ObjectSetDouble_1(MQLRestContext context)
         {
-            MQLCommandManager mqlCommandManager = DLLObjectWrapper.getInstance().getMQLCommandManager(chartId);
-            JObject payload = this.GetJsonPayload(context.Request);
-            JObject result = new JObject();
-            if (payload == null)
-            {
-                result["result"] = PARSE_ERROR;
-                return result;
-            }
+            var payload = context.JsonPayload;
+            var result = context.Result;
+            if (PayloadNotValid(context))
+                return context.Result;
             List<Object> parameters = new List<Object>();
-            parameters.Add(payload["chart_id"]);
-            parameters.Add(payload["object_name"]);
-            parameters.Add(payload["prop_id"]);
-            parameters.Add(payload["prop_value"]);
-            int id = mqlCommandManager.ExecCommand(MQLCommand.ObjectSetDouble_1, parameters); // MQLCommand ENUM = 183
-            while (mqlCommandManager.IsCommandRunning(id)) ; // block while command is running
-            try
-            {
-                mqlCommandManager.throwExceptionIfErrorResponse(id);
-                result["result"] = (bool)mqlCommandManager.GetCommandResult(id);
-            }
-            catch (Exception e)
-            {
-                result["error"] = MQLExceptions.convertRESTException(e.ToString());
-            }
+            ParamAdd(context, parameters, "chart_id");
+            ParamAdd(context, parameters, "object_name");
+            ParamAdd(context, parameters, "prop_id");
+            ParamAdd(context, parameters, "prop_value");
+            await ExecCommandAsync(context, MQLCommand.ObjectSetDouble_1, parameters); // MQLCommand ENUM = 183
+
+            result["result"] = (bool)GetCommandResult(context);
 
             return result;
         }
@@ -11183,11 +8775,10 @@ namespace MQL4CSharp.Base.REST
         /// <li><b>prop_value</b> :  [in] The value of the property.</li>
         /// </ul>
         /// </summary>
-        [RESTRoute(Method = HttpMethod.POST, PathInfo = @"^/[0-9]+/objectsetdouble")]
-        public void Handle_ObjectSetDouble_2(HttpListenerContext context)
+        [RestRoute(HttpMethod = HttpMethod.POST, PathInfo = @"^/[0-9]+/objectsetdouble$")]
+        public IHttpContext Handle_ObjectSetDouble_2(IHttpContext context)
         {
-            long chartid = Int64.Parse(context.Request.Url.Segments[1].Replace("/", ""));
-            this.SendJsonResponse(context, ObjectSetDouble_2(context, chartid));
+            return SendJsonResponse(context, GetChartId(context), ObjectSetDouble_2);
         }
 
         /// <summary>
@@ -11203,39 +8794,27 @@ namespace MQL4CSharp.Base.REST
         /// <li><b>prop_value</b> :  [in] The value of the property.</li>
         /// </ul>
         /// </summary>
-        [RESTRoute(Method = HttpMethod.POST, PathInfo = @"^/objectsetdouble")]
-        public void Handle_ObjectSetDouble_2_Default(HttpListenerContext context)
+        [RestRoute(HttpMethod = HttpMethod.POST, PathInfo = @"^/objectsetdouble$")]
+        public IHttpContext Handle_ObjectSetDouble_2_Default(IHttpContext context)
         {
-            this.SendJsonResponse(context, ObjectSetDouble_2(context, DEFAULT_CHART_ID));
+            return SendJsonResponse(context, ObjectSetDouble_2);
         }
 
-        private JObject ObjectSetDouble_2(HttpListenerContext context, long chartId)
+        private async Task<JObject> ObjectSetDouble_2(MQLRestContext context)
         {
-            MQLCommandManager mqlCommandManager = DLLObjectWrapper.getInstance().getMQLCommandManager(chartId);
-            JObject payload = this.GetJsonPayload(context.Request);
-            JObject result = new JObject();
-            if (payload == null)
-            {
-                result["result"] = PARSE_ERROR;
-                return result;
-            }
+            var payload = context.JsonPayload;
+            var result = context.Result;
+            if (PayloadNotValid(context))
+                return context.Result;
             List<Object> parameters = new List<Object>();
-            parameters.Add(payload["chart_id"]);
-            parameters.Add(payload["object_name"]);
-            parameters.Add(payload["prop_id"]);
-            parameters.Add(payload["prop_modifier"]);
-            parameters.Add(payload["prop_value"]);
-            int id = mqlCommandManager.ExecCommand(MQLCommand.ObjectSetDouble_2, parameters); // MQLCommand ENUM = 183
-            while (mqlCommandManager.IsCommandRunning(id)) ; // block while command is running
-            try
-            {
-                mqlCommandManager.throwExceptionIfErrorResponse(id);
-                result["result"] = (bool)mqlCommandManager.GetCommandResult(id);
-            }
-            catch (Exception e)
-            {
-                result["error"] = MQLExceptions.convertRESTException(e.ToString());
-            }
+            ParamAdd(context, parameters, "chart_id");
+            ParamAdd(context, parameters, "object_name");
+            ParamAdd(context, parameters, "prop_id");
+            ParamAdd(context, parameters, "prop_modifier");
+            ParamAdd(context, parameters, "prop_value");
+            await ExecCommandAsync(context, MQLCommand.ObjectSetDouble_2, parameters); // MQLCommand ENUM = 183
+
+            result["result"] = (bool)GetCommandResult(context);
 
             return result;
         }
@@ -11251,11 +8830,10 @@ namespace MQL4CSharp.Base.REST
         /// <li><b>prop_value</b> :  [in] The value of the property.</li>
         /// </ul>
         /// </summary>
-        [RESTRoute(Method = HttpMethod.POST, PathInfo = @"^/[0-9]+/objectsetinteger")]
-        public void Handle_ObjectSetInteger_1(HttpListenerContext context)
+        [RestRoute(HttpMethod = HttpMethod.POST, PathInfo = @"^/[0-9]+/objectsetinteger$")]
+        public IHttpContext Handle_ObjectSetInteger_1(IHttpContext context)
         {
-            long chartid = Int64.Parse(context.Request.Url.Segments[1].Replace("/", ""));
-            this.SendJsonResponse(context, ObjectSetInteger_1(context, chartid));
+            return SendJsonResponse(context, GetChartId(context), ObjectSetInteger_1);
         }
 
         /// <summary>
@@ -11270,38 +8848,26 @@ namespace MQL4CSharp.Base.REST
         /// <li><b>prop_value</b> :  [in] The value of the property.</li>
         /// </ul>
         /// </summary>
-        [RESTRoute(Method = HttpMethod.POST, PathInfo = @"^/objectsetinteger")]
-        public void Handle_ObjectSetInteger_1_Default(HttpListenerContext context)
+        [RestRoute(HttpMethod = HttpMethod.POST, PathInfo = @"^/objectsetinteger$")]
+        public IHttpContext Handle_ObjectSetInteger_1_Default(IHttpContext context)
         {
-            this.SendJsonResponse(context, ObjectSetInteger_1(context, DEFAULT_CHART_ID));
+            return SendJsonResponse(context, ObjectSetInteger_1);
         }
 
-        private JObject ObjectSetInteger_1(HttpListenerContext context, long chartId)
+        private async Task<JObject> ObjectSetInteger_1(MQLRestContext context)
         {
-            MQLCommandManager mqlCommandManager = DLLObjectWrapper.getInstance().getMQLCommandManager(chartId);
-            JObject payload = this.GetJsonPayload(context.Request);
-            JObject result = new JObject();
-            if (payload == null)
-            {
-                result["result"] = PARSE_ERROR;
-                return result;
-            }
+            var payload = context.JsonPayload;
+            var result = context.Result;
+            if (PayloadNotValid(context))
+                return context.Result;
             List<Object> parameters = new List<Object>();
-            parameters.Add(payload["chart_id"]);
-            parameters.Add(payload["object_name"]);
-            parameters.Add(payload["prop_id"]);
-            parameters.Add(payload["prop_value"]);
-            int id = mqlCommandManager.ExecCommand(MQLCommand.ObjectSetInteger_1, parameters); // MQLCommand ENUM = 184
-            while (mqlCommandManager.IsCommandRunning(id)) ; // block while command is running
-            try
-            {
-                mqlCommandManager.throwExceptionIfErrorResponse(id);
-                result["result"] = (bool)mqlCommandManager.GetCommandResult(id);
-            }
-            catch (Exception e)
-            {
-                result["error"] = MQLExceptions.convertRESTException(e.ToString());
-            }
+            ParamAdd(context, parameters, "chart_id");
+            ParamAdd(context, parameters, "object_name");
+            ParamAdd(context, parameters, "prop_id");
+            ParamAdd(context, parameters, "prop_value");
+            await ExecCommandAsync(context, MQLCommand.ObjectSetInteger_1, parameters); // MQLCommand ENUM = 184
+
+            result["result"] = (bool)GetCommandResult(context);
 
             return result;
         }
@@ -11318,11 +8884,10 @@ namespace MQL4CSharp.Base.REST
         /// <li><b>prop_value</b> :  [in] The value of the property.</li>
         /// </ul>
         /// </summary>
-        [RESTRoute(Method = HttpMethod.POST, PathInfo = @"^/[0-9]+/objectsetinteger")]
-        public void Handle_ObjectSetInteger_2(HttpListenerContext context)
+        [RestRoute(HttpMethod = HttpMethod.POST, PathInfo = @"^/[0-9]+/objectsetinteger$")]
+        public IHttpContext Handle_ObjectSetInteger_2(IHttpContext context)
         {
-            long chartid = Int64.Parse(context.Request.Url.Segments[1].Replace("/", ""));
-            this.SendJsonResponse(context, ObjectSetInteger_2(context, chartid));
+            return SendJsonResponse(context, GetChartId(context), ObjectSetInteger_2);
         }
 
         /// <summary>
@@ -11338,39 +8903,27 @@ namespace MQL4CSharp.Base.REST
         /// <li><b>prop_value</b> :  [in] The value of the property.</li>
         /// </ul>
         /// </summary>
-        [RESTRoute(Method = HttpMethod.POST, PathInfo = @"^/objectsetinteger")]
-        public void Handle_ObjectSetInteger_2_Default(HttpListenerContext context)
+        [RestRoute(HttpMethod = HttpMethod.POST, PathInfo = @"^/objectsetinteger$")]
+        public IHttpContext Handle_ObjectSetInteger_2_Default(IHttpContext context)
         {
-            this.SendJsonResponse(context, ObjectSetInteger_2(context, DEFAULT_CHART_ID));
+            return SendJsonResponse(context, ObjectSetInteger_2);
         }
 
-        private JObject ObjectSetInteger_2(HttpListenerContext context, long chartId)
+        private async Task<JObject> ObjectSetInteger_2(MQLRestContext context)
         {
-            MQLCommandManager mqlCommandManager = DLLObjectWrapper.getInstance().getMQLCommandManager(chartId);
-            JObject payload = this.GetJsonPayload(context.Request);
-            JObject result = new JObject();
-            if (payload == null)
-            {
-                result["result"] = PARSE_ERROR;
-                return result;
-            }
+            var payload = context.JsonPayload;
+            var result = context.Result;
+            if (PayloadNotValid(context))
+                return context.Result;
             List<Object> parameters = new List<Object>();
-            parameters.Add(payload["chart_id"]);
-            parameters.Add(payload["object_name"]);
-            parameters.Add(payload["prop_id"]);
-            parameters.Add(payload["prop_modifier"]);
-            parameters.Add(payload["prop_value"]);
-            int id = mqlCommandManager.ExecCommand(MQLCommand.ObjectSetInteger_2, parameters); // MQLCommand ENUM = 184
-            while (mqlCommandManager.IsCommandRunning(id)) ; // block while command is running
-            try
-            {
-                mqlCommandManager.throwExceptionIfErrorResponse(id);
-                result["result"] = (bool)mqlCommandManager.GetCommandResult(id);
-            }
-            catch (Exception e)
-            {
-                result["error"] = MQLExceptions.convertRESTException(e.ToString());
-            }
+            ParamAdd(context, parameters, "chart_id");
+            ParamAdd(context, parameters, "object_name");
+            ParamAdd(context, parameters, "prop_id");
+            ParamAdd(context, parameters, "prop_modifier");
+            ParamAdd(context, parameters, "prop_value");
+            await ExecCommandAsync(context, MQLCommand.ObjectSetInteger_2, parameters); // MQLCommand ENUM = 184
+
+            result["result"] = (bool)GetCommandResult(context);
 
             return result;
         }
@@ -11386,11 +8939,10 @@ namespace MQL4CSharp.Base.REST
         /// <li><b>prop_value</b> :  [in] The value of the property.</li>
         /// </ul>
         /// </summary>
-        [RESTRoute(Method = HttpMethod.POST, PathInfo = @"^/[0-9]+/objectsetstring")]
-        public void Handle_ObjectSetString_1(HttpListenerContext context)
+        [RestRoute(HttpMethod = HttpMethod.POST, PathInfo = @"^/[0-9]+/objectsetstring$")]
+        public IHttpContext Handle_ObjectSetString_1(IHttpContext context)
         {
-            long chartid = Int64.Parse(context.Request.Url.Segments[1].Replace("/", ""));
-            this.SendJsonResponse(context, ObjectSetString_1(context, chartid));
+            return SendJsonResponse(context, GetChartId(context), ObjectSetString_1);
         }
 
         /// <summary>
@@ -11405,38 +8957,26 @@ namespace MQL4CSharp.Base.REST
         /// <li><b>prop_value</b> :  [in] The value of the property.</li>
         /// </ul>
         /// </summary>
-        [RESTRoute(Method = HttpMethod.POST, PathInfo = @"^/objectsetstring")]
-        public void Handle_ObjectSetString_1_Default(HttpListenerContext context)
+        [RestRoute(HttpMethod = HttpMethod.POST, PathInfo = @"^/objectsetstring$")]
+        public IHttpContext Handle_ObjectSetString_1_Default(IHttpContext context)
         {
-            this.SendJsonResponse(context, ObjectSetString_1(context, DEFAULT_CHART_ID));
+            return SendJsonResponse(context, ObjectSetString_1);
         }
 
-        private JObject ObjectSetString_1(HttpListenerContext context, long chartId)
+        private async Task<JObject> ObjectSetString_1(MQLRestContext context)
         {
-            MQLCommandManager mqlCommandManager = DLLObjectWrapper.getInstance().getMQLCommandManager(chartId);
-            JObject payload = this.GetJsonPayload(context.Request);
-            JObject result = new JObject();
-            if (payload == null)
-            {
-                result["result"] = PARSE_ERROR;
-                return result;
-            }
+            var payload = context.JsonPayload;
+            var result = context.Result;
+            if (PayloadNotValid(context))
+                return context.Result;
             List<Object> parameters = new List<Object>();
-            parameters.Add(payload["chart_id"]);
-            parameters.Add(payload["object_name"]);
-            parameters.Add(payload["prop_id"]);
-            parameters.Add(payload["prop_value"]);
-            int id = mqlCommandManager.ExecCommand(MQLCommand.ObjectSetString_1, parameters); // MQLCommand ENUM = 185
-            while (mqlCommandManager.IsCommandRunning(id)) ; // block while command is running
-            try
-            {
-                mqlCommandManager.throwExceptionIfErrorResponse(id);
-                result["result"] = (bool)mqlCommandManager.GetCommandResult(id);
-            }
-            catch (Exception e)
-            {
-                result["error"] = MQLExceptions.convertRESTException(e.ToString());
-            }
+            ParamAdd(context, parameters, "chart_id");
+            ParamAdd(context, parameters, "object_name");
+            ParamAdd(context, parameters, "prop_id");
+            ParamAdd(context, parameters, "prop_value");
+            await ExecCommandAsync(context, MQLCommand.ObjectSetString_1, parameters); // MQLCommand ENUM = 185
+
+            result["result"] = (bool)GetCommandResult(context);
 
             return result;
         }
@@ -11453,11 +8993,10 @@ namespace MQL4CSharp.Base.REST
         /// <li><b>prop_value</b> :  [in] The value of the property.</li>
         /// </ul>
         /// </summary>
-        [RESTRoute(Method = HttpMethod.POST, PathInfo = @"^/[0-9]+/objectsetstring")]
-        public void Handle_ObjectSetString_2(HttpListenerContext context)
+        [RestRoute(HttpMethod = HttpMethod.POST, PathInfo = @"^/[0-9]+/objectsetstring$")]
+        public IHttpContext Handle_ObjectSetString_2(IHttpContext context)
         {
-            long chartid = Int64.Parse(context.Request.Url.Segments[1].Replace("/", ""));
-            this.SendJsonResponse(context, ObjectSetString_2(context, chartid));
+            return SendJsonResponse(context, GetChartId(context), ObjectSetString_2);
         }
 
         /// <summary>
@@ -11473,39 +9012,27 @@ namespace MQL4CSharp.Base.REST
         /// <li><b>prop_value</b> :  [in] The value of the property.</li>
         /// </ul>
         /// </summary>
-        [RESTRoute(Method = HttpMethod.POST, PathInfo = @"^/objectsetstring")]
-        public void Handle_ObjectSetString_2_Default(HttpListenerContext context)
+        [RestRoute(HttpMethod = HttpMethod.POST, PathInfo = @"^/objectsetstring$")]
+        public IHttpContext Handle_ObjectSetString_2_Default(IHttpContext context)
         {
-            this.SendJsonResponse(context, ObjectSetString_2(context, DEFAULT_CHART_ID));
+            return SendJsonResponse(context, ObjectSetString_2);
         }
 
-        private JObject ObjectSetString_2(HttpListenerContext context, long chartId)
+        private async Task<JObject> ObjectSetString_2(MQLRestContext context)
         {
-            MQLCommandManager mqlCommandManager = DLLObjectWrapper.getInstance().getMQLCommandManager(chartId);
-            JObject payload = this.GetJsonPayload(context.Request);
-            JObject result = new JObject();
-            if (payload == null)
-            {
-                result["result"] = PARSE_ERROR;
-                return result;
-            }
+            var payload = context.JsonPayload;
+            var result = context.Result;
+            if (PayloadNotValid(context))
+                return context.Result;
             List<Object> parameters = new List<Object>();
-            parameters.Add(payload["chart_id"]);
-            parameters.Add(payload["object_name"]);
-            parameters.Add(payload["prop_id"]);
-            parameters.Add(payload["prop_modifier"]);
-            parameters.Add(payload["prop_value"]);
-            int id = mqlCommandManager.ExecCommand(MQLCommand.ObjectSetString_2, parameters); // MQLCommand ENUM = 185
-            while (mqlCommandManager.IsCommandRunning(id)) ; // block while command is running
-            try
-            {
-                mqlCommandManager.throwExceptionIfErrorResponse(id);
-                result["result"] = (bool)mqlCommandManager.GetCommandResult(id);
-            }
-            catch (Exception e)
-            {
-                result["error"] = MQLExceptions.convertRESTException(e.ToString());
-            }
+            ParamAdd(context, parameters, "chart_id");
+            ParamAdd(context, parameters, "object_name");
+            ParamAdd(context, parameters, "prop_id");
+            ParamAdd(context, parameters, "prop_modifier");
+            ParamAdd(context, parameters, "prop_value");
+            await ExecCommandAsync(context, MQLCommand.ObjectSetString_2, parameters); // MQLCommand ENUM = 185
+
+            result["result"] = (bool)GetCommandResult(context);
 
             return result;
         }
@@ -11521,11 +9048,10 @@ namespace MQL4CSharp.Base.REST
         /// <li><b>orientation</b> :  [in] Text's horizontal inclination to X axis, the unit of measurement is 0.1 degrees. It means that orientation=450 stands for inclination equal to 45 degrees.</li>
         /// </ul>
         /// </summary>
-        [RESTRoute(Method = HttpMethod.POST, PathInfo = @"^/[0-9]+/textsetfont")]
-        public void Handle_TextSetFont_1(HttpListenerContext context)
+        [RestRoute(HttpMethod = HttpMethod.POST, PathInfo = @"^/[0-9]+/textsetfont$")]
+        public IHttpContext Handle_TextSetFont_1(IHttpContext context)
         {
-            long chartid = Int64.Parse(context.Request.Url.Segments[1].Replace("/", ""));
-            this.SendJsonResponse(context, TextSetFont_1(context, chartid));
+            return SendJsonResponse(context, GetChartId(context), TextSetFont_1);
         }
 
         /// <summary>
@@ -11540,38 +9066,26 @@ namespace MQL4CSharp.Base.REST
         /// <li><b>orientation</b> :  [in] Text's horizontal inclination to X axis, the unit of measurement is 0.1 degrees. It means that orientation=450 stands for inclination equal to 45 degrees.</li>
         /// </ul>
         /// </summary>
-        [RESTRoute(Method = HttpMethod.POST, PathInfo = @"^/textsetfont")]
-        public void Handle_TextSetFont_1_Default(HttpListenerContext context)
+        [RestRoute(HttpMethod = HttpMethod.POST, PathInfo = @"^/textsetfont$")]
+        public IHttpContext Handle_TextSetFont_1_Default(IHttpContext context)
         {
-            this.SendJsonResponse(context, TextSetFont_1(context, DEFAULT_CHART_ID));
+            return SendJsonResponse(context, TextSetFont_1);
         }
 
-        private JObject TextSetFont_1(HttpListenerContext context, long chartId)
+        private async Task<JObject> TextSetFont_1(MQLRestContext context)
         {
-            MQLCommandManager mqlCommandManager = DLLObjectWrapper.getInstance().getMQLCommandManager(chartId);
-            JObject payload = this.GetJsonPayload(context.Request);
-            JObject result = new JObject();
-            if (payload == null)
-            {
-                result["result"] = PARSE_ERROR;
-                return result;
-            }
+            var payload = context.JsonPayload;
+            var result = context.Result;
+            if (PayloadNotValid(context))
+                return context.Result;
             List<Object> parameters = new List<Object>();
-            parameters.Add(payload["name"]);
-            parameters.Add(payload["size"]);
-            parameters.Add(payload["flags"]);
-            parameters.Add(payload["orientation"]);
-            int id = mqlCommandManager.ExecCommand(MQLCommand.TextSetFont_1, parameters); // MQLCommand ENUM = 186
-            while (mqlCommandManager.IsCommandRunning(id)) ; // block while command is running
-            try
-            {
-                mqlCommandManager.throwExceptionIfErrorResponse(id);
-                result["result"] = (bool)mqlCommandManager.GetCommandResult(id);
-            }
-            catch (Exception e)
-            {
-                result["error"] = MQLExceptions.convertRESTException(e.ToString());
-            }
+            ParamAdd(context, parameters, "name");
+            ParamAdd(context, parameters, "size");
+            ParamAdd(context, parameters, "flags");
+            ParamAdd(context, parameters, "orientation");
+            await ExecCommandAsync(context, MQLCommand.TextSetFont_1, parameters); // MQLCommand ENUM = 186
+
+            result["result"] = (bool)GetCommandResult(context);
 
             return result;
         }
@@ -11584,11 +9098,10 @@ namespace MQL4CSharp.Base.REST
         /// <li><b>object_name</b> :  [in] Object name.</li>
         /// </ul>
         /// </summary>
-        [RESTRoute(Method = HttpMethod.POST, PathInfo = @"^/[0-9]+/objectdescription")]
-        public void Handle_ObjectDescription_1(HttpListenerContext context)
+        [RestRoute(HttpMethod = HttpMethod.POST, PathInfo = @"^/[0-9]+/objectdescription$")]
+        public IHttpContext Handle_ObjectDescription_1(IHttpContext context)
         {
-            long chartid = Int64.Parse(context.Request.Url.Segments[1].Replace("/", ""));
-            this.SendJsonResponse(context, ObjectDescription_1(context, chartid));
+            return SendJsonResponse(context, GetChartId(context), ObjectDescription_1);
         }
 
         /// <summary>
@@ -11600,35 +9113,23 @@ namespace MQL4CSharp.Base.REST
         /// <li><b>object_name</b> :  [in] Object name.</li>
         /// </ul>
         /// </summary>
-        [RESTRoute(Method = HttpMethod.POST, PathInfo = @"^/objectdescription")]
-        public void Handle_ObjectDescription_1_Default(HttpListenerContext context)
+        [RestRoute(HttpMethod = HttpMethod.POST, PathInfo = @"^/objectdescription$")]
+        public IHttpContext Handle_ObjectDescription_1_Default(IHttpContext context)
         {
-            this.SendJsonResponse(context, ObjectDescription_1(context, DEFAULT_CHART_ID));
+            return SendJsonResponse(context, ObjectDescription_1);
         }
 
-        private JObject ObjectDescription_1(HttpListenerContext context, long chartId)
+        private async Task<JObject> ObjectDescription_1(MQLRestContext context)
         {
-            MQLCommandManager mqlCommandManager = DLLObjectWrapper.getInstance().getMQLCommandManager(chartId);
-            JObject payload = this.GetJsonPayload(context.Request);
-            JObject result = new JObject();
-            if (payload == null)
-            {
-                result["result"] = PARSE_ERROR;
-                return result;
-            }
+            var payload = context.JsonPayload;
+            var result = context.Result;
+            if (PayloadNotValid(context))
+                return context.Result;
             List<Object> parameters = new List<Object>();
-            parameters.Add(payload["object_name"]);
-            int id = mqlCommandManager.ExecCommand(MQLCommand.ObjectDescription_1, parameters); // MQLCommand ENUM = 187
-            while (mqlCommandManager.IsCommandRunning(id)) ; // block while command is running
-            try
-            {
-                mqlCommandManager.throwExceptionIfErrorResponse(id);
-                result["result"] = (string)mqlCommandManager.GetCommandResult(id);
-            }
-            catch (Exception e)
-            {
-                result["error"] = MQLExceptions.convertRESTException(e.ToString());
-            }
+            ParamAdd(context, parameters, "object_name");
+            await ExecCommandAsync(context, MQLCommand.ObjectDescription_1, parameters); // MQLCommand ENUM = 187
+
+            result["result"] = (string)GetCommandResult(context);
 
             return result;
         }
@@ -11642,11 +9143,10 @@ namespace MQL4CSharp.Base.REST
         /// <li><b>index</b> :  [in] Object property index. It can be any of the enumeration values.</li>
         /// </ul>
         /// </summary>
-        [RESTRoute(Method = HttpMethod.POST, PathInfo = @"^/[0-9]+/objectget")]
-        public void Handle_ObjectGet_1(HttpListenerContext context)
+        [RestRoute(HttpMethod = HttpMethod.POST, PathInfo = @"^/[0-9]+/objectget$")]
+        public IHttpContext Handle_ObjectGet_1(IHttpContext context)
         {
-            long chartid = Int64.Parse(context.Request.Url.Segments[1].Replace("/", ""));
-            this.SendJsonResponse(context, ObjectGet_1(context, chartid));
+            return SendJsonResponse(context, GetChartId(context), ObjectGet_1);
         }
 
         /// <summary>
@@ -11659,36 +9159,24 @@ namespace MQL4CSharp.Base.REST
         /// <li><b>index</b> :  [in] Object property index. It can be any of the enumeration values.</li>
         /// </ul>
         /// </summary>
-        [RESTRoute(Method = HttpMethod.POST, PathInfo = @"^/objectget")]
-        public void Handle_ObjectGet_1_Default(HttpListenerContext context)
+        [RestRoute(HttpMethod = HttpMethod.POST, PathInfo = @"^/objectget$")]
+        public IHttpContext Handle_ObjectGet_1_Default(IHttpContext context)
         {
-            this.SendJsonResponse(context, ObjectGet_1(context, DEFAULT_CHART_ID));
+            return SendJsonResponse(context, ObjectGet_1);
         }
 
-        private JObject ObjectGet_1(HttpListenerContext context, long chartId)
+        private async Task<JObject> ObjectGet_1(MQLRestContext context)
         {
-            MQLCommandManager mqlCommandManager = DLLObjectWrapper.getInstance().getMQLCommandManager(chartId);
-            JObject payload = this.GetJsonPayload(context.Request);
-            JObject result = new JObject();
-            if (payload == null)
-            {
-                result["result"] = PARSE_ERROR;
-                return result;
-            }
+            var payload = context.JsonPayload;
+            var result = context.Result;
+            if (PayloadNotValid(context))
+                return context.Result;
             List<Object> parameters = new List<Object>();
-            parameters.Add(payload["object_name"]);
-            parameters.Add(payload["index"]);
-            int id = mqlCommandManager.ExecCommand(MQLCommand.ObjectGet_1, parameters); // MQLCommand ENUM = 188
-            while (mqlCommandManager.IsCommandRunning(id)) ; // block while command is running
-            try
-            {
-                mqlCommandManager.throwExceptionIfErrorResponse(id);
-                result["result"] = Convert.ToDecimal(mqlCommandManager.GetCommandResult(id));
-            }
-            catch (Exception e)
-            {
-                result["error"] = MQLExceptions.convertRESTException(e.ToString());
-            }
+            ParamAdd(context, parameters, "object_name");
+            ParamAdd(context, parameters, "index");
+            await ExecCommandAsync(context, MQLCommand.ObjectGet_1, parameters); // MQLCommand ENUM = 188
+
+            result["result"] = Convert.ToDecimal(GetCommandResult(context));
 
             return result;
         }
@@ -11702,11 +9190,10 @@ namespace MQL4CSharp.Base.REST
         /// <li><b>index</b> :  [in] Index of the Fibonacci level (0-31).</li>
         /// </ul>
         /// </summary>
-        [RESTRoute(Method = HttpMethod.POST, PathInfo = @"^/[0-9]+/objectgetfibodescription")]
-        public void Handle_ObjectGetFiboDescription_1(HttpListenerContext context)
+        [RestRoute(HttpMethod = HttpMethod.POST, PathInfo = @"^/[0-9]+/objectgetfibodescription$")]
+        public IHttpContext Handle_ObjectGetFiboDescription_1(IHttpContext context)
         {
-            long chartid = Int64.Parse(context.Request.Url.Segments[1].Replace("/", ""));
-            this.SendJsonResponse(context, ObjectGetFiboDescription_1(context, chartid));
+            return SendJsonResponse(context, GetChartId(context), ObjectGetFiboDescription_1);
         }
 
         /// <summary>
@@ -11719,36 +9206,24 @@ namespace MQL4CSharp.Base.REST
         /// <li><b>index</b> :  [in] Index of the Fibonacci level (0-31).</li>
         /// </ul>
         /// </summary>
-        [RESTRoute(Method = HttpMethod.POST, PathInfo = @"^/objectgetfibodescription")]
-        public void Handle_ObjectGetFiboDescription_1_Default(HttpListenerContext context)
+        [RestRoute(HttpMethod = HttpMethod.POST, PathInfo = @"^/objectgetfibodescription$")]
+        public IHttpContext Handle_ObjectGetFiboDescription_1_Default(IHttpContext context)
         {
-            this.SendJsonResponse(context, ObjectGetFiboDescription_1(context, DEFAULT_CHART_ID));
+            return SendJsonResponse(context, ObjectGetFiboDescription_1);
         }
 
-        private JObject ObjectGetFiboDescription_1(HttpListenerContext context, long chartId)
+        private async Task<JObject> ObjectGetFiboDescription_1(MQLRestContext context)
         {
-            MQLCommandManager mqlCommandManager = DLLObjectWrapper.getInstance().getMQLCommandManager(chartId);
-            JObject payload = this.GetJsonPayload(context.Request);
-            JObject result = new JObject();
-            if (payload == null)
-            {
-                result["result"] = PARSE_ERROR;
-                return result;
-            }
+            var payload = context.JsonPayload;
+            var result = context.Result;
+            if (PayloadNotValid(context))
+                return context.Result;
             List<Object> parameters = new List<Object>();
-            parameters.Add(payload["object_name"]);
-            parameters.Add(payload["index"]);
-            int id = mqlCommandManager.ExecCommand(MQLCommand.ObjectGetFiboDescription_1, parameters); // MQLCommand ENUM = 189
-            while (mqlCommandManager.IsCommandRunning(id)) ; // block while command is running
-            try
-            {
-                mqlCommandManager.throwExceptionIfErrorResponse(id);
-                result["result"] = (string)mqlCommandManager.GetCommandResult(id);
-            }
-            catch (Exception e)
-            {
-                result["error"] = MQLExceptions.convertRESTException(e.ToString());
-            }
+            ParamAdd(context, parameters, "object_name");
+            ParamAdd(context, parameters, "index");
+            await ExecCommandAsync(context, MQLCommand.ObjectGetFiboDescription_1, parameters); // MQLCommand ENUM = 189
+
+            result["result"] = (string)GetCommandResult(context);
 
             return result;
         }
@@ -11762,11 +9237,10 @@ namespace MQL4CSharp.Base.REST
         /// <li><b>value</b> :  [in] Price value.</li>
         /// </ul>
         /// </summary>
-        [RESTRoute(Method = HttpMethod.POST, PathInfo = @"^/[0-9]+/objectgetshiftbyvalue")]
-        public void Handle_ObjectGetShiftByValue_1(HttpListenerContext context)
+        [RestRoute(HttpMethod = HttpMethod.POST, PathInfo = @"^/[0-9]+/objectgetshiftbyvalue$")]
+        public IHttpContext Handle_ObjectGetShiftByValue_1(IHttpContext context)
         {
-            long chartid = Int64.Parse(context.Request.Url.Segments[1].Replace("/", ""));
-            this.SendJsonResponse(context, ObjectGetShiftByValue_1(context, chartid));
+            return SendJsonResponse(context, GetChartId(context), ObjectGetShiftByValue_1);
         }
 
         /// <summary>
@@ -11779,36 +9253,24 @@ namespace MQL4CSharp.Base.REST
         /// <li><b>value</b> :  [in] Price value.</li>
         /// </ul>
         /// </summary>
-        [RESTRoute(Method = HttpMethod.POST, PathInfo = @"^/objectgetshiftbyvalue")]
-        public void Handle_ObjectGetShiftByValue_1_Default(HttpListenerContext context)
+        [RestRoute(HttpMethod = HttpMethod.POST, PathInfo = @"^/objectgetshiftbyvalue$")]
+        public IHttpContext Handle_ObjectGetShiftByValue_1_Default(IHttpContext context)
         {
-            this.SendJsonResponse(context, ObjectGetShiftByValue_1(context, DEFAULT_CHART_ID));
+            return SendJsonResponse(context, ObjectGetShiftByValue_1);
         }
 
-        private JObject ObjectGetShiftByValue_1(HttpListenerContext context, long chartId)
+        private async Task<JObject> ObjectGetShiftByValue_1(MQLRestContext context)
         {
-            MQLCommandManager mqlCommandManager = DLLObjectWrapper.getInstance().getMQLCommandManager(chartId);
-            JObject payload = this.GetJsonPayload(context.Request);
-            JObject result = new JObject();
-            if (payload == null)
-            {
-                result["result"] = PARSE_ERROR;
-                return result;
-            }
+            var payload = context.JsonPayload;
+            var result = context.Result;
+            if (PayloadNotValid(context))
+                return context.Result;
             List<Object> parameters = new List<Object>();
-            parameters.Add(payload["object_name"]);
-            parameters.Add(payload["value"]);
-            int id = mqlCommandManager.ExecCommand(MQLCommand.ObjectGetShiftByValue_1, parameters); // MQLCommand ENUM = 190
-            while (mqlCommandManager.IsCommandRunning(id)) ; // block while command is running
-            try
-            {
-                mqlCommandManager.throwExceptionIfErrorResponse(id);
-                result["result"] = Convert.ToInt32(mqlCommandManager.GetCommandResult(id));
-            }
-            catch (Exception e)
-            {
-                result["error"] = MQLExceptions.convertRESTException(e.ToString());
-            }
+            ParamAdd(context, parameters, "object_name");
+            ParamAdd(context, parameters, "value");
+            await ExecCommandAsync(context, MQLCommand.ObjectGetShiftByValue_1, parameters); // MQLCommand ENUM = 190
+
+            result["result"] = Convert.ToInt32(GetCommandResult(context));
 
             return result;
         }
@@ -11822,11 +9284,10 @@ namespace MQL4CSharp.Base.REST
         /// <li><b>shift</b> :  [in] Bar index.</li>
         /// </ul>
         /// </summary>
-        [RESTRoute(Method = HttpMethod.POST, PathInfo = @"^/[0-9]+/objectgetvaluebyshift")]
-        public void Handle_ObjectGetValueByShift_1(HttpListenerContext context)
+        [RestRoute(HttpMethod = HttpMethod.POST, PathInfo = @"^/[0-9]+/objectgetvaluebyshift$")]
+        public IHttpContext Handle_ObjectGetValueByShift_1(IHttpContext context)
         {
-            long chartid = Int64.Parse(context.Request.Url.Segments[1].Replace("/", ""));
-            this.SendJsonResponse(context, ObjectGetValueByShift_1(context, chartid));
+            return SendJsonResponse(context, GetChartId(context), ObjectGetValueByShift_1);
         }
 
         /// <summary>
@@ -11839,36 +9300,24 @@ namespace MQL4CSharp.Base.REST
         /// <li><b>shift</b> :  [in] Bar index.</li>
         /// </ul>
         /// </summary>
-        [RESTRoute(Method = HttpMethod.POST, PathInfo = @"^/objectgetvaluebyshift")]
-        public void Handle_ObjectGetValueByShift_1_Default(HttpListenerContext context)
+        [RestRoute(HttpMethod = HttpMethod.POST, PathInfo = @"^/objectgetvaluebyshift$")]
+        public IHttpContext Handle_ObjectGetValueByShift_1_Default(IHttpContext context)
         {
-            this.SendJsonResponse(context, ObjectGetValueByShift_1(context, DEFAULT_CHART_ID));
+            return SendJsonResponse(context, ObjectGetValueByShift_1);
         }
 
-        private JObject ObjectGetValueByShift_1(HttpListenerContext context, long chartId)
+        private async Task<JObject> ObjectGetValueByShift_1(MQLRestContext context)
         {
-            MQLCommandManager mqlCommandManager = DLLObjectWrapper.getInstance().getMQLCommandManager(chartId);
-            JObject payload = this.GetJsonPayload(context.Request);
-            JObject result = new JObject();
-            if (payload == null)
-            {
-                result["result"] = PARSE_ERROR;
-                return result;
-            }
+            var payload = context.JsonPayload;
+            var result = context.Result;
+            if (PayloadNotValid(context))
+                return context.Result;
             List<Object> parameters = new List<Object>();
-            parameters.Add(payload["object_name"]);
-            parameters.Add(payload["shift"]);
-            int id = mqlCommandManager.ExecCommand(MQLCommand.ObjectGetValueByShift_1, parameters); // MQLCommand ENUM = 191
-            while (mqlCommandManager.IsCommandRunning(id)) ; // block while command is running
-            try
-            {
-                mqlCommandManager.throwExceptionIfErrorResponse(id);
-                result["result"] = Convert.ToDecimal(mqlCommandManager.GetCommandResult(id));
-            }
-            catch (Exception e)
-            {
-                result["error"] = MQLExceptions.convertRESTException(e.ToString());
-            }
+            ParamAdd(context, parameters, "object_name");
+            ParamAdd(context, parameters, "shift");
+            await ExecCommandAsync(context, MQLCommand.ObjectGetValueByShift_1, parameters); // MQLCommand ENUM = 191
+
+            result["result"] = Convert.ToDecimal(GetCommandResult(context));
 
             return result;
         }
@@ -11883,11 +9332,10 @@ namespace MQL4CSharp.Base.REST
         /// <li><b>value</b> :  [in] New value of the given property.</li>
         /// </ul>
         /// </summary>
-        [RESTRoute(Method = HttpMethod.POST, PathInfo = @"^/[0-9]+/objectset")]
-        public void Handle_ObjectSet_1(HttpListenerContext context)
+        [RestRoute(HttpMethod = HttpMethod.POST, PathInfo = @"^/[0-9]+/objectset$")]
+        public IHttpContext Handle_ObjectSet_1(IHttpContext context)
         {
-            long chartid = Int64.Parse(context.Request.Url.Segments[1].Replace("/", ""));
-            this.SendJsonResponse(context, ObjectSet_1(context, chartid));
+            return SendJsonResponse(context, GetChartId(context), ObjectSet_1);
         }
 
         /// <summary>
@@ -11901,37 +9349,25 @@ namespace MQL4CSharp.Base.REST
         /// <li><b>value</b> :  [in] New value of the given property.</li>
         /// </ul>
         /// </summary>
-        [RESTRoute(Method = HttpMethod.POST, PathInfo = @"^/objectset")]
-        public void Handle_ObjectSet_1_Default(HttpListenerContext context)
+        [RestRoute(HttpMethod = HttpMethod.POST, PathInfo = @"^/objectset$")]
+        public IHttpContext Handle_ObjectSet_1_Default(IHttpContext context)
         {
-            this.SendJsonResponse(context, ObjectSet_1(context, DEFAULT_CHART_ID));
+            return SendJsonResponse(context, ObjectSet_1);
         }
 
-        private JObject ObjectSet_1(HttpListenerContext context, long chartId)
+        private async Task<JObject> ObjectSet_1(MQLRestContext context)
         {
-            MQLCommandManager mqlCommandManager = DLLObjectWrapper.getInstance().getMQLCommandManager(chartId);
-            JObject payload = this.GetJsonPayload(context.Request);
-            JObject result = new JObject();
-            if (payload == null)
-            {
-                result["result"] = PARSE_ERROR;
-                return result;
-            }
+            var payload = context.JsonPayload;
+            var result = context.Result;
+            if (PayloadNotValid(context))
+                return context.Result;
             List<Object> parameters = new List<Object>();
-            parameters.Add(payload["object_name"]);
-            parameters.Add(payload["index"]);
-            parameters.Add(payload["value"]);
-            int id = mqlCommandManager.ExecCommand(MQLCommand.ObjectSet_1, parameters); // MQLCommand ENUM = 192
-            while (mqlCommandManager.IsCommandRunning(id)) ; // block while command is running
-            try
-            {
-                mqlCommandManager.throwExceptionIfErrorResponse(id);
-                result["result"] = (bool)mqlCommandManager.GetCommandResult(id);
-            }
-            catch (Exception e)
-            {
-                result["error"] = MQLExceptions.convertRESTException(e.ToString());
-            }
+            ParamAdd(context, parameters, "object_name");
+            ParamAdd(context, parameters, "index");
+            ParamAdd(context, parameters, "value");
+            await ExecCommandAsync(context, MQLCommand.ObjectSet_1, parameters); // MQLCommand ENUM = 192
+
+            result["result"] = (bool)GetCommandResult(context);
 
             return result;
         }
@@ -11946,11 +9382,10 @@ namespace MQL4CSharp.Base.REST
         /// <li><b>text</b> :  [in] New description of the level.</li>
         /// </ul>
         /// </summary>
-        [RESTRoute(Method = HttpMethod.POST, PathInfo = @"^/[0-9]+/objectsetfibodescription")]
-        public void Handle_ObjectSetFiboDescription_1(HttpListenerContext context)
+        [RestRoute(HttpMethod = HttpMethod.POST, PathInfo = @"^/[0-9]+/objectsetfibodescription$")]
+        public IHttpContext Handle_ObjectSetFiboDescription_1(IHttpContext context)
         {
-            long chartid = Int64.Parse(context.Request.Url.Segments[1].Replace("/", ""));
-            this.SendJsonResponse(context, ObjectSetFiboDescription_1(context, chartid));
+            return SendJsonResponse(context, GetChartId(context), ObjectSetFiboDescription_1);
         }
 
         /// <summary>
@@ -11964,37 +9399,25 @@ namespace MQL4CSharp.Base.REST
         /// <li><b>text</b> :  [in] New description of the level.</li>
         /// </ul>
         /// </summary>
-        [RESTRoute(Method = HttpMethod.POST, PathInfo = @"^/objectsetfibodescription")]
-        public void Handle_ObjectSetFiboDescription_1_Default(HttpListenerContext context)
+        [RestRoute(HttpMethod = HttpMethod.POST, PathInfo = @"^/objectsetfibodescription$")]
+        public IHttpContext Handle_ObjectSetFiboDescription_1_Default(IHttpContext context)
         {
-            this.SendJsonResponse(context, ObjectSetFiboDescription_1(context, DEFAULT_CHART_ID));
+            return SendJsonResponse(context, ObjectSetFiboDescription_1);
         }
 
-        private JObject ObjectSetFiboDescription_1(HttpListenerContext context, long chartId)
+        private async Task<JObject> ObjectSetFiboDescription_1(MQLRestContext context)
         {
-            MQLCommandManager mqlCommandManager = DLLObjectWrapper.getInstance().getMQLCommandManager(chartId);
-            JObject payload = this.GetJsonPayload(context.Request);
-            JObject result = new JObject();
-            if (payload == null)
-            {
-                result["result"] = PARSE_ERROR;
-                return result;
-            }
+            var payload = context.JsonPayload;
+            var result = context.Result;
+            if (PayloadNotValid(context))
+                return context.Result;
             List<Object> parameters = new List<Object>();
-            parameters.Add(payload["object_name"]);
-            parameters.Add(payload["index"]);
-            parameters.Add(payload["text"]);
-            int id = mqlCommandManager.ExecCommand(MQLCommand.ObjectSetFiboDescription_1, parameters); // MQLCommand ENUM = 193
-            while (mqlCommandManager.IsCommandRunning(id)) ; // block while command is running
-            try
-            {
-                mqlCommandManager.throwExceptionIfErrorResponse(id);
-                result["result"] = (bool)mqlCommandManager.GetCommandResult(id);
-            }
-            catch (Exception e)
-            {
-                result["error"] = MQLExceptions.convertRESTException(e.ToString());
-            }
+            ParamAdd(context, parameters, "object_name");
+            ParamAdd(context, parameters, "index");
+            ParamAdd(context, parameters, "text");
+            await ExecCommandAsync(context, MQLCommand.ObjectSetFiboDescription_1, parameters); // MQLCommand ENUM = 193
+
+            result["result"] = (bool)GetCommandResult(context);
 
             return result;
         }
@@ -12011,11 +9434,10 @@ namespace MQL4CSharp.Base.REST
         /// <li><b>text_color</b> :  [in] Font color.</li>
         /// </ul>
         /// </summary>
-        [RESTRoute(Method = HttpMethod.POST, PathInfo = @"^/[0-9]+/objectsettext")]
-        public void Handle_ObjectSetText_1(HttpListenerContext context)
+        [RestRoute(HttpMethod = HttpMethod.POST, PathInfo = @"^/[0-9]+/objectsettext$")]
+        public IHttpContext Handle_ObjectSetText_1(IHttpContext context)
         {
-            long chartid = Int64.Parse(context.Request.Url.Segments[1].Replace("/", ""));
-            this.SendJsonResponse(context, ObjectSetText_1(context, chartid));
+            return SendJsonResponse(context, GetChartId(context), ObjectSetText_1);
         }
 
         /// <summary>
@@ -12031,39 +9453,27 @@ namespace MQL4CSharp.Base.REST
         /// <li><b>text_color</b> :  [in] Font color.</li>
         /// </ul>
         /// </summary>
-        [RESTRoute(Method = HttpMethod.POST, PathInfo = @"^/objectsettext")]
-        public void Handle_ObjectSetText_1_Default(HttpListenerContext context)
+        [RestRoute(HttpMethod = HttpMethod.POST, PathInfo = @"^/objectsettext$")]
+        public IHttpContext Handle_ObjectSetText_1_Default(IHttpContext context)
         {
-            this.SendJsonResponse(context, ObjectSetText_1(context, DEFAULT_CHART_ID));
+            return SendJsonResponse(context, ObjectSetText_1);
         }
 
-        private JObject ObjectSetText_1(HttpListenerContext context, long chartId)
+        private async Task<JObject> ObjectSetText_1(MQLRestContext context)
         {
-            MQLCommandManager mqlCommandManager = DLLObjectWrapper.getInstance().getMQLCommandManager(chartId);
-            JObject payload = this.GetJsonPayload(context.Request);
-            JObject result = new JObject();
-            if (payload == null)
-            {
-                result["result"] = PARSE_ERROR;
-                return result;
-            }
+            var payload = context.JsonPayload;
+            var result = context.Result;
+            if (PayloadNotValid(context))
+                return context.Result;
             List<Object> parameters = new List<Object>();
-            parameters.Add(payload["object_name"]);
-            parameters.Add(payload["text"]);
-            parameters.Add(payload["font_size"]);
-            parameters.Add(payload["font_name"]);
-            parameters.Add(payload["text_color"]);
-            int id = mqlCommandManager.ExecCommand(MQLCommand.ObjectSetText_1, parameters); // MQLCommand ENUM = 194
-            while (mqlCommandManager.IsCommandRunning(id)) ; // block while command is running
-            try
-            {
-                mqlCommandManager.throwExceptionIfErrorResponse(id);
-                result["result"] = (bool)mqlCommandManager.GetCommandResult(id);
-            }
-            catch (Exception e)
-            {
-                result["error"] = MQLExceptions.convertRESTException(e.ToString());
-            }
+            ParamAdd(context, parameters, "object_name");
+            ParamAdd(context, parameters, "text");
+            ParamAdd(context, parameters, "font_size");
+            ParamAdd(context, parameters, "font_name");
+            ParamAdd(context, parameters, "text_color");
+            await ExecCommandAsync(context, MQLCommand.ObjectSetText_1, parameters); // MQLCommand ENUM = 194
+
+            result["result"] = (bool)GetCommandResult(context);
 
             return result;
         }
@@ -12076,11 +9486,10 @@ namespace MQL4CSharp.Base.REST
         /// <li><b>object_name</b> :  [in] Object name.</li>
         /// </ul>
         /// </summary>
-        [RESTRoute(Method = HttpMethod.POST, PathInfo = @"^/[0-9]+/objecttype")]
-        public void Handle_ObjectType_1(HttpListenerContext context)
+        [RestRoute(HttpMethod = HttpMethod.POST, PathInfo = @"^/[0-9]+/objecttype$")]
+        public IHttpContext Handle_ObjectType_1(IHttpContext context)
         {
-            long chartid = Int64.Parse(context.Request.Url.Segments[1].Replace("/", ""));
-            this.SendJsonResponse(context, ObjectType_1(context, chartid));
+            return SendJsonResponse(context, GetChartId(context), ObjectType_1);
         }
 
         /// <summary>
@@ -12092,35 +9501,23 @@ namespace MQL4CSharp.Base.REST
         /// <li><b>object_name</b> :  [in] Object name.</li>
         /// </ul>
         /// </summary>
-        [RESTRoute(Method = HttpMethod.POST, PathInfo = @"^/objecttype")]
-        public void Handle_ObjectType_1_Default(HttpListenerContext context)
+        [RestRoute(HttpMethod = HttpMethod.POST, PathInfo = @"^/objecttype$")]
+        public IHttpContext Handle_ObjectType_1_Default(IHttpContext context)
         {
-            this.SendJsonResponse(context, ObjectType_1(context, DEFAULT_CHART_ID));
+            return SendJsonResponse(context, ObjectType_1);
         }
 
-        private JObject ObjectType_1(HttpListenerContext context, long chartId)
+        private async Task<JObject> ObjectType_1(MQLRestContext context)
         {
-            MQLCommandManager mqlCommandManager = DLLObjectWrapper.getInstance().getMQLCommandManager(chartId);
-            JObject payload = this.GetJsonPayload(context.Request);
-            JObject result = new JObject();
-            if (payload == null)
-            {
-                result["result"] = PARSE_ERROR;
-                return result;
-            }
+            var payload = context.JsonPayload;
+            var result = context.Result;
+            if (PayloadNotValid(context))
+                return context.Result;
             List<Object> parameters = new List<Object>();
-            parameters.Add(payload["object_name"]);
-            int id = mqlCommandManager.ExecCommand(MQLCommand.ObjectType_1, parameters); // MQLCommand ENUM = 195
-            while (mqlCommandManager.IsCommandRunning(id)) ; // block while command is running
-            try
-            {
-                mqlCommandManager.throwExceptionIfErrorResponse(id);
-                result["result"] = Convert.ToInt32(mqlCommandManager.GetCommandResult(id));
-            }
-            catch (Exception e)
-            {
-                result["error"] = MQLExceptions.convertRESTException(e.ToString());
-            }
+            ParamAdd(context, parameters, "object_name");
+            await ExecCommandAsync(context, MQLCommand.ObjectType_1, parameters); // MQLCommand ENUM = 195
+
+            result["result"] = Convert.ToInt32(GetCommandResult(context));
 
             return result;
         }
@@ -12135,11 +9532,10 @@ namespace MQL4CSharp.Base.REST
         /// <li><b>shift</b> :  [in] Index of the value taken from the indicator buffer (shift relative to the current bar the given amount of periods ago).</li>
         /// </ul>
         /// </summary>
-        [RESTRoute(Method = HttpMethod.POST, PathInfo = @"^/[0-9]+/iac")]
-        public void Handle_iAC_1(HttpListenerContext context)
+        [RestRoute(HttpMethod = HttpMethod.POST, PathInfo = @"^/[0-9]+/iac$")]
+        public IHttpContext Handle_iAC_1(IHttpContext context)
         {
-            long chartid = Int64.Parse(context.Request.Url.Segments[1].Replace("/", ""));
-            this.SendJsonResponse(context, iAC_1(context, chartid));
+            return SendJsonResponse(context, GetChartId(context), iAC_1);
         }
 
         /// <summary>
@@ -12153,37 +9549,25 @@ namespace MQL4CSharp.Base.REST
         /// <li><b>shift</b> :  [in] Index of the value taken from the indicator buffer (shift relative to the current bar the given amount of periods ago).</li>
         /// </ul>
         /// </summary>
-        [RESTRoute(Method = HttpMethod.POST, PathInfo = @"^/iac")]
-        public void Handle_iAC_1_Default(HttpListenerContext context)
+        [RestRoute(HttpMethod = HttpMethod.POST, PathInfo = @"^/iac$")]
+        public IHttpContext Handle_iAC_1_Default(IHttpContext context)
         {
-            this.SendJsonResponse(context, iAC_1(context, DEFAULT_CHART_ID));
+            return SendJsonResponse(context, iAC_1);
         }
 
-        private JObject iAC_1(HttpListenerContext context, long chartId)
+        private async Task<JObject> iAC_1(MQLRestContext context)
         {
-            MQLCommandManager mqlCommandManager = DLLObjectWrapper.getInstance().getMQLCommandManager(chartId);
-            JObject payload = this.GetJsonPayload(context.Request);
-            JObject result = new JObject();
-            if (payload == null)
-            {
-                result["result"] = PARSE_ERROR;
-                return result;
-            }
+            var payload = context.JsonPayload;
+            var result = context.Result;
+            if (PayloadNotValid(context))
+                return context.Result;
             List<Object> parameters = new List<Object>();
-            parameters.Add(payload["symbol"]);
-            parameters.Add(payload["timeframe"]);
-            parameters.Add(payload["shift"]);
-            int id = mqlCommandManager.ExecCommand(MQLCommand.iAC_1, parameters); // MQLCommand ENUM = 196
-            while (mqlCommandManager.IsCommandRunning(id)) ; // block while command is running
-            try
-            {
-                mqlCommandManager.throwExceptionIfErrorResponse(id);
-                result["result"] = Convert.ToDecimal(mqlCommandManager.GetCommandResult(id));
-            }
-            catch (Exception e)
-            {
-                result["error"] = MQLExceptions.convertRESTException(e.ToString());
-            }
+            ParamAdd(context, parameters, "symbol");
+            ParamAdd(context, parameters, "timeframe");
+            ParamAdd(context, parameters, "shift");
+            await ExecCommandAsync(context, MQLCommand.iAC_1, parameters); // MQLCommand ENUM = 196
+
+            result["result"] = Convert.ToDecimal(GetCommandResult(context));
 
             return result;
         }
@@ -12198,11 +9582,10 @@ namespace MQL4CSharp.Base.REST
         /// <li><b>shift</b> :  [in] Index of the value taken from the indicator buffer (shift relative to the current bar the given amount of periods ago).</li>
         /// </ul>
         /// </summary>
-        [RESTRoute(Method = HttpMethod.POST, PathInfo = @"^/[0-9]+/iad")]
-        public void Handle_iAD_1(HttpListenerContext context)
+        [RestRoute(HttpMethod = HttpMethod.POST, PathInfo = @"^/[0-9]+/iad$")]
+        public IHttpContext Handle_iAD_1(IHttpContext context)
         {
-            long chartid = Int64.Parse(context.Request.Url.Segments[1].Replace("/", ""));
-            this.SendJsonResponse(context, iAD_1(context, chartid));
+            return SendJsonResponse(context, GetChartId(context), iAD_1);
         }
 
         /// <summary>
@@ -12216,37 +9599,25 @@ namespace MQL4CSharp.Base.REST
         /// <li><b>shift</b> :  [in] Index of the value taken from the indicator buffer (shift relative to the current bar the given amount of periods ago).</li>
         /// </ul>
         /// </summary>
-        [RESTRoute(Method = HttpMethod.POST, PathInfo = @"^/iad")]
-        public void Handle_iAD_1_Default(HttpListenerContext context)
+        [RestRoute(HttpMethod = HttpMethod.POST, PathInfo = @"^/iad$")]
+        public IHttpContext Handle_iAD_1_Default(IHttpContext context)
         {
-            this.SendJsonResponse(context, iAD_1(context, DEFAULT_CHART_ID));
+            return SendJsonResponse(context, iAD_1);
         }
 
-        private JObject iAD_1(HttpListenerContext context, long chartId)
+        private async Task<JObject> iAD_1(MQLRestContext context)
         {
-            MQLCommandManager mqlCommandManager = DLLObjectWrapper.getInstance().getMQLCommandManager(chartId);
-            JObject payload = this.GetJsonPayload(context.Request);
-            JObject result = new JObject();
-            if (payload == null)
-            {
-                result["result"] = PARSE_ERROR;
-                return result;
-            }
+            var payload = context.JsonPayload;
+            var result = context.Result;
+            if (PayloadNotValid(context))
+                return context.Result;
             List<Object> parameters = new List<Object>();
-            parameters.Add(payload["symbol"]);
-            parameters.Add(payload["timeframe"]);
-            parameters.Add(payload["shift"]);
-            int id = mqlCommandManager.ExecCommand(MQLCommand.iAD_1, parameters); // MQLCommand ENUM = 197
-            while (mqlCommandManager.IsCommandRunning(id)) ; // block while command is running
-            try
-            {
-                mqlCommandManager.throwExceptionIfErrorResponse(id);
-                result["result"] = Convert.ToDecimal(mqlCommandManager.GetCommandResult(id));
-            }
-            catch (Exception e)
-            {
-                result["error"] = MQLExceptions.convertRESTException(e.ToString());
-            }
+            ParamAdd(context, parameters, "symbol");
+            ParamAdd(context, parameters, "timeframe");
+            ParamAdd(context, parameters, "shift");
+            await ExecCommandAsync(context, MQLCommand.iAD_1, parameters); // MQLCommand ENUM = 197
+
+            result["result"] = Convert.ToDecimal(GetCommandResult(context));
 
             return result;
         }
@@ -12264,11 +9635,10 @@ namespace MQL4CSharp.Base.REST
         /// <li><b>shift</b> :  [in] Index of the value taken from the indicator buffer (shift relative to the current bar the given amount of periods ago).</li>
         /// </ul>
         /// </summary>
-        [RESTRoute(Method = HttpMethod.POST, PathInfo = @"^/[0-9]+/iadx")]
-        public void Handle_iADX_1(HttpListenerContext context)
+        [RestRoute(HttpMethod = HttpMethod.POST, PathInfo = @"^/[0-9]+/iadx$")]
+        public IHttpContext Handle_iADX_1(IHttpContext context)
         {
-            long chartid = Int64.Parse(context.Request.Url.Segments[1].Replace("/", ""));
-            this.SendJsonResponse(context, iADX_1(context, chartid));
+            return SendJsonResponse(context, GetChartId(context), iADX_1);
         }
 
         /// <summary>
@@ -12285,40 +9655,28 @@ namespace MQL4CSharp.Base.REST
         /// <li><b>shift</b> :  [in] Index of the value taken from the indicator buffer (shift relative to the current bar the given amount of periods ago).</li>
         /// </ul>
         /// </summary>
-        [RESTRoute(Method = HttpMethod.POST, PathInfo = @"^/iadx")]
-        public void Handle_iADX_1_Default(HttpListenerContext context)
+        [RestRoute(HttpMethod = HttpMethod.POST, PathInfo = @"^/iadx$")]
+        public IHttpContext Handle_iADX_1_Default(IHttpContext context)
         {
-            this.SendJsonResponse(context, iADX_1(context, DEFAULT_CHART_ID));
+            return SendJsonResponse(context, iADX_1);
         }
 
-        private JObject iADX_1(HttpListenerContext context, long chartId)
+        private async Task<JObject> iADX_1(MQLRestContext context)
         {
-            MQLCommandManager mqlCommandManager = DLLObjectWrapper.getInstance().getMQLCommandManager(chartId);
-            JObject payload = this.GetJsonPayload(context.Request);
-            JObject result = new JObject();
-            if (payload == null)
-            {
-                result["result"] = PARSE_ERROR;
-                return result;
-            }
+            var payload = context.JsonPayload;
+            var result = context.Result;
+            if (PayloadNotValid(context))
+                return context.Result;
             List<Object> parameters = new List<Object>();
-            parameters.Add(payload["symbol"]);
-            parameters.Add(payload["timeframe"]);
-            parameters.Add(payload["period"]);
-            parameters.Add(payload["applied_price"]);
-            parameters.Add(payload["mode"]);
-            parameters.Add(payload["shift"]);
-            int id = mqlCommandManager.ExecCommand(MQLCommand.iADX_1, parameters); // MQLCommand ENUM = 198
-            while (mqlCommandManager.IsCommandRunning(id)) ; // block while command is running
-            try
-            {
-                mqlCommandManager.throwExceptionIfErrorResponse(id);
-                result["result"] = Convert.ToDecimal(mqlCommandManager.GetCommandResult(id));
-            }
-            catch (Exception e)
-            {
-                result["error"] = MQLExceptions.convertRESTException(e.ToString());
-            }
+            ParamAdd(context, parameters, "symbol");
+            ParamAdd(context, parameters, "timeframe");
+            ParamAdd(context, parameters, "period");
+            ParamAdd(context, parameters, "applied_price");
+            ParamAdd(context, parameters, "mode");
+            ParamAdd(context, parameters, "shift");
+            await ExecCommandAsync(context, MQLCommand.iADX_1, parameters); // MQLCommand ENUM = 198
+
+            result["result"] = Convert.ToDecimal(GetCommandResult(context));
 
             return result;
         }
@@ -12342,11 +9700,10 @@ namespace MQL4CSharp.Base.REST
         /// <li><b>shift</b> :  MODE_GATORJAW - Gator Jaw (blue) balance line,MODE_GATORTEETH - Gator Teeth (red) balance line,MODE_GATORLIPS - Gator Lips (green) balance line.</li>
         /// </ul>
         /// </summary>
-        [RESTRoute(Method = HttpMethod.POST, PathInfo = @"^/[0-9]+/ialligator")]
-        public void Handle_iAlligator_1(HttpListenerContext context)
+        [RestRoute(HttpMethod = HttpMethod.POST, PathInfo = @"^/[0-9]+/ialligator$")]
+        public IHttpContext Handle_iAlligator_1(IHttpContext context)
         {
-            long chartid = Int64.Parse(context.Request.Url.Segments[1].Replace("/", ""));
-            this.SendJsonResponse(context, iAlligator_1(context, chartid));
+            return SendJsonResponse(context, GetChartId(context), iAlligator_1);
         }
 
         /// <summary>
@@ -12369,46 +9726,34 @@ namespace MQL4CSharp.Base.REST
         /// <li><b>shift</b> :  MODE_GATORJAW - Gator Jaw (blue) balance line,MODE_GATORTEETH - Gator Teeth (red) balance line,MODE_GATORLIPS - Gator Lips (green) balance line.</li>
         /// </ul>
         /// </summary>
-        [RESTRoute(Method = HttpMethod.POST, PathInfo = @"^/ialligator")]
-        public void Handle_iAlligator_1_Default(HttpListenerContext context)
+        [RestRoute(HttpMethod = HttpMethod.POST, PathInfo = @"^/ialligator$")]
+        public IHttpContext Handle_iAlligator_1_Default(IHttpContext context)
         {
-            this.SendJsonResponse(context, iAlligator_1(context, DEFAULT_CHART_ID));
+            return SendJsonResponse(context, iAlligator_1);
         }
 
-        private JObject iAlligator_1(HttpListenerContext context, long chartId)
+        private async Task<JObject> iAlligator_1(MQLRestContext context)
         {
-            MQLCommandManager mqlCommandManager = DLLObjectWrapper.getInstance().getMQLCommandManager(chartId);
-            JObject payload = this.GetJsonPayload(context.Request);
-            JObject result = new JObject();
-            if (payload == null)
-            {
-                result["result"] = PARSE_ERROR;
-                return result;
-            }
+            var payload = context.JsonPayload;
+            var result = context.Result;
+            if (PayloadNotValid(context))
+                return context.Result;
             List<Object> parameters = new List<Object>();
-            parameters.Add(payload["symbol"]);
-            parameters.Add(payload["timeframe"]);
-            parameters.Add(payload["jaw_period"]);
-            parameters.Add(payload["jaw_shift"]);
-            parameters.Add(payload["teeth_period"]);
-            parameters.Add(payload["teeth_shift"]);
-            parameters.Add(payload["lips_period"]);
-            parameters.Add(payload["lips_shift"]);
-            parameters.Add(payload["ma_method"]);
-            parameters.Add(payload["applied_price"]);
-            parameters.Add(payload["mode"]);
-            parameters.Add(payload["shift"]);
-            int id = mqlCommandManager.ExecCommand(MQLCommand.iAlligator_1, parameters); // MQLCommand ENUM = 199
-            while (mqlCommandManager.IsCommandRunning(id)) ; // block while command is running
-            try
-            {
-                mqlCommandManager.throwExceptionIfErrorResponse(id);
-                result["result"] = Convert.ToDecimal(mqlCommandManager.GetCommandResult(id));
-            }
-            catch (Exception e)
-            {
-                result["error"] = MQLExceptions.convertRESTException(e.ToString());
-            }
+            ParamAdd(context, parameters, "symbol");
+            ParamAdd(context, parameters, "timeframe");
+            ParamAdd(context, parameters, "jaw_period");
+            ParamAdd(context, parameters, "jaw_shift");
+            ParamAdd(context, parameters, "teeth_period");
+            ParamAdd(context, parameters, "teeth_shift");
+            ParamAdd(context, parameters, "lips_period");
+            ParamAdd(context, parameters, "lips_shift");
+            ParamAdd(context, parameters, "ma_method");
+            ParamAdd(context, parameters, "applied_price");
+            ParamAdd(context, parameters, "mode");
+            ParamAdd(context, parameters, "shift");
+            await ExecCommandAsync(context, MQLCommand.iAlligator_1, parameters); // MQLCommand ENUM = 199
+
+            result["result"] = Convert.ToDecimal(GetCommandResult(context));
 
             return result;
         }
@@ -12423,11 +9768,10 @@ namespace MQL4CSharp.Base.REST
         /// <li><b>shift</b> :  [in] Index of the value taken from the indicator buffer (shift relative to the current bar the given amount of periods ago).</li>
         /// </ul>
         /// </summary>
-        [RESTRoute(Method = HttpMethod.POST, PathInfo = @"^/[0-9]+/iao")]
-        public void Handle_iAO_1(HttpListenerContext context)
+        [RestRoute(HttpMethod = HttpMethod.POST, PathInfo = @"^/[0-9]+/iao$")]
+        public IHttpContext Handle_iAO_1(IHttpContext context)
         {
-            long chartid = Int64.Parse(context.Request.Url.Segments[1].Replace("/", ""));
-            this.SendJsonResponse(context, iAO_1(context, chartid));
+            return SendJsonResponse(context, GetChartId(context), iAO_1);
         }
 
         /// <summary>
@@ -12441,37 +9785,25 @@ namespace MQL4CSharp.Base.REST
         /// <li><b>shift</b> :  [in] Index of the value taken from the indicator buffer (shift relative to the current bar the given amount of periods ago).</li>
         /// </ul>
         /// </summary>
-        [RESTRoute(Method = HttpMethod.POST, PathInfo = @"^/iao")]
-        public void Handle_iAO_1_Default(HttpListenerContext context)
+        [RestRoute(HttpMethod = HttpMethod.POST, PathInfo = @"^/iao$")]
+        public IHttpContext Handle_iAO_1_Default(IHttpContext context)
         {
-            this.SendJsonResponse(context, iAO_1(context, DEFAULT_CHART_ID));
+            return SendJsonResponse(context, iAO_1);
         }
 
-        private JObject iAO_1(HttpListenerContext context, long chartId)
+        private async Task<JObject> iAO_1(MQLRestContext context)
         {
-            MQLCommandManager mqlCommandManager = DLLObjectWrapper.getInstance().getMQLCommandManager(chartId);
-            JObject payload = this.GetJsonPayload(context.Request);
-            JObject result = new JObject();
-            if (payload == null)
-            {
-                result["result"] = PARSE_ERROR;
-                return result;
-            }
+            var payload = context.JsonPayload;
+            var result = context.Result;
+            if (PayloadNotValid(context))
+                return context.Result;
             List<Object> parameters = new List<Object>();
-            parameters.Add(payload["symbol"]);
-            parameters.Add(payload["timeframe"]);
-            parameters.Add(payload["shift"]);
-            int id = mqlCommandManager.ExecCommand(MQLCommand.iAO_1, parameters); // MQLCommand ENUM = 200
-            while (mqlCommandManager.IsCommandRunning(id)) ; // block while command is running
-            try
-            {
-                mqlCommandManager.throwExceptionIfErrorResponse(id);
-                result["result"] = Convert.ToDecimal(mqlCommandManager.GetCommandResult(id));
-            }
-            catch (Exception e)
-            {
-                result["error"] = MQLExceptions.convertRESTException(e.ToString());
-            }
+            ParamAdd(context, parameters, "symbol");
+            ParamAdd(context, parameters, "timeframe");
+            ParamAdd(context, parameters, "shift");
+            await ExecCommandAsync(context, MQLCommand.iAO_1, parameters); // MQLCommand ENUM = 200
+
+            result["result"] = Convert.ToDecimal(GetCommandResult(context));
 
             return result;
         }
@@ -12487,11 +9819,10 @@ namespace MQL4CSharp.Base.REST
         /// <li><b>shift</b> :  [in] Index of the value taken from the indicator buffer (shift relative to the current bar the given amount of periods ago).</li>
         /// </ul>
         /// </summary>
-        [RESTRoute(Method = HttpMethod.POST, PathInfo = @"^/[0-9]+/iatr")]
-        public void Handle_iATR_1(HttpListenerContext context)
+        [RestRoute(HttpMethod = HttpMethod.POST, PathInfo = @"^/[0-9]+/iatr$")]
+        public IHttpContext Handle_iATR_1(IHttpContext context)
         {
-            long chartid = Int64.Parse(context.Request.Url.Segments[1].Replace("/", ""));
-            this.SendJsonResponse(context, iATR_1(context, chartid));
+            return SendJsonResponse(context, GetChartId(context), iATR_1);
         }
 
         /// <summary>
@@ -12506,38 +9837,26 @@ namespace MQL4CSharp.Base.REST
         /// <li><b>shift</b> :  [in] Index of the value taken from the indicator buffer (shift relative to the current bar the given amount of periods ago).</li>
         /// </ul>
         /// </summary>
-        [RESTRoute(Method = HttpMethod.POST, PathInfo = @"^/iatr")]
-        public void Handle_iATR_1_Default(HttpListenerContext context)
+        [RestRoute(HttpMethod = HttpMethod.POST, PathInfo = @"^/iatr$")]
+        public IHttpContext Handle_iATR_1_Default(IHttpContext context)
         {
-            this.SendJsonResponse(context, iATR_1(context, DEFAULT_CHART_ID));
+            return SendJsonResponse(context, iATR_1);
         }
 
-        private JObject iATR_1(HttpListenerContext context, long chartId)
+        private async Task<JObject> iATR_1(MQLRestContext context)
         {
-            MQLCommandManager mqlCommandManager = DLLObjectWrapper.getInstance().getMQLCommandManager(chartId);
-            JObject payload = this.GetJsonPayload(context.Request);
-            JObject result = new JObject();
-            if (payload == null)
-            {
-                result["result"] = PARSE_ERROR;
-                return result;
-            }
+            var payload = context.JsonPayload;
+            var result = context.Result;
+            if (PayloadNotValid(context))
+                return context.Result;
             List<Object> parameters = new List<Object>();
-            parameters.Add(payload["symbol"]);
-            parameters.Add(payload["timeframe"]);
-            parameters.Add(payload["period"]);
-            parameters.Add(payload["shift"]);
-            int id = mqlCommandManager.ExecCommand(MQLCommand.iATR_1, parameters); // MQLCommand ENUM = 201
-            while (mqlCommandManager.IsCommandRunning(id)) ; // block while command is running
-            try
-            {
-                mqlCommandManager.throwExceptionIfErrorResponse(id);
-                result["result"] = Convert.ToDecimal(mqlCommandManager.GetCommandResult(id));
-            }
-            catch (Exception e)
-            {
-                result["error"] = MQLExceptions.convertRESTException(e.ToString());
-            }
+            ParamAdd(context, parameters, "symbol");
+            ParamAdd(context, parameters, "timeframe");
+            ParamAdd(context, parameters, "period");
+            ParamAdd(context, parameters, "shift");
+            await ExecCommandAsync(context, MQLCommand.iATR_1, parameters); // MQLCommand ENUM = 201
+
+            result["result"] = Convert.ToDecimal(GetCommandResult(context));
 
             return result;
         }
@@ -12554,11 +9873,10 @@ namespace MQL4CSharp.Base.REST
         /// <li><b>shift</b> :  [in] Index of the value taken from the indicator buffer (shift relative to the current bar the given amount of periods ago).</li>
         /// </ul>
         /// </summary>
-        [RESTRoute(Method = HttpMethod.POST, PathInfo = @"^/[0-9]+/ibearspower")]
-        public void Handle_iBearsPower_1(HttpListenerContext context)
+        [RestRoute(HttpMethod = HttpMethod.POST, PathInfo = @"^/[0-9]+/ibearspower$")]
+        public IHttpContext Handle_iBearsPower_1(IHttpContext context)
         {
-            long chartid = Int64.Parse(context.Request.Url.Segments[1].Replace("/", ""));
-            this.SendJsonResponse(context, iBearsPower_1(context, chartid));
+            return SendJsonResponse(context, GetChartId(context), iBearsPower_1);
         }
 
         /// <summary>
@@ -12574,39 +9892,27 @@ namespace MQL4CSharp.Base.REST
         /// <li><b>shift</b> :  [in] Index of the value taken from the indicator buffer (shift relative to the current bar the given amount of periods ago).</li>
         /// </ul>
         /// </summary>
-        [RESTRoute(Method = HttpMethod.POST, PathInfo = @"^/ibearspower")]
-        public void Handle_iBearsPower_1_Default(HttpListenerContext context)
+        [RestRoute(HttpMethod = HttpMethod.POST, PathInfo = @"^/ibearspower$")]
+        public IHttpContext Handle_iBearsPower_1_Default(IHttpContext context)
         {
-            this.SendJsonResponse(context, iBearsPower_1(context, DEFAULT_CHART_ID));
+            return SendJsonResponse(context, iBearsPower_1);
         }
 
-        private JObject iBearsPower_1(HttpListenerContext context, long chartId)
+        private async Task<JObject> iBearsPower_1(MQLRestContext context)
         {
-            MQLCommandManager mqlCommandManager = DLLObjectWrapper.getInstance().getMQLCommandManager(chartId);
-            JObject payload = this.GetJsonPayload(context.Request);
-            JObject result = new JObject();
-            if (payload == null)
-            {
-                result["result"] = PARSE_ERROR;
-                return result;
-            }
+            var payload = context.JsonPayload;
+            var result = context.Result;
+            if (PayloadNotValid(context))
+                return context.Result;
             List<Object> parameters = new List<Object>();
-            parameters.Add(payload["symbol"]);
-            parameters.Add(payload["timeframe"]);
-            parameters.Add(payload["period"]);
-            parameters.Add(payload["applied_price"]);
-            parameters.Add(payload["shift"]);
-            int id = mqlCommandManager.ExecCommand(MQLCommand.iBearsPower_1, parameters); // MQLCommand ENUM = 202
-            while (mqlCommandManager.IsCommandRunning(id)) ; // block while command is running
-            try
-            {
-                mqlCommandManager.throwExceptionIfErrorResponse(id);
-                result["result"] = Convert.ToDecimal(mqlCommandManager.GetCommandResult(id));
-            }
-            catch (Exception e)
-            {
-                result["error"] = MQLExceptions.convertRESTException(e.ToString());
-            }
+            ParamAdd(context, parameters, "symbol");
+            ParamAdd(context, parameters, "timeframe");
+            ParamAdd(context, parameters, "period");
+            ParamAdd(context, parameters, "applied_price");
+            ParamAdd(context, parameters, "shift");
+            await ExecCommandAsync(context, MQLCommand.iBearsPower_1, parameters); // MQLCommand ENUM = 202
+
+            result["result"] = Convert.ToDecimal(GetCommandResult(context));
 
             return result;
         }
@@ -12626,11 +9932,10 @@ namespace MQL4CSharp.Base.REST
         /// <li><b>shift</b> :  [in] Index of the value taken from the indicator buffer (shift relative to the current bar the given amount of periods ago).</li>
         /// </ul>
         /// </summary>
-        [RESTRoute(Method = HttpMethod.POST, PathInfo = @"^/[0-9]+/ibands")]
-        public void Handle_iBands_1(HttpListenerContext context)
+        [RestRoute(HttpMethod = HttpMethod.POST, PathInfo = @"^/[0-9]+/ibands$")]
+        public IHttpContext Handle_iBands_1(IHttpContext context)
         {
-            long chartid = Int64.Parse(context.Request.Url.Segments[1].Replace("/", ""));
-            this.SendJsonResponse(context, iBands_1(context, chartid));
+            return SendJsonResponse(context, GetChartId(context), iBands_1);
         }
 
         /// <summary>
@@ -12649,42 +9954,30 @@ namespace MQL4CSharp.Base.REST
         /// <li><b>shift</b> :  [in] Index of the value taken from the indicator buffer (shift relative to the current bar the given amount of periods ago).</li>
         /// </ul>
         /// </summary>
-        [RESTRoute(Method = HttpMethod.POST, PathInfo = @"^/ibands")]
-        public void Handle_iBands_1_Default(HttpListenerContext context)
+        [RestRoute(HttpMethod = HttpMethod.POST, PathInfo = @"^/ibands$")]
+        public IHttpContext Handle_iBands_1_Default(IHttpContext context)
         {
-            this.SendJsonResponse(context, iBands_1(context, DEFAULT_CHART_ID));
+            return SendJsonResponse(context, iBands_1);
         }
 
-        private JObject iBands_1(HttpListenerContext context, long chartId)
+        private async Task<JObject> iBands_1(MQLRestContext context)
         {
-            MQLCommandManager mqlCommandManager = DLLObjectWrapper.getInstance().getMQLCommandManager(chartId);
-            JObject payload = this.GetJsonPayload(context.Request);
-            JObject result = new JObject();
-            if (payload == null)
-            {
-                result["result"] = PARSE_ERROR;
-                return result;
-            }
+            var payload = context.JsonPayload;
+            var result = context.Result;
+            if (PayloadNotValid(context))
+                return context.Result;
             List<Object> parameters = new List<Object>();
-            parameters.Add(payload["symbol"]);
-            parameters.Add(payload["timeframe"]);
-            parameters.Add(payload["period"]);
-            parameters.Add(payload["deviation"]);
-            parameters.Add(payload["bands_shift"]);
-            parameters.Add(payload["applied_price"]);
-            parameters.Add(payload["mode"]);
-            parameters.Add(payload["shift"]);
-            int id = mqlCommandManager.ExecCommand(MQLCommand.iBands_1, parameters); // MQLCommand ENUM = 203
-            while (mqlCommandManager.IsCommandRunning(id)) ; // block while command is running
-            try
-            {
-                mqlCommandManager.throwExceptionIfErrorResponse(id);
-                result["result"] = Convert.ToDecimal(mqlCommandManager.GetCommandResult(id));
-            }
-            catch (Exception e)
-            {
-                result["error"] = MQLExceptions.convertRESTException(e.ToString());
-            }
+            ParamAdd(context, parameters, "symbol");
+            ParamAdd(context, parameters, "timeframe");
+            ParamAdd(context, parameters, "period");
+            ParamAdd(context, parameters, "deviation");
+            ParamAdd(context, parameters, "bands_shift");
+            ParamAdd(context, parameters, "applied_price");
+            ParamAdd(context, parameters, "mode");
+            ParamAdd(context, parameters, "shift");
+            await ExecCommandAsync(context, MQLCommand.iBands_1, parameters); // MQLCommand ENUM = 203
+
+            result["result"] = Convert.ToDecimal(GetCommandResult(context));
 
             return result;
         }
@@ -12701,11 +9994,10 @@ namespace MQL4CSharp.Base.REST
         /// <li><b>shift</b> :  [in] Index of the value taken from the indicator buffer (shift relative to the current bar the given amount of periods ago).</li>
         /// </ul>
         /// </summary>
-        [RESTRoute(Method = HttpMethod.POST, PathInfo = @"^/[0-9]+/ibullspower")]
-        public void Handle_iBullsPower_1(HttpListenerContext context)
+        [RestRoute(HttpMethod = HttpMethod.POST, PathInfo = @"^/[0-9]+/ibullspower$")]
+        public IHttpContext Handle_iBullsPower_1(IHttpContext context)
         {
-            long chartid = Int64.Parse(context.Request.Url.Segments[1].Replace("/", ""));
-            this.SendJsonResponse(context, iBullsPower_1(context, chartid));
+            return SendJsonResponse(context, GetChartId(context), iBullsPower_1);
         }
 
         /// <summary>
@@ -12721,39 +10013,27 @@ namespace MQL4CSharp.Base.REST
         /// <li><b>shift</b> :  [in] Index of the value taken from the indicator buffer (shift relative to the current bar the given amount of periods ago).</li>
         /// </ul>
         /// </summary>
-        [RESTRoute(Method = HttpMethod.POST, PathInfo = @"^/ibullspower")]
-        public void Handle_iBullsPower_1_Default(HttpListenerContext context)
+        [RestRoute(HttpMethod = HttpMethod.POST, PathInfo = @"^/ibullspower$")]
+        public IHttpContext Handle_iBullsPower_1_Default(IHttpContext context)
         {
-            this.SendJsonResponse(context, iBullsPower_1(context, DEFAULT_CHART_ID));
+            return SendJsonResponse(context, iBullsPower_1);
         }
 
-        private JObject iBullsPower_1(HttpListenerContext context, long chartId)
+        private async Task<JObject> iBullsPower_1(MQLRestContext context)
         {
-            MQLCommandManager mqlCommandManager = DLLObjectWrapper.getInstance().getMQLCommandManager(chartId);
-            JObject payload = this.GetJsonPayload(context.Request);
-            JObject result = new JObject();
-            if (payload == null)
-            {
-                result["result"] = PARSE_ERROR;
-                return result;
-            }
+            var payload = context.JsonPayload;
+            var result = context.Result;
+            if (PayloadNotValid(context))
+                return context.Result;
             List<Object> parameters = new List<Object>();
-            parameters.Add(payload["symbol"]);
-            parameters.Add(payload["timeframe"]);
-            parameters.Add(payload["period"]);
-            parameters.Add(payload["applied_price"]);
-            parameters.Add(payload["shift"]);
-            int id = mqlCommandManager.ExecCommand(MQLCommand.iBullsPower_1, parameters); // MQLCommand ENUM = 204
-            while (mqlCommandManager.IsCommandRunning(id)) ; // block while command is running
-            try
-            {
-                mqlCommandManager.throwExceptionIfErrorResponse(id);
-                result["result"] = Convert.ToDecimal(mqlCommandManager.GetCommandResult(id));
-            }
-            catch (Exception e)
-            {
-                result["error"] = MQLExceptions.convertRESTException(e.ToString());
-            }
+            ParamAdd(context, parameters, "symbol");
+            ParamAdd(context, parameters, "timeframe");
+            ParamAdd(context, parameters, "period");
+            ParamAdd(context, parameters, "applied_price");
+            ParamAdd(context, parameters, "shift");
+            await ExecCommandAsync(context, MQLCommand.iBullsPower_1, parameters); // MQLCommand ENUM = 204
+
+            result["result"] = Convert.ToDecimal(GetCommandResult(context));
 
             return result;
         }
@@ -12770,11 +10050,10 @@ namespace MQL4CSharp.Base.REST
         /// <li><b>shift</b> :  [in] Index of the value taken from the indicator buffer (shift relative to the current bar the given amount of periods ago).</li>
         /// </ul>
         /// </summary>
-        [RESTRoute(Method = HttpMethod.POST, PathInfo = @"^/[0-9]+/icci")]
-        public void Handle_iCCI_1(HttpListenerContext context)
+        [RestRoute(HttpMethod = HttpMethod.POST, PathInfo = @"^/[0-9]+/icci$")]
+        public IHttpContext Handle_iCCI_1(IHttpContext context)
         {
-            long chartid = Int64.Parse(context.Request.Url.Segments[1].Replace("/", ""));
-            this.SendJsonResponse(context, iCCI_1(context, chartid));
+            return SendJsonResponse(context, GetChartId(context), iCCI_1);
         }
 
         /// <summary>
@@ -12790,39 +10069,27 @@ namespace MQL4CSharp.Base.REST
         /// <li><b>shift</b> :  [in] Index of the value taken from the indicator buffer (shift relative to the current bar the given amount of periods ago).</li>
         /// </ul>
         /// </summary>
-        [RESTRoute(Method = HttpMethod.POST, PathInfo = @"^/icci")]
-        public void Handle_iCCI_1_Default(HttpListenerContext context)
+        [RestRoute(HttpMethod = HttpMethod.POST, PathInfo = @"^/icci$")]
+        public IHttpContext Handle_iCCI_1_Default(IHttpContext context)
         {
-            this.SendJsonResponse(context, iCCI_1(context, DEFAULT_CHART_ID));
+            return SendJsonResponse(context, iCCI_1);
         }
 
-        private JObject iCCI_1(HttpListenerContext context, long chartId)
+        private async Task<JObject> iCCI_1(MQLRestContext context)
         {
-            MQLCommandManager mqlCommandManager = DLLObjectWrapper.getInstance().getMQLCommandManager(chartId);
-            JObject payload = this.GetJsonPayload(context.Request);
-            JObject result = new JObject();
-            if (payload == null)
-            {
-                result["result"] = PARSE_ERROR;
-                return result;
-            }
+            var payload = context.JsonPayload;
+            var result = context.Result;
+            if (PayloadNotValid(context))
+                return context.Result;
             List<Object> parameters = new List<Object>();
-            parameters.Add(payload["symbol"]);
-            parameters.Add(payload["timeframe"]);
-            parameters.Add(payload["period"]);
-            parameters.Add(payload["applied_price"]);
-            parameters.Add(payload["shift"]);
-            int id = mqlCommandManager.ExecCommand(MQLCommand.iCCI_1, parameters); // MQLCommand ENUM = 205
-            while (mqlCommandManager.IsCommandRunning(id)) ; // block while command is running
-            try
-            {
-                mqlCommandManager.throwExceptionIfErrorResponse(id);
-                result["result"] = Convert.ToDecimal(mqlCommandManager.GetCommandResult(id));
-            }
-            catch (Exception e)
-            {
-                result["error"] = MQLExceptions.convertRESTException(e.ToString());
-            }
+            ParamAdd(context, parameters, "symbol");
+            ParamAdd(context, parameters, "timeframe");
+            ParamAdd(context, parameters, "period");
+            ParamAdd(context, parameters, "applied_price");
+            ParamAdd(context, parameters, "shift");
+            await ExecCommandAsync(context, MQLCommand.iCCI_1, parameters); // MQLCommand ENUM = 205
+
+            result["result"] = Convert.ToDecimal(GetCommandResult(context));
 
             return result;
         }
@@ -12838,11 +10105,10 @@ namespace MQL4CSharp.Base.REST
         /// <li><b>shift</b> :  [in] Index of the value taken from the indicator buffer (shift relative to the current bar the given amount of periods ago).</li>
         /// </ul>
         /// </summary>
-        [RESTRoute(Method = HttpMethod.POST, PathInfo = @"^/[0-9]+/idemarker")]
-        public void Handle_iDeMarker_1(HttpListenerContext context)
+        [RestRoute(HttpMethod = HttpMethod.POST, PathInfo = @"^/[0-9]+/idemarker$")]
+        public IHttpContext Handle_iDeMarker_1(IHttpContext context)
         {
-            long chartid = Int64.Parse(context.Request.Url.Segments[1].Replace("/", ""));
-            this.SendJsonResponse(context, iDeMarker_1(context, chartid));
+            return SendJsonResponse(context, GetChartId(context), iDeMarker_1);
         }
 
         /// <summary>
@@ -12857,38 +10123,26 @@ namespace MQL4CSharp.Base.REST
         /// <li><b>shift</b> :  [in] Index of the value taken from the indicator buffer (shift relative to the current bar the given amount of periods ago).</li>
         /// </ul>
         /// </summary>
-        [RESTRoute(Method = HttpMethod.POST, PathInfo = @"^/idemarker")]
-        public void Handle_iDeMarker_1_Default(HttpListenerContext context)
+        [RestRoute(HttpMethod = HttpMethod.POST, PathInfo = @"^/idemarker$")]
+        public IHttpContext Handle_iDeMarker_1_Default(IHttpContext context)
         {
-            this.SendJsonResponse(context, iDeMarker_1(context, DEFAULT_CHART_ID));
+            return SendJsonResponse(context, iDeMarker_1);
         }
 
-        private JObject iDeMarker_1(HttpListenerContext context, long chartId)
+        private async Task<JObject> iDeMarker_1(MQLRestContext context)
         {
-            MQLCommandManager mqlCommandManager = DLLObjectWrapper.getInstance().getMQLCommandManager(chartId);
-            JObject payload = this.GetJsonPayload(context.Request);
-            JObject result = new JObject();
-            if (payload == null)
-            {
-                result["result"] = PARSE_ERROR;
-                return result;
-            }
+            var payload = context.JsonPayload;
+            var result = context.Result;
+            if (PayloadNotValid(context))
+                return context.Result;
             List<Object> parameters = new List<Object>();
-            parameters.Add(payload["symbol"]);
-            parameters.Add(payload["timeframe"]);
-            parameters.Add(payload["period"]);
-            parameters.Add(payload["shift"]);
-            int id = mqlCommandManager.ExecCommand(MQLCommand.iDeMarker_1, parameters); // MQLCommand ENUM = 206
-            while (mqlCommandManager.IsCommandRunning(id)) ; // block while command is running
-            try
-            {
-                mqlCommandManager.throwExceptionIfErrorResponse(id);
-                result["result"] = Convert.ToDecimal(mqlCommandManager.GetCommandResult(id));
-            }
-            catch (Exception e)
-            {
-                result["error"] = MQLExceptions.convertRESTException(e.ToString());
-            }
+            ParamAdd(context, parameters, "symbol");
+            ParamAdd(context, parameters, "timeframe");
+            ParamAdd(context, parameters, "period");
+            ParamAdd(context, parameters, "shift");
+            await ExecCommandAsync(context, MQLCommand.iDeMarker_1, parameters); // MQLCommand ENUM = 206
+
+            result["result"] = Convert.ToDecimal(GetCommandResult(context));
 
             return result;
         }
@@ -12909,11 +10163,10 @@ namespace MQL4CSharp.Base.REST
         /// <li><b>shift</b> :  [in] Index of the value taken from the indicator buffer (shift relative to the current bar the given amount of periods ago).</li>
         /// </ul>
         /// </summary>
-        [RESTRoute(Method = HttpMethod.POST, PathInfo = @"^/[0-9]+/ienvelopes")]
-        public void Handle_iEnvelopes_1(HttpListenerContext context)
+        [RestRoute(HttpMethod = HttpMethod.POST, PathInfo = @"^/[0-9]+/ienvelopes$")]
+        public IHttpContext Handle_iEnvelopes_1(IHttpContext context)
         {
-            long chartid = Int64.Parse(context.Request.Url.Segments[1].Replace("/", ""));
-            this.SendJsonResponse(context, iEnvelopes_1(context, chartid));
+            return SendJsonResponse(context, GetChartId(context), iEnvelopes_1);
         }
 
         /// <summary>
@@ -12933,43 +10186,31 @@ namespace MQL4CSharp.Base.REST
         /// <li><b>shift</b> :  [in] Index of the value taken from the indicator buffer (shift relative to the current bar the given amount of periods ago).</li>
         /// </ul>
         /// </summary>
-        [RESTRoute(Method = HttpMethod.POST, PathInfo = @"^/ienvelopes")]
-        public void Handle_iEnvelopes_1_Default(HttpListenerContext context)
+        [RestRoute(HttpMethod = HttpMethod.POST, PathInfo = @"^/ienvelopes$")]
+        public IHttpContext Handle_iEnvelopes_1_Default(IHttpContext context)
         {
-            this.SendJsonResponse(context, iEnvelopes_1(context, DEFAULT_CHART_ID));
+            return SendJsonResponse(context, iEnvelopes_1);
         }
 
-        private JObject iEnvelopes_1(HttpListenerContext context, long chartId)
+        private async Task<JObject> iEnvelopes_1(MQLRestContext context)
         {
-            MQLCommandManager mqlCommandManager = DLLObjectWrapper.getInstance().getMQLCommandManager(chartId);
-            JObject payload = this.GetJsonPayload(context.Request);
-            JObject result = new JObject();
-            if (payload == null)
-            {
-                result["result"] = PARSE_ERROR;
-                return result;
-            }
+            var payload = context.JsonPayload;
+            var result = context.Result;
+            if (PayloadNotValid(context))
+                return context.Result;
             List<Object> parameters = new List<Object>();
-            parameters.Add(payload["symbol"]);
-            parameters.Add(payload["timeframe"]);
-            parameters.Add(payload["ma_period"]);
-            parameters.Add(payload["ma_method"]);
-            parameters.Add(payload["ma_shift"]);
-            parameters.Add(payload["applied_price"]);
-            parameters.Add(payload["deviation"]);
-            parameters.Add(payload["mode"]);
-            parameters.Add(payload["shift"]);
-            int id = mqlCommandManager.ExecCommand(MQLCommand.iEnvelopes_1, parameters); // MQLCommand ENUM = 207
-            while (mqlCommandManager.IsCommandRunning(id)) ; // block while command is running
-            try
-            {
-                mqlCommandManager.throwExceptionIfErrorResponse(id);
-                result["result"] = Convert.ToDecimal(mqlCommandManager.GetCommandResult(id));
-            }
-            catch (Exception e)
-            {
-                result["error"] = MQLExceptions.convertRESTException(e.ToString());
-            }
+            ParamAdd(context, parameters, "symbol");
+            ParamAdd(context, parameters, "timeframe");
+            ParamAdd(context, parameters, "ma_period");
+            ParamAdd(context, parameters, "ma_method");
+            ParamAdd(context, parameters, "ma_shift");
+            ParamAdd(context, parameters, "applied_price");
+            ParamAdd(context, parameters, "deviation");
+            ParamAdd(context, parameters, "mode");
+            ParamAdd(context, parameters, "shift");
+            await ExecCommandAsync(context, MQLCommand.iEnvelopes_1, parameters); // MQLCommand ENUM = 207
+
+            result["result"] = Convert.ToDecimal(GetCommandResult(context));
 
             return result;
         }
@@ -12987,11 +10228,10 @@ namespace MQL4CSharp.Base.REST
         /// <li><b>shift</b> :  [in] Index of the value taken from the indicator buffer (shift relative to the current bar the given amount of periods ago).</li>
         /// </ul>
         /// </summary>
-        [RESTRoute(Method = HttpMethod.POST, PathInfo = @"^/[0-9]+/iforce")]
-        public void Handle_iForce_1(HttpListenerContext context)
+        [RestRoute(HttpMethod = HttpMethod.POST, PathInfo = @"^/[0-9]+/iforce$")]
+        public IHttpContext Handle_iForce_1(IHttpContext context)
         {
-            long chartid = Int64.Parse(context.Request.Url.Segments[1].Replace("/", ""));
-            this.SendJsonResponse(context, iForce_1(context, chartid));
+            return SendJsonResponse(context, GetChartId(context), iForce_1);
         }
 
         /// <summary>
@@ -13008,40 +10248,28 @@ namespace MQL4CSharp.Base.REST
         /// <li><b>shift</b> :  [in] Index of the value taken from the indicator buffer (shift relative to the current bar the given amount of periods ago).</li>
         /// </ul>
         /// </summary>
-        [RESTRoute(Method = HttpMethod.POST, PathInfo = @"^/iforce")]
-        public void Handle_iForce_1_Default(HttpListenerContext context)
+        [RestRoute(HttpMethod = HttpMethod.POST, PathInfo = @"^/iforce$")]
+        public IHttpContext Handle_iForce_1_Default(IHttpContext context)
         {
-            this.SendJsonResponse(context, iForce_1(context, DEFAULT_CHART_ID));
+            return SendJsonResponse(context, iForce_1);
         }
 
-        private JObject iForce_1(HttpListenerContext context, long chartId)
+        private async Task<JObject> iForce_1(MQLRestContext context)
         {
-            MQLCommandManager mqlCommandManager = DLLObjectWrapper.getInstance().getMQLCommandManager(chartId);
-            JObject payload = this.GetJsonPayload(context.Request);
-            JObject result = new JObject();
-            if (payload == null)
-            {
-                result["result"] = PARSE_ERROR;
-                return result;
-            }
+            var payload = context.JsonPayload;
+            var result = context.Result;
+            if (PayloadNotValid(context))
+                return context.Result;
             List<Object> parameters = new List<Object>();
-            parameters.Add(payload["symbol"]);
-            parameters.Add(payload["timeframe"]);
-            parameters.Add(payload["period"]);
-            parameters.Add(payload["ma_method"]);
-            parameters.Add(payload["applied_price"]);
-            parameters.Add(payload["shift"]);
-            int id = mqlCommandManager.ExecCommand(MQLCommand.iForce_1, parameters); // MQLCommand ENUM = 208
-            while (mqlCommandManager.IsCommandRunning(id)) ; // block while command is running
-            try
-            {
-                mqlCommandManager.throwExceptionIfErrorResponse(id);
-                result["result"] = Convert.ToDecimal(mqlCommandManager.GetCommandResult(id));
-            }
-            catch (Exception e)
-            {
-                result["error"] = MQLExceptions.convertRESTException(e.ToString());
-            }
+            ParamAdd(context, parameters, "symbol");
+            ParamAdd(context, parameters, "timeframe");
+            ParamAdd(context, parameters, "period");
+            ParamAdd(context, parameters, "ma_method");
+            ParamAdd(context, parameters, "applied_price");
+            ParamAdd(context, parameters, "shift");
+            await ExecCommandAsync(context, MQLCommand.iForce_1, parameters); // MQLCommand ENUM = 208
+
+            result["result"] = Convert.ToDecimal(GetCommandResult(context));
 
             return result;
         }
@@ -13057,11 +10285,10 @@ namespace MQL4CSharp.Base.REST
         /// <li><b>shift</b> :  [in] Index of the value taken from the indicator buffer (shift relative to the current bar the given amount of periods ago).</li>
         /// </ul>
         /// </summary>
-        [RESTRoute(Method = HttpMethod.POST, PathInfo = @"^/[0-9]+/ifractals")]
-        public void Handle_iFractals_1(HttpListenerContext context)
+        [RestRoute(HttpMethod = HttpMethod.POST, PathInfo = @"^/[0-9]+/ifractals$")]
+        public IHttpContext Handle_iFractals_1(IHttpContext context)
         {
-            long chartid = Int64.Parse(context.Request.Url.Segments[1].Replace("/", ""));
-            this.SendJsonResponse(context, iFractals_1(context, chartid));
+            return SendJsonResponse(context, GetChartId(context), iFractals_1);
         }
 
         /// <summary>
@@ -13076,38 +10303,26 @@ namespace MQL4CSharp.Base.REST
         /// <li><b>shift</b> :  [in] Index of the value taken from the indicator buffer (shift relative to the current bar the given amount of periods ago).</li>
         /// </ul>
         /// </summary>
-        [RESTRoute(Method = HttpMethod.POST, PathInfo = @"^/ifractals")]
-        public void Handle_iFractals_1_Default(HttpListenerContext context)
+        [RestRoute(HttpMethod = HttpMethod.POST, PathInfo = @"^/ifractals$")]
+        public IHttpContext Handle_iFractals_1_Default(IHttpContext context)
         {
-            this.SendJsonResponse(context, iFractals_1(context, DEFAULT_CHART_ID));
+            return SendJsonResponse(context, iFractals_1);
         }
 
-        private JObject iFractals_1(HttpListenerContext context, long chartId)
+        private async Task<JObject> iFractals_1(MQLRestContext context)
         {
-            MQLCommandManager mqlCommandManager = DLLObjectWrapper.getInstance().getMQLCommandManager(chartId);
-            JObject payload = this.GetJsonPayload(context.Request);
-            JObject result = new JObject();
-            if (payload == null)
-            {
-                result["result"] = PARSE_ERROR;
-                return result;
-            }
+            var payload = context.JsonPayload;
+            var result = context.Result;
+            if (PayloadNotValid(context))
+                return context.Result;
             List<Object> parameters = new List<Object>();
-            parameters.Add(payload["symbol"]);
-            parameters.Add(payload["timeframe"]);
-            parameters.Add(payload["mode"]);
-            parameters.Add(payload["shift"]);
-            int id = mqlCommandManager.ExecCommand(MQLCommand.iFractals_1, parameters); // MQLCommand ENUM = 209
-            while (mqlCommandManager.IsCommandRunning(id)) ; // block while command is running
-            try
-            {
-                mqlCommandManager.throwExceptionIfErrorResponse(id);
-                result["result"] = Convert.ToDecimal(mqlCommandManager.GetCommandResult(id));
-            }
-            catch (Exception e)
-            {
-                result["error"] = MQLExceptions.convertRESTException(e.ToString());
-            }
+            ParamAdd(context, parameters, "symbol");
+            ParamAdd(context, parameters, "timeframe");
+            ParamAdd(context, parameters, "mode");
+            ParamAdd(context, parameters, "shift");
+            await ExecCommandAsync(context, MQLCommand.iFractals_1, parameters); // MQLCommand ENUM = 209
+
+            result["result"] = Convert.ToDecimal(GetCommandResult(context));
 
             return result;
         }
@@ -13131,11 +10346,10 @@ namespace MQL4CSharp.Base.REST
         /// <li><b>shift</b> :  MODE_GATORJAW - blue line (Jaw line),MODE_GATORTEETH - red line (Teeth line),MODE_GATORLIPS - green line (Lips line).</li>
         /// </ul>
         /// </summary>
-        [RESTRoute(Method = HttpMethod.POST, PathInfo = @"^/[0-9]+/igator")]
-        public void Handle_iGator_1(HttpListenerContext context)
+        [RestRoute(HttpMethod = HttpMethod.POST, PathInfo = @"^/[0-9]+/igator$")]
+        public IHttpContext Handle_iGator_1(IHttpContext context)
         {
-            long chartid = Int64.Parse(context.Request.Url.Segments[1].Replace("/", ""));
-            this.SendJsonResponse(context, iGator_1(context, chartid));
+            return SendJsonResponse(context, GetChartId(context), iGator_1);
         }
 
         /// <summary>
@@ -13158,46 +10372,34 @@ namespace MQL4CSharp.Base.REST
         /// <li><b>shift</b> :  MODE_GATORJAW - blue line (Jaw line),MODE_GATORTEETH - red line (Teeth line),MODE_GATORLIPS - green line (Lips line).</li>
         /// </ul>
         /// </summary>
-        [RESTRoute(Method = HttpMethod.POST, PathInfo = @"^/igator")]
-        public void Handle_iGator_1_Default(HttpListenerContext context)
+        [RestRoute(HttpMethod = HttpMethod.POST, PathInfo = @"^/igator$")]
+        public IHttpContext Handle_iGator_1_Default(IHttpContext context)
         {
-            this.SendJsonResponse(context, iGator_1(context, DEFAULT_CHART_ID));
+            return SendJsonResponse(context, iGator_1);
         }
 
-        private JObject iGator_1(HttpListenerContext context, long chartId)
+        private async Task<JObject> iGator_1(MQLRestContext context)
         {
-            MQLCommandManager mqlCommandManager = DLLObjectWrapper.getInstance().getMQLCommandManager(chartId);
-            JObject payload = this.GetJsonPayload(context.Request);
-            JObject result = new JObject();
-            if (payload == null)
-            {
-                result["result"] = PARSE_ERROR;
-                return result;
-            }
+            var payload = context.JsonPayload;
+            var result = context.Result;
+            if (PayloadNotValid(context))
+                return context.Result;
             List<Object> parameters = new List<Object>();
-            parameters.Add(payload["symbol"]);
-            parameters.Add(payload["timeframe"]);
-            parameters.Add(payload["jaw_period"]);
-            parameters.Add(payload["jaw_shift"]);
-            parameters.Add(payload["teeth_period"]);
-            parameters.Add(payload["teeth_shift"]);
-            parameters.Add(payload["lips_period"]);
-            parameters.Add(payload["lips_shift"]);
-            parameters.Add(payload["ma_method"]);
-            parameters.Add(payload["applied_price"]);
-            parameters.Add(payload["mode"]);
-            parameters.Add(payload["shift"]);
-            int id = mqlCommandManager.ExecCommand(MQLCommand.iGator_1, parameters); // MQLCommand ENUM = 210
-            while (mqlCommandManager.IsCommandRunning(id)) ; // block while command is running
-            try
-            {
-                mqlCommandManager.throwExceptionIfErrorResponse(id);
-                result["result"] = Convert.ToDecimal(mqlCommandManager.GetCommandResult(id));
-            }
-            catch (Exception e)
-            {
-                result["error"] = MQLExceptions.convertRESTException(e.ToString());
-            }
+            ParamAdd(context, parameters, "symbol");
+            ParamAdd(context, parameters, "timeframe");
+            ParamAdd(context, parameters, "jaw_period");
+            ParamAdd(context, parameters, "jaw_shift");
+            ParamAdd(context, parameters, "teeth_period");
+            ParamAdd(context, parameters, "teeth_shift");
+            ParamAdd(context, parameters, "lips_period");
+            ParamAdd(context, parameters, "lips_shift");
+            ParamAdd(context, parameters, "ma_method");
+            ParamAdd(context, parameters, "applied_price");
+            ParamAdd(context, parameters, "mode");
+            ParamAdd(context, parameters, "shift");
+            await ExecCommandAsync(context, MQLCommand.iGator_1, parameters); // MQLCommand ENUM = 210
+
+            result["result"] = Convert.ToDecimal(GetCommandResult(context));
 
             return result;
         }
@@ -13216,11 +10418,10 @@ namespace MQL4CSharp.Base.REST
         /// <li><b>shift</b> :  [in] Index of the value taken from the indicator buffer (shift relative to the current bar the given amount of periods ago).</li>
         /// </ul>
         /// </summary>
-        [RESTRoute(Method = HttpMethod.POST, PathInfo = @"^/[0-9]+/iichimoku")]
-        public void Handle_iIchimoku_1(HttpListenerContext context)
+        [RestRoute(HttpMethod = HttpMethod.POST, PathInfo = @"^/[0-9]+/iichimoku$")]
+        public IHttpContext Handle_iIchimoku_1(IHttpContext context)
         {
-            long chartid = Int64.Parse(context.Request.Url.Segments[1].Replace("/", ""));
-            this.SendJsonResponse(context, iIchimoku_1(context, chartid));
+            return SendJsonResponse(context, GetChartId(context), iIchimoku_1);
         }
 
         /// <summary>
@@ -13238,41 +10439,29 @@ namespace MQL4CSharp.Base.REST
         /// <li><b>shift</b> :  [in] Index of the value taken from the indicator buffer (shift relative to the current bar the given amount of periods ago).</li>
         /// </ul>
         /// </summary>
-        [RESTRoute(Method = HttpMethod.POST, PathInfo = @"^/iichimoku")]
-        public void Handle_iIchimoku_1_Default(HttpListenerContext context)
+        [RestRoute(HttpMethod = HttpMethod.POST, PathInfo = @"^/iichimoku$")]
+        public IHttpContext Handle_iIchimoku_1_Default(IHttpContext context)
         {
-            this.SendJsonResponse(context, iIchimoku_1(context, DEFAULT_CHART_ID));
+            return SendJsonResponse(context, iIchimoku_1);
         }
 
-        private JObject iIchimoku_1(HttpListenerContext context, long chartId)
+        private async Task<JObject> iIchimoku_1(MQLRestContext context)
         {
-            MQLCommandManager mqlCommandManager = DLLObjectWrapper.getInstance().getMQLCommandManager(chartId);
-            JObject payload = this.GetJsonPayload(context.Request);
-            JObject result = new JObject();
-            if (payload == null)
-            {
-                result["result"] = PARSE_ERROR;
-                return result;
-            }
+            var payload = context.JsonPayload;
+            var result = context.Result;
+            if (PayloadNotValid(context))
+                return context.Result;
             List<Object> parameters = new List<Object>();
-            parameters.Add(payload["symbol"]);
-            parameters.Add(payload["timeframe"]);
-            parameters.Add(payload["tenkan_sen"]);
-            parameters.Add(payload["kijun_sen"]);
-            parameters.Add(payload["senkou_span_b"]);
-            parameters.Add(payload["mode"]);
-            parameters.Add(payload["shift"]);
-            int id = mqlCommandManager.ExecCommand(MQLCommand.iIchimoku_1, parameters); // MQLCommand ENUM = 211
-            while (mqlCommandManager.IsCommandRunning(id)) ; // block while command is running
-            try
-            {
-                mqlCommandManager.throwExceptionIfErrorResponse(id);
-                result["result"] = Convert.ToDecimal(mqlCommandManager.GetCommandResult(id));
-            }
-            catch (Exception e)
-            {
-                result["error"] = MQLExceptions.convertRESTException(e.ToString());
-            }
+            ParamAdd(context, parameters, "symbol");
+            ParamAdd(context, parameters, "timeframe");
+            ParamAdd(context, parameters, "tenkan_sen");
+            ParamAdd(context, parameters, "kijun_sen");
+            ParamAdd(context, parameters, "senkou_span_b");
+            ParamAdd(context, parameters, "mode");
+            ParamAdd(context, parameters, "shift");
+            await ExecCommandAsync(context, MQLCommand.iIchimoku_1, parameters); // MQLCommand ENUM = 211
+
+            result["result"] = Convert.ToDecimal(GetCommandResult(context));
 
             return result;
         }
@@ -13287,11 +10476,10 @@ namespace MQL4CSharp.Base.REST
         /// <li><b>shift</b> :  [in] Index of the value taken from the indicator buffer (shift relative to the current bar the given amount of periods ago).</li>
         /// </ul>
         /// </summary>
-        [RESTRoute(Method = HttpMethod.POST, PathInfo = @"^/[0-9]+/ibwmfi")]
-        public void Handle_iBWMFI_1(HttpListenerContext context)
+        [RestRoute(HttpMethod = HttpMethod.POST, PathInfo = @"^/[0-9]+/ibwmfi$")]
+        public IHttpContext Handle_iBWMFI_1(IHttpContext context)
         {
-            long chartid = Int64.Parse(context.Request.Url.Segments[1].Replace("/", ""));
-            this.SendJsonResponse(context, iBWMFI_1(context, chartid));
+            return SendJsonResponse(context, GetChartId(context), iBWMFI_1);
         }
 
         /// <summary>
@@ -13305,37 +10493,25 @@ namespace MQL4CSharp.Base.REST
         /// <li><b>shift</b> :  [in] Index of the value taken from the indicator buffer (shift relative to the current bar the given amount of periods ago).</li>
         /// </ul>
         /// </summary>
-        [RESTRoute(Method = HttpMethod.POST, PathInfo = @"^/ibwmfi")]
-        public void Handle_iBWMFI_1_Default(HttpListenerContext context)
+        [RestRoute(HttpMethod = HttpMethod.POST, PathInfo = @"^/ibwmfi$")]
+        public IHttpContext Handle_iBWMFI_1_Default(IHttpContext context)
         {
-            this.SendJsonResponse(context, iBWMFI_1(context, DEFAULT_CHART_ID));
+            return SendJsonResponse(context, iBWMFI_1);
         }
 
-        private JObject iBWMFI_1(HttpListenerContext context, long chartId)
+        private async Task<JObject> iBWMFI_1(MQLRestContext context)
         {
-            MQLCommandManager mqlCommandManager = DLLObjectWrapper.getInstance().getMQLCommandManager(chartId);
-            JObject payload = this.GetJsonPayload(context.Request);
-            JObject result = new JObject();
-            if (payload == null)
-            {
-                result["result"] = PARSE_ERROR;
-                return result;
-            }
+            var payload = context.JsonPayload;
+            var result = context.Result;
+            if (PayloadNotValid(context))
+                return context.Result;
             List<Object> parameters = new List<Object>();
-            parameters.Add(payload["symbol"]);
-            parameters.Add(payload["timeframe"]);
-            parameters.Add(payload["shift"]);
-            int id = mqlCommandManager.ExecCommand(MQLCommand.iBWMFI_1, parameters); // MQLCommand ENUM = 212
-            while (mqlCommandManager.IsCommandRunning(id)) ; // block while command is running
-            try
-            {
-                mqlCommandManager.throwExceptionIfErrorResponse(id);
-                result["result"] = Convert.ToDecimal(mqlCommandManager.GetCommandResult(id));
-            }
-            catch (Exception e)
-            {
-                result["error"] = MQLExceptions.convertRESTException(e.ToString());
-            }
+            ParamAdd(context, parameters, "symbol");
+            ParamAdd(context, parameters, "timeframe");
+            ParamAdd(context, parameters, "shift");
+            await ExecCommandAsync(context, MQLCommand.iBWMFI_1, parameters); // MQLCommand ENUM = 212
+
+            result["result"] = Convert.ToDecimal(GetCommandResult(context));
 
             return result;
         }
@@ -13352,11 +10528,10 @@ namespace MQL4CSharp.Base.REST
         /// <li><b>shift</b> :  [in] Index of the value taken from the indicator buffer (shift relative to the current bar the given amount of periods ago).</li>
         /// </ul>
         /// </summary>
-        [RESTRoute(Method = HttpMethod.POST, PathInfo = @"^/[0-9]+/imomentum")]
-        public void Handle_iMomentum_1(HttpListenerContext context)
+        [RestRoute(HttpMethod = HttpMethod.POST, PathInfo = @"^/[0-9]+/imomentum$")]
+        public IHttpContext Handle_iMomentum_1(IHttpContext context)
         {
-            long chartid = Int64.Parse(context.Request.Url.Segments[1].Replace("/", ""));
-            this.SendJsonResponse(context, iMomentum_1(context, chartid));
+            return SendJsonResponse(context, GetChartId(context), iMomentum_1);
         }
 
         /// <summary>
@@ -13372,39 +10547,27 @@ namespace MQL4CSharp.Base.REST
         /// <li><b>shift</b> :  [in] Index of the value taken from the indicator buffer (shift relative to the current bar the given amount of periods ago).</li>
         /// </ul>
         /// </summary>
-        [RESTRoute(Method = HttpMethod.POST, PathInfo = @"^/imomentum")]
-        public void Handle_iMomentum_1_Default(HttpListenerContext context)
+        [RestRoute(HttpMethod = HttpMethod.POST, PathInfo = @"^/imomentum$")]
+        public IHttpContext Handle_iMomentum_1_Default(IHttpContext context)
         {
-            this.SendJsonResponse(context, iMomentum_1(context, DEFAULT_CHART_ID));
+            return SendJsonResponse(context, iMomentum_1);
         }
 
-        private JObject iMomentum_1(HttpListenerContext context, long chartId)
+        private async Task<JObject> iMomentum_1(MQLRestContext context)
         {
-            MQLCommandManager mqlCommandManager = DLLObjectWrapper.getInstance().getMQLCommandManager(chartId);
-            JObject payload = this.GetJsonPayload(context.Request);
-            JObject result = new JObject();
-            if (payload == null)
-            {
-                result["result"] = PARSE_ERROR;
-                return result;
-            }
+            var payload = context.JsonPayload;
+            var result = context.Result;
+            if (PayloadNotValid(context))
+                return context.Result;
             List<Object> parameters = new List<Object>();
-            parameters.Add(payload["symbol"]);
-            parameters.Add(payload["timeframe"]);
-            parameters.Add(payload["period"]);
-            parameters.Add(payload["applied_price"]);
-            parameters.Add(payload["shift"]);
-            int id = mqlCommandManager.ExecCommand(MQLCommand.iMomentum_1, parameters); // MQLCommand ENUM = 213
-            while (mqlCommandManager.IsCommandRunning(id)) ; // block while command is running
-            try
-            {
-                mqlCommandManager.throwExceptionIfErrorResponse(id);
-                result["result"] = Convert.ToDecimal(mqlCommandManager.GetCommandResult(id));
-            }
-            catch (Exception e)
-            {
-                result["error"] = MQLExceptions.convertRESTException(e.ToString());
-            }
+            ParamAdd(context, parameters, "symbol");
+            ParamAdd(context, parameters, "timeframe");
+            ParamAdd(context, parameters, "period");
+            ParamAdd(context, parameters, "applied_price");
+            ParamAdd(context, parameters, "shift");
+            await ExecCommandAsync(context, MQLCommand.iMomentum_1, parameters); // MQLCommand ENUM = 213
+
+            result["result"] = Convert.ToDecimal(GetCommandResult(context));
 
             return result;
         }
@@ -13420,11 +10583,10 @@ namespace MQL4CSharp.Base.REST
         /// <li><b>shift</b> :  [in] Index of the value taken from the indicator buffer (shift relative to the current bar the given amount of periods ago).</li>
         /// </ul>
         /// </summary>
-        [RESTRoute(Method = HttpMethod.POST, PathInfo = @"^/[0-9]+/imfi")]
-        public void Handle_iMFI_1(HttpListenerContext context)
+        [RestRoute(HttpMethod = HttpMethod.POST, PathInfo = @"^/[0-9]+/imfi$")]
+        public IHttpContext Handle_iMFI_1(IHttpContext context)
         {
-            long chartid = Int64.Parse(context.Request.Url.Segments[1].Replace("/", ""));
-            this.SendJsonResponse(context, iMFI_1(context, chartid));
+            return SendJsonResponse(context, GetChartId(context), iMFI_1);
         }
 
         /// <summary>
@@ -13439,38 +10601,26 @@ namespace MQL4CSharp.Base.REST
         /// <li><b>shift</b> :  [in] Index of the value taken from the indicator buffer (shift relative to the current bar the given amount of periods ago).</li>
         /// </ul>
         /// </summary>
-        [RESTRoute(Method = HttpMethod.POST, PathInfo = @"^/imfi")]
-        public void Handle_iMFI_1_Default(HttpListenerContext context)
+        [RestRoute(HttpMethod = HttpMethod.POST, PathInfo = @"^/imfi$")]
+        public IHttpContext Handle_iMFI_1_Default(IHttpContext context)
         {
-            this.SendJsonResponse(context, iMFI_1(context, DEFAULT_CHART_ID));
+            return SendJsonResponse(context, iMFI_1);
         }
 
-        private JObject iMFI_1(HttpListenerContext context, long chartId)
+        private async Task<JObject> iMFI_1(MQLRestContext context)
         {
-            MQLCommandManager mqlCommandManager = DLLObjectWrapper.getInstance().getMQLCommandManager(chartId);
-            JObject payload = this.GetJsonPayload(context.Request);
-            JObject result = new JObject();
-            if (payload == null)
-            {
-                result["result"] = PARSE_ERROR;
-                return result;
-            }
+            var payload = context.JsonPayload;
+            var result = context.Result;
+            if (PayloadNotValid(context))
+                return context.Result;
             List<Object> parameters = new List<Object>();
-            parameters.Add(payload["symbol"]);
-            parameters.Add(payload["timeframe"]);
-            parameters.Add(payload["period"]);
-            parameters.Add(payload["shift"]);
-            int id = mqlCommandManager.ExecCommand(MQLCommand.iMFI_1, parameters); // MQLCommand ENUM = 214
-            while (mqlCommandManager.IsCommandRunning(id)) ; // block while command is running
-            try
-            {
-                mqlCommandManager.throwExceptionIfErrorResponse(id);
-                result["result"] = Convert.ToDecimal(mqlCommandManager.GetCommandResult(id));
-            }
-            catch (Exception e)
-            {
-                result["error"] = MQLExceptions.convertRESTException(e.ToString());
-            }
+            ParamAdd(context, parameters, "symbol");
+            ParamAdd(context, parameters, "timeframe");
+            ParamAdd(context, parameters, "period");
+            ParamAdd(context, parameters, "shift");
+            await ExecCommandAsync(context, MQLCommand.iMFI_1, parameters); // MQLCommand ENUM = 214
+
+            result["result"] = Convert.ToDecimal(GetCommandResult(context));
 
             return result;
         }
@@ -13489,11 +10639,10 @@ namespace MQL4CSharp.Base.REST
         /// <li><b>shift</b> :  [in] Index of the value taken from the indicator buffer (shift relative to the current bar the given amount of periods ago).</li>
         /// </ul>
         /// </summary>
-        [RESTRoute(Method = HttpMethod.POST, PathInfo = @"^/[0-9]+/ima")]
-        public void Handle_iMA_1(HttpListenerContext context)
+        [RestRoute(HttpMethod = HttpMethod.POST, PathInfo = @"^/[0-9]+/ima$")]
+        public IHttpContext Handle_iMA_1(IHttpContext context)
         {
-            long chartid = Int64.Parse(context.Request.Url.Segments[1].Replace("/", ""));
-            this.SendJsonResponse(context, iMA_1(context, chartid));
+            return SendJsonResponse(context, GetChartId(context), iMA_1);
         }
 
         /// <summary>
@@ -13511,41 +10660,29 @@ namespace MQL4CSharp.Base.REST
         /// <li><b>shift</b> :  [in] Index of the value taken from the indicator buffer (shift relative to the current bar the given amount of periods ago).</li>
         /// </ul>
         /// </summary>
-        [RESTRoute(Method = HttpMethod.POST, PathInfo = @"^/ima")]
-        public void Handle_iMA_1_Default(HttpListenerContext context)
+        [RestRoute(HttpMethod = HttpMethod.POST, PathInfo = @"^/ima$")]
+        public IHttpContext Handle_iMA_1_Default(IHttpContext context)
         {
-            this.SendJsonResponse(context, iMA_1(context, DEFAULT_CHART_ID));
+            return SendJsonResponse(context, iMA_1);
         }
 
-        private JObject iMA_1(HttpListenerContext context, long chartId)
+        private async Task<JObject> iMA_1(MQLRestContext context)
         {
-            MQLCommandManager mqlCommandManager = DLLObjectWrapper.getInstance().getMQLCommandManager(chartId);
-            JObject payload = this.GetJsonPayload(context.Request);
-            JObject result = new JObject();
-            if (payload == null)
-            {
-                result["result"] = PARSE_ERROR;
-                return result;
-            }
+            var payload = context.JsonPayload;
+            var result = context.Result;
+            if (PayloadNotValid(context))
+                return context.Result;
             List<Object> parameters = new List<Object>();
-            parameters.Add(payload["symbol"]);
-            parameters.Add(payload["timeframe"]);
-            parameters.Add(payload["ma_period"]);
-            parameters.Add(payload["ma_shift"]);
-            parameters.Add(payload["ma_method"]);
-            parameters.Add(payload["applied_price"]);
-            parameters.Add(payload["shift"]);
-            int id = mqlCommandManager.ExecCommand(MQLCommand.iMA_1, parameters); // MQLCommand ENUM = 215
-            while (mqlCommandManager.IsCommandRunning(id)) ; // block while command is running
-            try
-            {
-                mqlCommandManager.throwExceptionIfErrorResponse(id);
-                result["result"] = Convert.ToDecimal(mqlCommandManager.GetCommandResult(id));
-            }
-            catch (Exception e)
-            {
-                result["error"] = MQLExceptions.convertRESTException(e.ToString());
-            }
+            ParamAdd(context, parameters, "symbol");
+            ParamAdd(context, parameters, "timeframe");
+            ParamAdd(context, parameters, "ma_period");
+            ParamAdd(context, parameters, "ma_shift");
+            ParamAdd(context, parameters, "ma_method");
+            ParamAdd(context, parameters, "applied_price");
+            ParamAdd(context, parameters, "shift");
+            await ExecCommandAsync(context, MQLCommand.iMA_1, parameters); // MQLCommand ENUM = 215
+
+            result["result"] = Convert.ToDecimal(GetCommandResult(context));
 
             return result;
         }
@@ -13564,11 +10701,10 @@ namespace MQL4CSharp.Base.REST
         /// <li><b>shift</b> :  [in] Index of the value taken from the indicator buffer (shift relative to the current bar the given amount of periods ago).</li>
         /// </ul>
         /// </summary>
-        [RESTRoute(Method = HttpMethod.POST, PathInfo = @"^/[0-9]+/iosma")]
-        public void Handle_iOsMA_1(HttpListenerContext context)
+        [RestRoute(HttpMethod = HttpMethod.POST, PathInfo = @"^/[0-9]+/iosma$")]
+        public IHttpContext Handle_iOsMA_1(IHttpContext context)
         {
-            long chartid = Int64.Parse(context.Request.Url.Segments[1].Replace("/", ""));
-            this.SendJsonResponse(context, iOsMA_1(context, chartid));
+            return SendJsonResponse(context, GetChartId(context), iOsMA_1);
         }
 
         /// <summary>
@@ -13586,41 +10722,29 @@ namespace MQL4CSharp.Base.REST
         /// <li><b>shift</b> :  [in] Index of the value taken from the indicator buffer (shift relative to the current bar the given amount of periods ago).</li>
         /// </ul>
         /// </summary>
-        [RESTRoute(Method = HttpMethod.POST, PathInfo = @"^/iosma")]
-        public void Handle_iOsMA_1_Default(HttpListenerContext context)
+        [RestRoute(HttpMethod = HttpMethod.POST, PathInfo = @"^/iosma$")]
+        public IHttpContext Handle_iOsMA_1_Default(IHttpContext context)
         {
-            this.SendJsonResponse(context, iOsMA_1(context, DEFAULT_CHART_ID));
+            return SendJsonResponse(context, iOsMA_1);
         }
 
-        private JObject iOsMA_1(HttpListenerContext context, long chartId)
+        private async Task<JObject> iOsMA_1(MQLRestContext context)
         {
-            MQLCommandManager mqlCommandManager = DLLObjectWrapper.getInstance().getMQLCommandManager(chartId);
-            JObject payload = this.GetJsonPayload(context.Request);
-            JObject result = new JObject();
-            if (payload == null)
-            {
-                result["result"] = PARSE_ERROR;
-                return result;
-            }
+            var payload = context.JsonPayload;
+            var result = context.Result;
+            if (PayloadNotValid(context))
+                return context.Result;
             List<Object> parameters = new List<Object>();
-            parameters.Add(payload["symbol"]);
-            parameters.Add(payload["timeframe"]);
-            parameters.Add(payload["fast_ema_period"]);
-            parameters.Add(payload["slow_ema_period"]);
-            parameters.Add(payload["signal_period"]);
-            parameters.Add(payload["applied_price"]);
-            parameters.Add(payload["shift"]);
-            int id = mqlCommandManager.ExecCommand(MQLCommand.iOsMA_1, parameters); // MQLCommand ENUM = 216
-            while (mqlCommandManager.IsCommandRunning(id)) ; // block while command is running
-            try
-            {
-                mqlCommandManager.throwExceptionIfErrorResponse(id);
-                result["result"] = Convert.ToDecimal(mqlCommandManager.GetCommandResult(id));
-            }
-            catch (Exception e)
-            {
-                result["error"] = MQLExceptions.convertRESTException(e.ToString());
-            }
+            ParamAdd(context, parameters, "symbol");
+            ParamAdd(context, parameters, "timeframe");
+            ParamAdd(context, parameters, "fast_ema_period");
+            ParamAdd(context, parameters, "slow_ema_period");
+            ParamAdd(context, parameters, "signal_period");
+            ParamAdd(context, parameters, "applied_price");
+            ParamAdd(context, parameters, "shift");
+            await ExecCommandAsync(context, MQLCommand.iOsMA_1, parameters); // MQLCommand ENUM = 216
+
+            result["result"] = Convert.ToDecimal(GetCommandResult(context));
 
             return result;
         }
@@ -13640,11 +10764,10 @@ namespace MQL4CSharp.Base.REST
         /// <li><b>shift</b> :  [in] Index of the value taken from the indicator buffer (shift relative to the current bar the given amount of periods ago).</li>
         /// </ul>
         /// </summary>
-        [RESTRoute(Method = HttpMethod.POST, PathInfo = @"^/[0-9]+/imacd")]
-        public void Handle_iMACD_1(HttpListenerContext context)
+        [RestRoute(HttpMethod = HttpMethod.POST, PathInfo = @"^/[0-9]+/imacd$")]
+        public IHttpContext Handle_iMACD_1(IHttpContext context)
         {
-            long chartid = Int64.Parse(context.Request.Url.Segments[1].Replace("/", ""));
-            this.SendJsonResponse(context, iMACD_1(context, chartid));
+            return SendJsonResponse(context, GetChartId(context), iMACD_1);
         }
 
         /// <summary>
@@ -13663,42 +10786,30 @@ namespace MQL4CSharp.Base.REST
         /// <li><b>shift</b> :  [in] Index of the value taken from the indicator buffer (shift relative to the current bar the given amount of periods ago).</li>
         /// </ul>
         /// </summary>
-        [RESTRoute(Method = HttpMethod.POST, PathInfo = @"^/imacd")]
-        public void Handle_iMACD_1_Default(HttpListenerContext context)
+        [RestRoute(HttpMethod = HttpMethod.POST, PathInfo = @"^/imacd$")]
+        public IHttpContext Handle_iMACD_1_Default(IHttpContext context)
         {
-            this.SendJsonResponse(context, iMACD_1(context, DEFAULT_CHART_ID));
+            return SendJsonResponse(context, iMACD_1);
         }
 
-        private JObject iMACD_1(HttpListenerContext context, long chartId)
+        private async Task<JObject> iMACD_1(MQLRestContext context)
         {
-            MQLCommandManager mqlCommandManager = DLLObjectWrapper.getInstance().getMQLCommandManager(chartId);
-            JObject payload = this.GetJsonPayload(context.Request);
-            JObject result = new JObject();
-            if (payload == null)
-            {
-                result["result"] = PARSE_ERROR;
-                return result;
-            }
+            var payload = context.JsonPayload;
+            var result = context.Result;
+            if (PayloadNotValid(context))
+                return context.Result;
             List<Object> parameters = new List<Object>();
-            parameters.Add(payload["symbol"]);
-            parameters.Add(payload["timeframe"]);
-            parameters.Add(payload["fast_ema_period"]);
-            parameters.Add(payload["slow_ema_period"]);
-            parameters.Add(payload["signal_period"]);
-            parameters.Add(payload["applied_price"]);
-            parameters.Add(payload["mode"]);
-            parameters.Add(payload["shift"]);
-            int id = mqlCommandManager.ExecCommand(MQLCommand.iMACD_1, parameters); // MQLCommand ENUM = 217
-            while (mqlCommandManager.IsCommandRunning(id)) ; // block while command is running
-            try
-            {
-                mqlCommandManager.throwExceptionIfErrorResponse(id);
-                result["result"] = Convert.ToDecimal(mqlCommandManager.GetCommandResult(id));
-            }
-            catch (Exception e)
-            {
-                result["error"] = MQLExceptions.convertRESTException(e.ToString());
-            }
+            ParamAdd(context, parameters, "symbol");
+            ParamAdd(context, parameters, "timeframe");
+            ParamAdd(context, parameters, "fast_ema_period");
+            ParamAdd(context, parameters, "slow_ema_period");
+            ParamAdd(context, parameters, "signal_period");
+            ParamAdd(context, parameters, "applied_price");
+            ParamAdd(context, parameters, "mode");
+            ParamAdd(context, parameters, "shift");
+            await ExecCommandAsync(context, MQLCommand.iMACD_1, parameters); // MQLCommand ENUM = 217
+
+            result["result"] = Convert.ToDecimal(GetCommandResult(context));
 
             return result;
         }
@@ -13714,11 +10825,10 @@ namespace MQL4CSharp.Base.REST
         /// <li><b>shift</b> :  [in] Index of the value taken from the indicator buffer (shift relative to the current bar the given amount of periods ago).</li>
         /// </ul>
         /// </summary>
-        [RESTRoute(Method = HttpMethod.POST, PathInfo = @"^/[0-9]+/iobv")]
-        public void Handle_iOBV_1(HttpListenerContext context)
+        [RestRoute(HttpMethod = HttpMethod.POST, PathInfo = @"^/[0-9]+/iobv$")]
+        public IHttpContext Handle_iOBV_1(IHttpContext context)
         {
-            long chartid = Int64.Parse(context.Request.Url.Segments[1].Replace("/", ""));
-            this.SendJsonResponse(context, iOBV_1(context, chartid));
+            return SendJsonResponse(context, GetChartId(context), iOBV_1);
         }
 
         /// <summary>
@@ -13733,38 +10843,26 @@ namespace MQL4CSharp.Base.REST
         /// <li><b>shift</b> :  [in] Index of the value taken from the indicator buffer (shift relative to the current bar the given amount of periods ago).</li>
         /// </ul>
         /// </summary>
-        [RESTRoute(Method = HttpMethod.POST, PathInfo = @"^/iobv")]
-        public void Handle_iOBV_1_Default(HttpListenerContext context)
+        [RestRoute(HttpMethod = HttpMethod.POST, PathInfo = @"^/iobv$")]
+        public IHttpContext Handle_iOBV_1_Default(IHttpContext context)
         {
-            this.SendJsonResponse(context, iOBV_1(context, DEFAULT_CHART_ID));
+            return SendJsonResponse(context, iOBV_1);
         }
 
-        private JObject iOBV_1(HttpListenerContext context, long chartId)
+        private async Task<JObject> iOBV_1(MQLRestContext context)
         {
-            MQLCommandManager mqlCommandManager = DLLObjectWrapper.getInstance().getMQLCommandManager(chartId);
-            JObject payload = this.GetJsonPayload(context.Request);
-            JObject result = new JObject();
-            if (payload == null)
-            {
-                result["result"] = PARSE_ERROR;
-                return result;
-            }
+            var payload = context.JsonPayload;
+            var result = context.Result;
+            if (PayloadNotValid(context))
+                return context.Result;
             List<Object> parameters = new List<Object>();
-            parameters.Add(payload["symbol"]);
-            parameters.Add(payload["timeframe"]);
-            parameters.Add(payload["applied_price"]);
-            parameters.Add(payload["shift"]);
-            int id = mqlCommandManager.ExecCommand(MQLCommand.iOBV_1, parameters); // MQLCommand ENUM = 218
-            while (mqlCommandManager.IsCommandRunning(id)) ; // block while command is running
-            try
-            {
-                mqlCommandManager.throwExceptionIfErrorResponse(id);
-                result["result"] = Convert.ToDecimal(mqlCommandManager.GetCommandResult(id));
-            }
-            catch (Exception e)
-            {
-                result["error"] = MQLExceptions.convertRESTException(e.ToString());
-            }
+            ParamAdd(context, parameters, "symbol");
+            ParamAdd(context, parameters, "timeframe");
+            ParamAdd(context, parameters, "applied_price");
+            ParamAdd(context, parameters, "shift");
+            await ExecCommandAsync(context, MQLCommand.iOBV_1, parameters); // MQLCommand ENUM = 218
+
+            result["result"] = Convert.ToDecimal(GetCommandResult(context));
 
             return result;
         }
@@ -13781,11 +10879,10 @@ namespace MQL4CSharp.Base.REST
         /// <li><b>shift</b> :  [in] Index of the value taken from the indicator buffer (shift relative to the current bar the given amount of periods ago).</li>
         /// </ul>
         /// </summary>
-        [RESTRoute(Method = HttpMethod.POST, PathInfo = @"^/[0-9]+/isar")]
-        public void Handle_iSAR_1(HttpListenerContext context)
+        [RestRoute(HttpMethod = HttpMethod.POST, PathInfo = @"^/[0-9]+/isar$")]
+        public IHttpContext Handle_iSAR_1(IHttpContext context)
         {
-            long chartid = Int64.Parse(context.Request.Url.Segments[1].Replace("/", ""));
-            this.SendJsonResponse(context, iSAR_1(context, chartid));
+            return SendJsonResponse(context, GetChartId(context), iSAR_1);
         }
 
         /// <summary>
@@ -13801,39 +10898,27 @@ namespace MQL4CSharp.Base.REST
         /// <li><b>shift</b> :  [in] Index of the value taken from the indicator buffer (shift relative to the current bar the given amount of periods ago).</li>
         /// </ul>
         /// </summary>
-        [RESTRoute(Method = HttpMethod.POST, PathInfo = @"^/isar")]
-        public void Handle_iSAR_1_Default(HttpListenerContext context)
+        [RestRoute(HttpMethod = HttpMethod.POST, PathInfo = @"^/isar$")]
+        public IHttpContext Handle_iSAR_1_Default(IHttpContext context)
         {
-            this.SendJsonResponse(context, iSAR_1(context, DEFAULT_CHART_ID));
+            return SendJsonResponse(context, iSAR_1);
         }
 
-        private JObject iSAR_1(HttpListenerContext context, long chartId)
+        private async Task<JObject> iSAR_1(MQLRestContext context)
         {
-            MQLCommandManager mqlCommandManager = DLLObjectWrapper.getInstance().getMQLCommandManager(chartId);
-            JObject payload = this.GetJsonPayload(context.Request);
-            JObject result = new JObject();
-            if (payload == null)
-            {
-                result["result"] = PARSE_ERROR;
-                return result;
-            }
+            var payload = context.JsonPayload;
+            var result = context.Result;
+            if (PayloadNotValid(context))
+                return context.Result;
             List<Object> parameters = new List<Object>();
-            parameters.Add(payload["symbol"]);
-            parameters.Add(payload["timeframe"]);
-            parameters.Add(payload["step"]);
-            parameters.Add(payload["maximum"]);
-            parameters.Add(payload["shift"]);
-            int id = mqlCommandManager.ExecCommand(MQLCommand.iSAR_1, parameters); // MQLCommand ENUM = 219
-            while (mqlCommandManager.IsCommandRunning(id)) ; // block while command is running
-            try
-            {
-                mqlCommandManager.throwExceptionIfErrorResponse(id);
-                result["result"] = Convert.ToDecimal(mqlCommandManager.GetCommandResult(id));
-            }
-            catch (Exception e)
-            {
-                result["error"] = MQLExceptions.convertRESTException(e.ToString());
-            }
+            ParamAdd(context, parameters, "symbol");
+            ParamAdd(context, parameters, "timeframe");
+            ParamAdd(context, parameters, "step");
+            ParamAdd(context, parameters, "maximum");
+            ParamAdd(context, parameters, "shift");
+            await ExecCommandAsync(context, MQLCommand.iSAR_1, parameters); // MQLCommand ENUM = 219
+
+            result["result"] = Convert.ToDecimal(GetCommandResult(context));
 
             return result;
         }
@@ -13850,11 +10935,10 @@ namespace MQL4CSharp.Base.REST
         /// <li><b>shift</b> :  [in] Index of the value taken from the indicator buffer (shift relative to the current bar the given amount of periods ago).</li>
         /// </ul>
         /// </summary>
-        [RESTRoute(Method = HttpMethod.POST, PathInfo = @"^/[0-9]+/irsi")]
-        public void Handle_iRSI_1(HttpListenerContext context)
+        [RestRoute(HttpMethod = HttpMethod.POST, PathInfo = @"^/[0-9]+/irsi$")]
+        public IHttpContext Handle_iRSI_1(IHttpContext context)
         {
-            long chartid = Int64.Parse(context.Request.Url.Segments[1].Replace("/", ""));
-            this.SendJsonResponse(context, iRSI_1(context, chartid));
+            return SendJsonResponse(context, GetChartId(context), iRSI_1);
         }
 
         /// <summary>
@@ -13870,39 +10954,27 @@ namespace MQL4CSharp.Base.REST
         /// <li><b>shift</b> :  [in] Index of the value taken from the indicator buffer (shift relative to the current bar the given amount of periods ago).</li>
         /// </ul>
         /// </summary>
-        [RESTRoute(Method = HttpMethod.POST, PathInfo = @"^/irsi")]
-        public void Handle_iRSI_1_Default(HttpListenerContext context)
+        [RestRoute(HttpMethod = HttpMethod.POST, PathInfo = @"^/irsi$")]
+        public IHttpContext Handle_iRSI_1_Default(IHttpContext context)
         {
-            this.SendJsonResponse(context, iRSI_1(context, DEFAULT_CHART_ID));
+            return SendJsonResponse(context, iRSI_1);
         }
 
-        private JObject iRSI_1(HttpListenerContext context, long chartId)
+        private async Task<JObject> iRSI_1(MQLRestContext context)
         {
-            MQLCommandManager mqlCommandManager = DLLObjectWrapper.getInstance().getMQLCommandManager(chartId);
-            JObject payload = this.GetJsonPayload(context.Request);
-            JObject result = new JObject();
-            if (payload == null)
-            {
-                result["result"] = PARSE_ERROR;
-                return result;
-            }
+            var payload = context.JsonPayload;
+            var result = context.Result;
+            if (PayloadNotValid(context))
+                return context.Result;
             List<Object> parameters = new List<Object>();
-            parameters.Add(payload["symbol"]);
-            parameters.Add(payload["timeframe"]);
-            parameters.Add(payload["period"]);
-            parameters.Add(payload["applied_price"]);
-            parameters.Add(payload["shift"]);
-            int id = mqlCommandManager.ExecCommand(MQLCommand.iRSI_1, parameters); // MQLCommand ENUM = 220
-            while (mqlCommandManager.IsCommandRunning(id)) ; // block while command is running
-            try
-            {
-                mqlCommandManager.throwExceptionIfErrorResponse(id);
-                result["result"] = Convert.ToDecimal(mqlCommandManager.GetCommandResult(id));
-            }
-            catch (Exception e)
-            {
-                result["error"] = MQLExceptions.convertRESTException(e.ToString());
-            }
+            ParamAdd(context, parameters, "symbol");
+            ParamAdd(context, parameters, "timeframe");
+            ParamAdd(context, parameters, "period");
+            ParamAdd(context, parameters, "applied_price");
+            ParamAdd(context, parameters, "shift");
+            await ExecCommandAsync(context, MQLCommand.iRSI_1, parameters); // MQLCommand ENUM = 220
+
+            result["result"] = Convert.ToDecimal(GetCommandResult(context));
 
             return result;
         }
@@ -13919,11 +10991,10 @@ namespace MQL4CSharp.Base.REST
         /// <li><b>shift</b> :  [in] Index of the value taken from the indicator buffer (shift relative to the current bar the given amount of periods ago).</li>
         /// </ul>
         /// </summary>
-        [RESTRoute(Method = HttpMethod.POST, PathInfo = @"^/[0-9]+/irvi")]
-        public void Handle_iRVI_1(HttpListenerContext context)
+        [RestRoute(HttpMethod = HttpMethod.POST, PathInfo = @"^/[0-9]+/irvi$")]
+        public IHttpContext Handle_iRVI_1(IHttpContext context)
         {
-            long chartid = Int64.Parse(context.Request.Url.Segments[1].Replace("/", ""));
-            this.SendJsonResponse(context, iRVI_1(context, chartid));
+            return SendJsonResponse(context, GetChartId(context), iRVI_1);
         }
 
         /// <summary>
@@ -13939,39 +11010,27 @@ namespace MQL4CSharp.Base.REST
         /// <li><b>shift</b> :  [in] Index of the value taken from the indicator buffer (shift relative to the current bar the given amount of periods ago).</li>
         /// </ul>
         /// </summary>
-        [RESTRoute(Method = HttpMethod.POST, PathInfo = @"^/irvi")]
-        public void Handle_iRVI_1_Default(HttpListenerContext context)
+        [RestRoute(HttpMethod = HttpMethod.POST, PathInfo = @"^/irvi$")]
+        public IHttpContext Handle_iRVI_1_Default(IHttpContext context)
         {
-            this.SendJsonResponse(context, iRVI_1(context, DEFAULT_CHART_ID));
+            return SendJsonResponse(context, iRVI_1);
         }
 
-        private JObject iRVI_1(HttpListenerContext context, long chartId)
+        private async Task<JObject> iRVI_1(MQLRestContext context)
         {
-            MQLCommandManager mqlCommandManager = DLLObjectWrapper.getInstance().getMQLCommandManager(chartId);
-            JObject payload = this.GetJsonPayload(context.Request);
-            JObject result = new JObject();
-            if (payload == null)
-            {
-                result["result"] = PARSE_ERROR;
-                return result;
-            }
+            var payload = context.JsonPayload;
+            var result = context.Result;
+            if (PayloadNotValid(context))
+                return context.Result;
             List<Object> parameters = new List<Object>();
-            parameters.Add(payload["symbol"]);
-            parameters.Add(payload["timeframe"]);
-            parameters.Add(payload["period"]);
-            parameters.Add(payload["mode"]);
-            parameters.Add(payload["shift"]);
-            int id = mqlCommandManager.ExecCommand(MQLCommand.iRVI_1, parameters); // MQLCommand ENUM = 221
-            while (mqlCommandManager.IsCommandRunning(id)) ; // block while command is running
-            try
-            {
-                mqlCommandManager.throwExceptionIfErrorResponse(id);
-                result["result"] = Convert.ToDecimal(mqlCommandManager.GetCommandResult(id));
-            }
-            catch (Exception e)
-            {
-                result["error"] = MQLExceptions.convertRESTException(e.ToString());
-            }
+            ParamAdd(context, parameters, "symbol");
+            ParamAdd(context, parameters, "timeframe");
+            ParamAdd(context, parameters, "period");
+            ParamAdd(context, parameters, "mode");
+            ParamAdd(context, parameters, "shift");
+            await ExecCommandAsync(context, MQLCommand.iRVI_1, parameters); // MQLCommand ENUM = 221
+
+            result["result"] = Convert.ToDecimal(GetCommandResult(context));
 
             return result;
         }
@@ -13990,11 +11049,10 @@ namespace MQL4CSharp.Base.REST
         /// <li><b>shift</b> :  [in] Index of the value taken from the indicator buffer (shift relative to the current bar the given amount of periods ago).</li>
         /// </ul>
         /// </summary>
-        [RESTRoute(Method = HttpMethod.POST, PathInfo = @"^/[0-9]+/istddev")]
-        public void Handle_iStdDev_1(HttpListenerContext context)
+        [RestRoute(HttpMethod = HttpMethod.POST, PathInfo = @"^/[0-9]+/istddev$")]
+        public IHttpContext Handle_iStdDev_1(IHttpContext context)
         {
-            long chartid = Int64.Parse(context.Request.Url.Segments[1].Replace("/", ""));
-            this.SendJsonResponse(context, iStdDev_1(context, chartid));
+            return SendJsonResponse(context, GetChartId(context), iStdDev_1);
         }
 
         /// <summary>
@@ -14012,41 +11070,29 @@ namespace MQL4CSharp.Base.REST
         /// <li><b>shift</b> :  [in] Index of the value taken from the indicator buffer (shift relative to the current bar the given amount of periods ago).</li>
         /// </ul>
         /// </summary>
-        [RESTRoute(Method = HttpMethod.POST, PathInfo = @"^/istddev")]
-        public void Handle_iStdDev_1_Default(HttpListenerContext context)
+        [RestRoute(HttpMethod = HttpMethod.POST, PathInfo = @"^/istddev$")]
+        public IHttpContext Handle_iStdDev_1_Default(IHttpContext context)
         {
-            this.SendJsonResponse(context, iStdDev_1(context, DEFAULT_CHART_ID));
+            return SendJsonResponse(context, iStdDev_1);
         }
 
-        private JObject iStdDev_1(HttpListenerContext context, long chartId)
+        private async Task<JObject> iStdDev_1(MQLRestContext context)
         {
-            MQLCommandManager mqlCommandManager = DLLObjectWrapper.getInstance().getMQLCommandManager(chartId);
-            JObject payload = this.GetJsonPayload(context.Request);
-            JObject result = new JObject();
-            if (payload == null)
-            {
-                result["result"] = PARSE_ERROR;
-                return result;
-            }
+            var payload = context.JsonPayload;
+            var result = context.Result;
+            if (PayloadNotValid(context))
+                return context.Result;
             List<Object> parameters = new List<Object>();
-            parameters.Add(payload["symbol"]);
-            parameters.Add(payload["timeframe"]);
-            parameters.Add(payload["ma_period"]);
-            parameters.Add(payload["ma_shift"]);
-            parameters.Add(payload["ma_method"]);
-            parameters.Add(payload["applied_price"]);
-            parameters.Add(payload["shift"]);
-            int id = mqlCommandManager.ExecCommand(MQLCommand.iStdDev_1, parameters); // MQLCommand ENUM = 222
-            while (mqlCommandManager.IsCommandRunning(id)) ; // block while command is running
-            try
-            {
-                mqlCommandManager.throwExceptionIfErrorResponse(id);
-                result["result"] = Convert.ToDecimal(mqlCommandManager.GetCommandResult(id));
-            }
-            catch (Exception e)
-            {
-                result["error"] = MQLExceptions.convertRESTException(e.ToString());
-            }
+            ParamAdd(context, parameters, "symbol");
+            ParamAdd(context, parameters, "timeframe");
+            ParamAdd(context, parameters, "ma_period");
+            ParamAdd(context, parameters, "ma_shift");
+            ParamAdd(context, parameters, "ma_method");
+            ParamAdd(context, parameters, "applied_price");
+            ParamAdd(context, parameters, "shift");
+            await ExecCommandAsync(context, MQLCommand.iStdDev_1, parameters); // MQLCommand ENUM = 222
+
+            result["result"] = Convert.ToDecimal(GetCommandResult(context));
 
             return result;
         }
@@ -14067,11 +11113,10 @@ namespace MQL4CSharp.Base.REST
         /// <li><b>shift</b> :  [in] Index of the value taken from the indicator buffer (shift relative to the current bar the given amount of periods ago).</li>
         /// </ul>
         /// </summary>
-        [RESTRoute(Method = HttpMethod.POST, PathInfo = @"^/[0-9]+/istochastic")]
-        public void Handle_iStochastic_1(HttpListenerContext context)
+        [RestRoute(HttpMethod = HttpMethod.POST, PathInfo = @"^/[0-9]+/istochastic$")]
+        public IHttpContext Handle_iStochastic_1(IHttpContext context)
         {
-            long chartid = Int64.Parse(context.Request.Url.Segments[1].Replace("/", ""));
-            this.SendJsonResponse(context, iStochastic_1(context, chartid));
+            return SendJsonResponse(context, GetChartId(context), iStochastic_1);
         }
 
         /// <summary>
@@ -14091,43 +11136,31 @@ namespace MQL4CSharp.Base.REST
         /// <li><b>shift</b> :  [in] Index of the value taken from the indicator buffer (shift relative to the current bar the given amount of periods ago).</li>
         /// </ul>
         /// </summary>
-        [RESTRoute(Method = HttpMethod.POST, PathInfo = @"^/istochastic")]
-        public void Handle_iStochastic_1_Default(HttpListenerContext context)
+        [RestRoute(HttpMethod = HttpMethod.POST, PathInfo = @"^/istochastic$")]
+        public IHttpContext Handle_iStochastic_1_Default(IHttpContext context)
         {
-            this.SendJsonResponse(context, iStochastic_1(context, DEFAULT_CHART_ID));
+            return SendJsonResponse(context, iStochastic_1);
         }
 
-        private JObject iStochastic_1(HttpListenerContext context, long chartId)
+        private async Task<JObject> iStochastic_1(MQLRestContext context)
         {
-            MQLCommandManager mqlCommandManager = DLLObjectWrapper.getInstance().getMQLCommandManager(chartId);
-            JObject payload = this.GetJsonPayload(context.Request);
-            JObject result = new JObject();
-            if (payload == null)
-            {
-                result["result"] = PARSE_ERROR;
-                return result;
-            }
+            var payload = context.JsonPayload;
+            var result = context.Result;
+            if (PayloadNotValid(context))
+                return context.Result;
             List<Object> parameters = new List<Object>();
-            parameters.Add(payload["symbol"]);
-            parameters.Add(payload["timeframe"]);
-            parameters.Add(payload["Kperiod"]);
-            parameters.Add(payload["Dperiod"]);
-            parameters.Add(payload["slowing"]);
-            parameters.Add(payload["method"]);
-            parameters.Add(payload["price_field"]);
-            parameters.Add(payload["mode"]);
-            parameters.Add(payload["shift"]);
-            int id = mqlCommandManager.ExecCommand(MQLCommand.iStochastic_1, parameters); // MQLCommand ENUM = 223
-            while (mqlCommandManager.IsCommandRunning(id)) ; // block while command is running
-            try
-            {
-                mqlCommandManager.throwExceptionIfErrorResponse(id);
-                result["result"] = Convert.ToDecimal(mqlCommandManager.GetCommandResult(id));
-            }
-            catch (Exception e)
-            {
-                result["error"] = MQLExceptions.convertRESTException(e.ToString());
-            }
+            ParamAdd(context, parameters, "symbol");
+            ParamAdd(context, parameters, "timeframe");
+            ParamAdd(context, parameters, "Kperiod");
+            ParamAdd(context, parameters, "Dperiod");
+            ParamAdd(context, parameters, "slowing");
+            ParamAdd(context, parameters, "method");
+            ParamAdd(context, parameters, "price_field");
+            ParamAdd(context, parameters, "mode");
+            ParamAdd(context, parameters, "shift");
+            await ExecCommandAsync(context, MQLCommand.iStochastic_1, parameters); // MQLCommand ENUM = 223
+
+            result["result"] = Convert.ToDecimal(GetCommandResult(context));
 
             return result;
         }
@@ -14143,11 +11176,10 @@ namespace MQL4CSharp.Base.REST
         /// <li><b>shift</b> :  [in] Index of the value taken from the indicator buffer (shift relative to the current bar the given amount of periods ago).</li>
         /// </ul>
         /// </summary>
-        [RESTRoute(Method = HttpMethod.POST, PathInfo = @"^/[0-9]+/iwpr")]
-        public void Handle_iWPR_1(HttpListenerContext context)
+        [RestRoute(HttpMethod = HttpMethod.POST, PathInfo = @"^/[0-9]+/iwpr$")]
+        public IHttpContext Handle_iWPR_1(IHttpContext context)
         {
-            long chartid = Int64.Parse(context.Request.Url.Segments[1].Replace("/", ""));
-            this.SendJsonResponse(context, iWPR_1(context, chartid));
+            return SendJsonResponse(context, GetChartId(context), iWPR_1);
         }
 
         /// <summary>
@@ -14162,38 +11194,26 @@ namespace MQL4CSharp.Base.REST
         /// <li><b>shift</b> :  [in] Index of the value taken from the indicator buffer (shift relative to the current bar the given amount of periods ago).</li>
         /// </ul>
         /// </summary>
-        [RESTRoute(Method = HttpMethod.POST, PathInfo = @"^/iwpr")]
-        public void Handle_iWPR_1_Default(HttpListenerContext context)
+        [RestRoute(HttpMethod = HttpMethod.POST, PathInfo = @"^/iwpr$")]
+        public IHttpContext Handle_iWPR_1_Default(IHttpContext context)
         {
-            this.SendJsonResponse(context, iWPR_1(context, DEFAULT_CHART_ID));
+            return SendJsonResponse(context, iWPR_1);
         }
 
-        private JObject iWPR_1(HttpListenerContext context, long chartId)
+        private async Task<JObject> iWPR_1(MQLRestContext context)
         {
-            MQLCommandManager mqlCommandManager = DLLObjectWrapper.getInstance().getMQLCommandManager(chartId);
-            JObject payload = this.GetJsonPayload(context.Request);
-            JObject result = new JObject();
-            if (payload == null)
-            {
-                result["result"] = PARSE_ERROR;
-                return result;
-            }
+            var payload = context.JsonPayload;
+            var result = context.Result;
+            if (PayloadNotValid(context))
+                return context.Result;
             List<Object> parameters = new List<Object>();
-            parameters.Add(payload["symbol"]);
-            parameters.Add(payload["timeframe"]);
-            parameters.Add(payload["period"]);
-            parameters.Add(payload["shift"]);
-            int id = mqlCommandManager.ExecCommand(MQLCommand.iWPR_1, parameters); // MQLCommand ENUM = 224
-            while (mqlCommandManager.IsCommandRunning(id)) ; // block while command is running
-            try
-            {
-                mqlCommandManager.throwExceptionIfErrorResponse(id);
-                result["result"] = Convert.ToDecimal(mqlCommandManager.GetCommandResult(id));
-            }
-            catch (Exception e)
-            {
-                result["error"] = MQLExceptions.convertRESTException(e.ToString());
-            }
+            ParamAdd(context, parameters, "symbol");
+            ParamAdd(context, parameters, "timeframe");
+            ParamAdd(context, parameters, "period");
+            ParamAdd(context, parameters, "shift");
+            await ExecCommandAsync(context, MQLCommand.iWPR_1, parameters); // MQLCommand ENUM = 224
+
+            result["result"] = Convert.ToDecimal(GetCommandResult(context));
 
             return result;
         }

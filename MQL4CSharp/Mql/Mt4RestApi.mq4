@@ -15,12 +15,11 @@ limitations under the License.
 */
 
 
-
 #import "MQL4CSharp.dll"
 void InitLogging();
 void UnloadAll(long);
 int ExecOnInit(long, string);
-void RestServerStart(long, string);
+bool RestServerStart(long, string);
 void RestServerStop(long);
 int InitRates(long, MqlRates&[], int);
 void SetRatesSize(long, int);
@@ -206,7 +205,7 @@ int OnInit()
 {
    if(!IsDllsAllowed())
    {
-      info("Require DLL imports.");
+      Alert("Require DLL imports.");
       return(INIT_FAILED);
    }
    EventSetMillisecondTimer(EVENT_TIMER_MILLIS);
@@ -216,8 +215,6 @@ int OnInit()
    InitLogging();
    
    chartID = ChartID();
-   info("OnInit() Initializing RestServer ", RestServerAddress);
-   RestServerStart(chartID, RestServerAddress);
 
    // Copy the rates array and pass it to the library
    ArrayCopyRates(rates, NULL, 0);
@@ -229,6 +226,14 @@ int OnInit()
    while(!IsCommandManagerReady(chartID))
    {
    
+   }
+
+   info("OnInit() Initializing RestServer ", RestServerAddress);
+   if (!RestServerStart(chartID, RestServerAddress))
+   {
+      info("OnInit() Initializing RestServer failed ", RestServerAddress, ". Check port already used.");
+      Alert("Initializing RestServer failed " + RestServerAddress + ". Check port already used.");
+      return(INIT_FAILED);
    }
    
    info("OnInit() executeCommands on Init");
@@ -251,7 +256,6 @@ int OnInit()
  
 void OnDeinit(const int reason)
 {
-   info("OnDeinit()");
    // Call the DLL onDeinit
    ExecOnDeinit(chartID);
    

@@ -112,7 +112,6 @@
     <Compile Include="Base\Enums\OBJECT_TYPE.cs" />
     <Compile Include="Base\MQL\MQLBase.cs" />
     <Compile Include="Base\MQL\MQLThreadPool.cs" />
-    <Compile Include="Base\REST\AsyncHelper.cs" />
     <Compile Include="Base\REST\MQLRESTBase.cs" />
     <Compile Include="Base\REST\MQLRESTResource.cs" />
     <Compile Include="Initializer.cs" />
@@ -137,10 +136,12 @@
     <Compile Include="UserDefined\Strategy\MQLRESTStrategy.cs" />
     <Compile Include="UserDefined\TakeProfit\FixedPipTakeProfit.cs" />
     <Compile Include="Util\DateUtil.cs" />
+    <Compile Include="Util\Extensions.cs" />
     <Compile Include="Util\JSONHelper.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="UserDefined\Input\NewsReports.cs" />
     <Compile Include="UserDefined\Input\NewsReport.cs" />
+    <Compile Include="Util\MethodInfoExtended.cs" />
   </ItemGroup>
   <ItemGroup>
     <None Include="FodyWeavers.xsd">

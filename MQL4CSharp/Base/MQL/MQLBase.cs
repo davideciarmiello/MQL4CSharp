@@ -16,15 +16,17 @@ namespace MQL4CSharp.Base
         {
         }
 
-        private object ExecCommand(MQLCommand command, List<Object> parameters)
+        public int ExecCommandTimeout { get; set; } = 5000;
+        protected virtual object ExecCommand(MQLCommand command, List<Object> parameters)
         {
-            const int cmd_timeout = 5000;
-
-            TaskCompletionSource<Object> tsc = new TaskCompletionSource<Object>();
+            var tsc = new TaskCompletionSource<Object>();
             int id = getCommandManager().ExecCommand(command, parameters, tsc);
-            tsc.Task.Wait(cmd_timeout);
+            tsc.Task.Wait(ExecCommandTimeout);
             getCommandManager().throwExceptionIfErrorResponse(id);
-            return getCommandManager().GetCommandResult(id);
+            var res = getCommandManager().GetCommandResult(id);
+            if (!tsc.Task.IsCompleted)
+                throw new TimeoutException($"Timeout {command}");
+            return res;
         }
 
         /// <summary>

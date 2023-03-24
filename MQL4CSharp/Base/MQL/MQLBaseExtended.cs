@@ -166,23 +166,41 @@ namespace MQL4CSharp.Base
         }
         #endregion
 
+
+        public string ChartExpertAdvisorLastActiveName(long chart_id)
+        {
+            var chart = GetCacheStorage().Charts.GetValueOrDefault(chart_id);
+            if (!string.IsNullOrEmpty(chart?.EAName))
+                return chart?.EAName ?? "";
+            ChartGetTemplate(chart_id);
+            chart = GetCacheStorage().Charts.GetValueOrDefault(chart_id);
+            return chart?.EAName ?? "";
+        }
+        public string ChartExpertAdvisorLastActiveSettings(long chart_id)
+        {
+            var chart = GetCacheStorage().Charts.GetValueOrDefault(chart_id);
+            if (!string.IsNullOrEmpty(chart?.EASettings))
+                return chart?.EASettings ?? "";
+            ChartGetTemplate(chart_id);
+            chart = GetCacheStorage().Charts.GetValueOrDefault(chart_id);
+            return chart?.EASettings ?? "";
+        }
+        public bool ChartExpertAdvisorEnableLastActive(long chart_id)
+        {
+            var nameCurrent = ChartExpertAdvisorName(chart_id);
+            if (!string.IsNullOrEmpty(nameCurrent))
+                return true;
+            var chart = GetCacheStorage().Charts.GetValueOrDefault(chart_id);
+            if (string.IsNullOrEmpty(chart?.EAName))
+                throw new Exception("Expert Advisor not saved in cache, can't activate without name!");
+            return ChartExpertAdvisorEnablePrivate(chart_id, chart.EAName, chart.EASettings);
+        }
+
         public string ChartExpertAdvisorName(long chart_id)
         {
             ChartGetTemplate(chart_id);
             var chart = GetCacheStorage().Charts.GetValueOrDefault(chart_id);
             return (chart?.EAEnabled == true ? chart.EAName : null) ?? "";
-        }
-        public string ChartExpertAdvisorLatestName(long chart_id)
-        {
-            ChartGetTemplate(chart_id);
-            var chart = GetCacheStorage().Charts.GetValueOrDefault(chart_id);
-            return chart?.EAName ?? "";
-        }
-        public string ChartExpertAdvisorLatestSettings(long chart_id)
-        {
-            ChartGetTemplate(chart_id);
-            var chart = GetCacheStorage().Charts.GetValueOrDefault(chart_id);
-            return chart?.EASettings ?? "";
         }
 
         public bool ChartExpertAdvisorDisable(long chart_id)
@@ -193,16 +211,6 @@ namespace MQL4CSharp.Base
             return res;
         }
 
-        public bool ChartExpertAdvisorEnableLatest(long chart_id)
-        {
-            var nameCurrent = ChartExpertAdvisorName(chart_id);
-            if (!string.IsNullOrEmpty(nameCurrent))
-                return true;
-            var chart = GetCacheStorage().Charts.GetValueOrDefault(chart_id);
-            if (string.IsNullOrEmpty(chart?.EAName))
-                throw new Exception("Expert Advisor not saved in cache, can't activate without name!");
-            return ChartExpertAdvisorEnablePrivate(chart_id, chart.EAName, chart.EASettings);
-        }
 
         private bool ChartExpertAdvisorEnablePrivate(long chart_id, string expert_name, string expert_settings)
         {

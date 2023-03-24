@@ -68,6 +68,23 @@ namespace MQL4CSharp.Base
             }
         }
 
+        public bool OrderClose(int ticket, int slippage)
+        {
+            if (!OrderSelect(ticket, (int)SELECTION_TYPE.SELECT_BY_TICKET, (int)SELECTION_POOL.MODE_TRADES))
+                return false;
+            var symbol = OrderSymbol();
+            var orderType = OrderType();
+            if (orderType == (int)TRADE_OPERATION.OP_BUY)
+            {
+                return OrderClose(ticket, OrderLots(), MarketInfo(symbol, (int)MARKET_INFO.MODE_BID), slippage, COLOR.Red);
+            }
+            if (orderType == (int)TRADE_OPERATION.OP_SELL)
+            {
+                return OrderClose(ticket, OrderLots(), MarketInfo(symbol, (int)MARKET_INFO.MODE_ASK), slippage, COLOR.Red);
+            }
+            return false;
+        }
+
         #region Expert Advisor
 
         public override bool ChartSaveTemplate(long chart_id, string filename)

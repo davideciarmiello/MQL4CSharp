@@ -42,8 +42,9 @@ namespace MQL4CSharp.Base.REST
 
             try
             {
-                var file = XmlDocsExtensions.GetXmlDocsPath(typeof(MQLRESTResource).Assembly, XmlDocsOptions.Default);
-                using (var input = typeof(MQLRESTResource).Assembly.GetManifestResourceStream("MQL4CSharp.MQL4CSharp.xml"))
+                var assembly = Assembly.GetAssembly(typeof(MQLRESTResource));
+                var file = assembly.Location.Replace(".dll", ".xml");
+                using (var input = assembly.GetManifestResourceStream("MQL4CSharp.MQL4CSharp.xml"))
                 using (var ms = new MemoryStream())
                 {
                     input.CopyTo(ms);
@@ -52,7 +53,6 @@ namespace MQL4CSharp.Base.REST
                 }
             }
             catch { }
-
 
             var allMethods = GetExpertByChartId(0).GetType().GetMethods();
             var methods = allMethods

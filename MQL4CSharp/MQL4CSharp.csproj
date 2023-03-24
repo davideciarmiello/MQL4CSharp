@@ -103,7 +103,9 @@
     <Compile Include="Base\Enums\OBJECT_PROPERTY.cs" />
     <Compile Include="Base\Enums\TRADE_OPERATION.cs" />
     <Compile Include="Base\Exceptions\MQLExceptions.cs" />
+    <Compile Include="Base\MQL\CachedDataStorage.cs" />
     <Compile Include="Base\MQL\DLLObjectWrapper.cs" />
+    <Compile Include="Base\MQL\MQLBaseExtended.cs" />
     <Compile Include="Base\MQL\MQLCommandRequest.cs" />
     <Compile Include="Base\MQL\MQLExpert.cs" />
     <Compile Include="Base\MQL\MQLCommandManager.cs" />
@@ -113,6 +115,7 @@
     <Compile Include="Base\MQL\MQLBase.cs" />
     <Compile Include="Base\MQL\MQLThreadPool.cs" />
     <Compile Include="Base\REST\MQLRESTBase.cs" />
+    <Compile Include="Base\REST\MqlRestDynamicMethodRoute.cs" />
     <Compile Include="Base\REST\MQLRESTResource.cs" />
     <Compile Include="Initializer.cs" />
     <Compile Include="Logging.cs" />

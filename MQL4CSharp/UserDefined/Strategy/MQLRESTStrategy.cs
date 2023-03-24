@@ -10,7 +10,7 @@ namespace MQL4CSharp.UserDefined.Strategy
     /// Attach this one to your chart just to enable the REST API.
     /// It does nothing, but every MQLExpert has a REST endpoint
     /// </summary>
-    public class MQLRESTStrategy : Base.MQLBase
+    public class MQLRESTStrategy : Base.MQLBaseExtended
     {
         public MQLRESTStrategy(long ix) : base(ix)
         {

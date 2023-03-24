@@ -13,6 +13,7 @@ using Newtonsoft.Json;
 using MQL4CSharp.Base.Enums;
 using System.Threading;
 using System.IO;
+using System.Reflection;
 using Grapevine.Server;
 using MQL4CSharp.UserDefined.Strategy;
 using MQL4CSharp.Util;
@@ -25,6 +26,39 @@ namespace MQL4CSharp.Base.REST
         public virtual void OnServerInit(RestServer server)
         {
 
+        }
+
+        public static ConcurrentDictionary<string, List<MethodInfo>> AddedRoutesMethods = new ConcurrentDictionary<string, List<MethodInfo>>();
+
+        /// <summary>
+        /// add routes to call directly methods of MQLBase
+        /// </summary>
+        /// <param name="server"></param>
+        /// <param name="instanceGetter"></param>
+        /// <param name="methods"></param>
+        public virtual void AddRoutesFromStandardMethods(RestServer server, Func<MQLRestContext, object> instanceGetter, IEnumerable<MethodInfo> methods)
+        {
+            var routeAdded = new HashSet<string>(server.Router.RoutingTable.Select(x => x.PathInfo));
+            foreach (var methodInfo in methods)
+            {
+                var methodName = methodInfo.Name;
+                var pathInfo = $@"^/([0-9]+/)?(?i){methodInfo.Name.ToLowerInvariant()}$";
+                var lstInfo = AddedRoutesMethods.GetOrAdd(pathInfo, s => new List<MethodInfo>());
+                if (!lstInfo.Contains(methodInfo))
+                    lstInfo.Add(methodInfo);
+                if (!routeAdded.Add(pathInfo))
+                    continue;
+                var route = new Route(context =>
+                {
+                    return SendJsonResponse(context, GetChartId(context), restContext =>
+                    {
+                        var target = instanceGetter(restContext);
+                        SetResultFromMethodName(restContext, target, methodName);
+                        return restContext.Result;
+                    });
+                }, HttpMethod.POST, pathInfo);
+                server.Router.Register(route);
+            }
         }
 
         int DEFAULT_CHART_ID = 0;
@@ -42,15 +76,15 @@ namespace MQL4CSharp.Base.REST
             var methods = MethodInfoExtended.GetByMethodName(target.GetType(), methodName);
             if (methods.Count > 1)
             {
-                var matchmethods = methods.Where(x => x.Parameters.All(p => HaveParam(context, p.Name))).ToList();
+                var matchmethods = methods.Where(x => x.ParametersForRestApi.All(p => HaveParam(context, p.Name))).ToList();
                 if (matchmethods.Count != 1)
                 {
                     var propertiesCount = context.JsonPayload?.Properties().Count();
-                    matchmethods = methods.Where(x => propertiesCount > 0 && x.Parameters.Length == propertiesCount).ToList();
+                    matchmethods = methods.Where(x => propertiesCount > 0 && x.ParametersForRestApi.Length == propertiesCount).ToList();
                 }
                 if (matchmethods.Count != 1)
                     throw new Exception($"Found many methods {methods[0].Method.Name}. Pass all parameters to match correct method.\r\n"
-                    + methods.Select((extended, i) => $"{i}: {GetMethodDescr(extended)}").Join("\r\n"));
+                    + methods.Select((extended, i) => $"{i}: {GetMethodDescr(extended.Method)}").Join("\r\n"));
                 methods = matchmethods;
             }
             var method = methods.Single();
@@ -59,17 +93,19 @@ namespace MQL4CSharp.Base.REST
         protected virtual void SetResultFromMethod(MQLRestContext context, object target, MethodInfoExtended method)
         {
             var parameters = new List<object>();
-            if (method.Parameters.Any(p => !HaveParam(context, p.Name)))
+            if (method.ParametersForRestApi.Any(p => !HaveParam(context, p.Name)))
             {
                 if (!TrySetParametersAsOrder(context, method))
-                    throw new Exception($"Input paramters not valid. Method Info: {GetMethodDescr(method)}.");
+                    throw new Exception($"Input paramters not valid. Method Info: {GetMethodDescr(method.Method)}.");
             }
             foreach (var methodParameter in method.Parameters)
                 ParamAdd(context, parameters, methodParameter.Name, methodParameter.ParameterType);
-            if (parameters.Any() && PayloadNotValid(context))
+            if (method.ParametersForRestApi.Any() && PayloadNotValid(context))
                 return;
             var output = method.InvokeFast(target, parameters);
             output = (method.Method.ReturnType == typeof(void)) ? "" : output;
+            if (output != null)
+                output = ConvertValueToRest(method.Method.ReturnType, output);
             context.Result["result"] = new JValue(output);
         }
 
@@ -77,27 +113,45 @@ namespace MQL4CSharp.Base.REST
         {
             var payload = context.JsonPayload ?? new JObject();
             var properties = payload.Properties().ToList();
-            if (properties.Count != method.Parameters.Length)
+            if (properties.Count != method.ParametersForRestApi.Length)
                 return false;
-            for (int i = 0; i < method.Parameters.Length; i++)
-                context.JsonPayload[method.Parameters[i].Name] = properties[i].Value;
+            for (int i = 0; i < method.ParametersForRestApi.Length; i++)
+                context.JsonPayload[method.ParametersForRestApi[i].Name] = properties[i].Value;
             return true;
         }
 
-        private string GetMethodDescr(MethodInfoExtended method)
+        protected string GetMethodDescr(MethodInfo method)
         {
-            var str = $"{{ {method.Parameters.Select(x => $"\"{x.Name}\": {x.ParameterType.Name.ToLowerInvariant()}").Join(", ")} }}";
+            Func<Type, string> getParamType = type => type.IsEnum ? $"int32 (Enum {type.Name})" : type == typeof(byte[]) ? "string (base64)" : type.Name.ToLowerInvariant();
+            var str = $"Input: {{ {method.GetParameters().Where(x => x.ParameterType != typeof(MQLRestContext)).Select(x => $"\"{x.Name}\": {getParamType(x.ParameterType)}").Join(", ")} }} - Result: {getParamType(method.ReturnType)}";
             return str;
+        }
+
+        public static ConcurrentDictionary<long, MQLBase> Expers = new ConcurrentDictionary<long, MQLBase>();
+        public virtual MQLBase GetExpertByChartId(long chartId)
+        {
+            return Expers.GetOrAdd(chartId, l =>
+            {
+                try
+                {
+                    var expert = (MQLBase)DLLObjectWrapper.getInstance().getMQLExpert(chartId);
+                    expert = (MQLBase)Activator.CreateInstance(expert.GetType(), l);
+                    expert.ExecCommandTimeout = 30000;
+                    return expert;
+                }
+                catch { /**/ }
+                return new MQLRESTStrategy(l) { ExecCommandTimeout = 30000 };
+            });
         }
 
         protected virtual IHttpContext SendJsonResponse(IHttpContext context, long chartId, Func<MQLRestContext, JObject> getter)
         {
-            var ctx = new MQLRestContext();
+            var ctx = new MQLRestContext() { RestServerContext = context };
             try
             {
                 ctx.Result = new JObject();
+                ctx.ChartId = chartId;
                 ctx.CommandManager = DLLObjectWrapper.getInstance().getMQLCommandManager(chartId);
-                ctx.Strategy = new MQLRESTStrategy(chartId) { ExecCommandTimeout = 30000 };
                 try
                 {
                     if (context.Request.Payload != null)
@@ -116,10 +170,6 @@ namespace MQL4CSharp.Base.REST
                     msg = msg.Replace(e.Message, $"{e.Message} - Parameters: {string.Join(", ", ctx.CommandParametersNames)}");
                 ctx.Result["error"] = msg;
             }
-            finally
-            {
-                EndFileNameProcess(ctx);
-            }
             var bytes = context.Request.ContentEncoding.GetBytes(ctx.Result.ToString(Formatting.Indented));
             context.Response.ContentType = ContentType.JSON;
             context.Response.ContentEncoding = Encoding.UTF8;
@@ -134,6 +184,11 @@ namespace MQL4CSharp.Base.REST
         }
         public void ParamAdd(MQLRestContext context, List<object> parameters, string paramName, Type paramType)
         {
+            if (paramType == typeof(MQLRestContext))
+            {
+                parameters.Add(context);
+                return;
+            }
             if (context.CommandParameters != parameters)
             {
                 context.CommandParameters = parameters;
@@ -146,21 +201,45 @@ namespace MQL4CSharp.Base.REST
             {
                 var jValue = (jToken as JValue);
                 value = jValue == null ? jToken.ToString() : jValue.Value;
-                if (value != null && paramType.IsEnum)
-                {
-                    try
-                    {
-                        value = Enum.Parse(paramType, value.ToString());
-                    }
-                    catch
-                    {
-                        value = Enum.ToObject(paramType, Convert.ToInt32(value));
-                    }
-                }
-                if (value != null && value.GetType() != paramType)
-                    value = Convert.ChangeType(value, paramType);
+                if (value != null)
+                    value = ConvertValueFromRest(paramType, value);
             }
             parameters.Add(value);
+        }
+
+        private static object ConvertValueToRest(Type type, object output)
+        {
+            if (output != null && type.IsEnum)
+                output = Convert.ToInt32(output);
+            var bytes = output as byte[];
+            if (output != null && bytes != null)
+                output = Convert.ToBase64String(bytes);
+            return output;
+        }
+
+        private static object ConvertValueFromRest(Type paramType, object value)
+        {
+            if (value != null && paramType.IsEnum)
+            {
+                try
+                {
+                    value = Enum.Parse(paramType, value.ToString());
+                }
+                catch
+                {
+                    value = Enum.ToObject(paramType, Convert.ToInt32(value));
+                }
+            }
+
+            if (value != null && value.GetType() != paramType)
+            {
+                if (paramType == typeof(byte[]))
+                    value = Convert.FromBase64String(value.ToString());
+                else
+                    value = Convert.ChangeType(value, paramType);
+            }
+
+            return value;
         }
 
         private String PARSE_ERROR = "JSON Parse Error. Check the input format";
@@ -174,116 +253,16 @@ namespace MQL4CSharp.Base.REST
             return true;
         }
 
-        protected void SetFileNameInfoAsOutput(MQLRestContext context, string directory, string extension)
-        {
-            SetFileNameFull(context, directory, extension);
-            context.PayloadFileNameAsOutput = true;
-        }
-
-        protected void SetFileNameInfoAsInput(MQLRestContext context, string directory, string extension)
-        {
-            var payload = context.JsonPayload ?? new JObject();
-            byte[] fileContent = null;
-            var fileContentBase64 = payload.Value<string>("filecontent");
-            if (fileContentBase64 != null)
-            {
-                fileContent = Convert.FromBase64String(fileContentBase64);
-                payload.Remove("filecontent");
-            }
-            if (fileContent == null)
-            {
-                var fileContentString = payload.Value<string>("filecontentstring") as string;
-                if (fileContentString != null)
-                {
-                    payload.Remove("filecontentstring");
-                    fileContent = Encoding.UTF8.GetBytes(fileContentString);
-                }
-            }
-
-            if (fileContent != null)
-            {
-                SetFileNameFull(context, directory, extension);
-                File.WriteAllBytes(context.PayloadFileNameFull, fileContent);
-            }
-
-            context.PayloadFileNameAsOutput = false;
-        }
-
-        protected void SetFileNameFull(MQLRestContext context, string directory, string fileExtension)
-        {
-            if (context.JsonPayload == null)
-                context.JsonPayload = new JObject();
-            var payload = context.JsonPayload;
-            var fileName = payload.Value<string>("filename") as string;
-            var dataPath = context.Strategy.TerminalInfoString((int)TERMINAL_INFO_STRING.TERMINAL_DATA_PATH);
-            if (string.IsNullOrEmpty(fileName))
-            {
-                context.PayloadFileNameToDelete = true;
-                fileName = $"tmp_{Guid.NewGuid().ToString().Replace("-", "")}";
-            }
-            var extsAllowed = fileExtension.Split(',');
-            if (!extsAllowed.Any(x => fileName.EndsWith($".{x}")))
-                fileName = $"{Path.GetFileNameWithoutExtension(fileName)}.{extsAllowed.First()}";
-            payload["filename"] = fileName;
-            var fileInfo = new FileInfo(Path.Combine(dataPath, directory, fileName));
-            context.PayloadFileNameFull = fileInfo.FullName;
-        }
-
-        protected void EndFileNameProcess(MQLRestContext context)
-        {
-            if (context.PayloadFileNameFull == null)
-                return;
-            var res = context.Result.Value<bool?>("result");
-            if (res == true && context.PayloadFileNameAsOutput)
-            {
-                var fileContent = File.ReadAllBytes(context.PayloadFileNameFull);
-                context.Result["result_filecontent"] = Convert.ToBase64String(fileContent);
-            }
-            if (context.PayloadFileNameToDelete != true)
-                return;
-            var fileName = context.PayloadFileNameFull;
-            if (context.PayloadFileNameAsOutput && FnDeleteFile(2, fileName))
-                return;
-            //l'eliminazione la faccio dopo 30 secondi, altrimenti ApplyTemplate non sempre funziona, elimina il file mentre lo sta caricando
-            new Task(() =>
-            {
-                Thread.Sleep(TimeSpan.FromSeconds(30));
-                FnDeleteFile(10, fileName);
-            }).Start();
-        }
-
-        private bool FnDeleteFile(int tentativi, string fileName)
-        {
-            for (int i = 0; i < tentativi; i++)
-            {
-                try
-                {
-                    if (File.Exists(fileName))
-                        File.Delete(fileName);
-                    return true;
-                }
-                catch
-                {
-                    Thread.Sleep(50);
-                }
-            }
-
-            return false;
-        }
     }
 
     public class MQLRestContext
     {
+        public IHttpContext RestServerContext { get; set; }
+        public long ChartId { get; set; }
         public JObject Result { get; set; }
-        public IHttpRequest Request { get; set; }
         public MQLCommandManager CommandManager { get; set; }
-        public int CommandId { get; set; }
         public List<string> CommandParametersNames { get; set; }
         public List<object> CommandParameters { get; set; }
         public JObject JsonPayload { get; set; }
-        public string PayloadFileNameFull { get; set; }
-        public bool PayloadFileNameAsOutput { get; set; }
-        public bool PayloadFileNameToDelete { get; set; }
-        public MQLRESTStrategy Strategy { get; set; }
     }
 }

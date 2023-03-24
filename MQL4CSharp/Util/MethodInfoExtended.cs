@@ -1,9 +1,11 @@
-﻿using System;
+﻿using MQL4CSharp.Base.REST;
+using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Linq;
 using System.Linq.Expressions;
 using System.Reflection;
+using System.Runtime.Remoting.Contexts;
 using System.Text;
 using System.Threading.Tasks;
 
@@ -33,10 +35,12 @@ namespace MQL4CSharp.Util
 
         public MethodInfo Method { get; }
         public ParameterInfo[] Parameters { get; }
+        public ParameterInfo[] ParametersForRestApi { get; }
         public MethodInfoExtended(MethodInfo method)
         {
             Method = method;
             Parameters = method.GetParameters();
+            ParametersForRestApi = Parameters.Where(x => x.ParameterType != typeof(MQLRestContext)).ToArray();
             FillInvoker();
         }
 

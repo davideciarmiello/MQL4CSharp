@@ -922,7 +922,7 @@ namespace MQL4CSharp.Base
         /// </summary>
         /// <param name="chart_id">[in] Chart ID. 0 means the current chart.</param>
         /// <param name="filename">[in] The name of the file containing the template.</param>
-        public bool ChartApplyTemplate(long chart_id, string filename)
+        public virtual bool ChartApplyTemplate(long chart_id, string filename)
         {
             List<Object> parameters = new List<Object>();
             parameters.Add(chart_id);
@@ -937,7 +937,7 @@ namespace MQL4CSharp.Base
         /// </summary>
         /// <param name="chart_id">[in] Chart ID. 0 means the current chart.</param>
         /// <param name="filename">[in] The filename to save the template. The ".tpl" extension will be added to the filename automatically; there is no need to specify it. The template is saved in terminal_directory\Profiles\Templates\ and can be used for manual application in the terminal. If a template with the same filename already exists, the contents of this file will be overwritten.</param>
-        public bool ChartSaveTemplate(long chart_id, string filename)
+        public virtual bool ChartSaveTemplate(long chart_id, string filename)
         {
             List<Object> parameters = new List<Object>();
             parameters.Add(chart_id);

@@ -10,6 +10,8 @@ using Grapevine.Shared;
 using MQL4CSharp.Base.MQL;
 using MQL4CSharp.UserDefined.Strategy;
 using MQL4CSharp.Util;
+using Namotion.Reflection;
+using System.Resources;
 
 namespace MQL4CSharp.Base.REST
 {
@@ -24,15 +26,34 @@ namespace MQL4CSharp.Base.REST
         public IHttpContext Help(IHttpContext context)
         {
             var allmethods = AddedRoutesMethods.OrderBy(x => x.Key)
-                .SelectMany(pair => pair.Value, (pair, info) => pair.Key + ": " + GetMethodDescr(info))
+                .SelectMany(pair => pair.Value, (pair, info) =>
+                {
+                    var comment = info.GetXmlDocsSummary();
+                    return $"Api Url: {pair.Key}\r\n{(string.IsNullOrEmpty(comment) ? comment : comment + "\r\n")}{GetMethodDescr(info)}";
+                })
                 .ToList();
-            context.Response.SendResponse($"All Methods:\r\n{allmethods.Join("\r\n")}");
+            context.Response.SendResponse($"All Methods:\r\n{allmethods.Join("\r\n\r\n")}");
             return context;
         }
 
         public override void OnServerInit(RestServer server)
         {
             base.OnServerInit(server);
+
+            try
+            {
+                var file = XmlDocsExtensions.GetXmlDocsPath(typeof(MQLRESTResource).Assembly, XmlDocsOptions.Default);
+                using (var input = typeof(MQLRESTResource).Assembly.GetManifestResourceStream("MQL4CSharp.MQL4CSharp.xml"))
+                using (var ms = new MemoryStream())
+                {
+                    input.CopyTo(ms);
+                    var bytes = ms.ToArray();
+                    File.WriteAllBytes(file, bytes);
+                }
+            }
+            catch { }
+
+
             var allMethods = GetExpertByChartId(0).GetType().GetMethods();
             var methods = allMethods
                     .Where(x => x.DeclaringType != typeof(MQLExpert))

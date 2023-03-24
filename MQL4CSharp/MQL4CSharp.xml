@@ -1,0 +1,2273 @@
+<?xml version="1.0"?>
+<doc>
+    <assembly>
+        <name>MQL4CSharp</name>
+    </assembly>
+    <members>
+        <member name="T:MQL4CSharp.Base.MQL.DLLObjectWrapper">
+            <summary>
+            This class will be used to keep object refs so DLL calls are made to the correct object
+            </summary>
+        </member>
+        <member name="T:MQL4CSharp.Base.MQLBaseExtended">
+            <summary>
+            Class with methods customized of standard methods
+            </summary>
+        </member>
+        <member name="M:MQL4CSharp.Base.MQLBase.Alert(System.String)">
+            <summary>
+            Function: Alert
+            Description: Displays a message in a separate window.
+            URL: http://docs.mql4.com/common/alert
+            </summary>
+            <param name="argument"></param>
+        </member>
+        <member name="M:MQL4CSharp.Base.MQLBase.Comment(System.String)">
+            <summary>
+            Function: Comment
+            Description: This function outputs a comment defined by a user in the top left corner of a chart.
+            URL: http://docs.mql4.com/common/comment
+            </summary>
+            <param name="argument">[in] Any values, separated by commas. To delimit output information into several lines, a line break symbol "\n" or "\r\n" is used. Number of parameters cannot exceed 64. Total length of the input comment (including invisible symbols) cannot exceed 2045 characters (excess symbols will be cut out during output).</param>
+        </member>
+        <member name="M:MQL4CSharp.Base.MQLBase.SendFTP(System.String,System.String)">
+            <summary>
+            Function: SendFTP
+            Description: Sends a file at the address, specified in the setting window of the "FTP" tab.
+            URL: http://docs.mql4.com/common/sendftp
+            </summary>
+            <param name="filename">[in] Name of sent file.</param>
+            <param name="ftp_path">[in] FTP catalog. If a directory is not specified, directory described in settings is used.</param>
+        </member>
+        <member name="M:MQL4CSharp.Base.MQLBase.SendNotification(System.String)">
+            <summary>
+            Function: SendNotification
+            Description: Sends push notifications to the mobile terminals, whose MetaQuotes IDs are specified in the "Notifications" tab.
+            URL: http://docs.mql4.com/common/sendnotification
+            </summary>
+            <param name="text">[in] The text of the notification. The message length should not exceed 255 characters.</param>
+        </member>
+        <member name="M:MQL4CSharp.Base.MQLBase.SendMail(System.String,System.String)">
+            <summary>
+            Function: SendMail
+            Description: Sends an email at the address specified in the settings window of the "Email" tab.
+            URL: http://docs.mql4.com/common/sendmail
+            </summary>
+            <param name="subject">[in] Email header.</param>
+            <param name="some_text">[in] Email body.</param>
+        </member>
+        <member name="M:MQL4CSharp.Base.MQLBase.AccountInfoDouble(System.Int32)">
+            <summary>
+            Function: AccountInfoDouble
+            Description: Returns the value of the corresponding account property.
+            URL: http://docs.mql4.com/account/accountinfodouble
+            </summary>
+            <param name="property_id">[in] Identifier of the property. The value can be one of the values of .</param>
+        </member>
+        <member name="M:MQL4CSharp.Base.MQLBase.AccountInfoInteger(System.Int32)">
+            <summary>
+            Function: AccountInfoInteger
+            Description: Returns the value of the properties of the account.
+            URL: http://docs.mql4.com/account/accountinfointeger
+            </summary>
+            <param name="property_id">[in] Identifier of the property. The value can be one of the values of .</param>
+        </member>
+        <member name="M:MQL4CSharp.Base.MQLBase.AccountInfoString(System.Int32)">
+            <summary>
+            Function: AccountInfoString
+            Description: Returns the value of the corresponding account property.
+            URL: http://docs.mql4.com/account/accountinfostring
+            </summary>
+            <param name="property_id">[in] Identifier of the property. The value can be one of the values of .</param>
+        </member>
+        <member name="M:MQL4CSharp.Base.MQLBase.AccountBalance">
+            <summary>
+            Function: AccountBalance
+            Description: Returns balance value of the current account.
+            URL: http://docs.mql4.com/account/accountbalance
+            </summary>
+        </member>
+        <member name="M:MQL4CSharp.Base.MQLBase.AccountCredit">
+            <summary>
+            Function: AccountCredit
+            Description: Returns credit value of the current account.
+            URL: http://docs.mql4.com/account/accountcredit
+            </summary>
+        </member>
+        <member name="M:MQL4CSharp.Base.MQLBase.AccountCompany">
+            <summary>
+            Function: AccountCompany
+            Description: Returns the brokerage company name where the current account was registered.
+            URL: http://docs.mql4.com/account/accountcompany
+            </summary>
+        </member>
+        <member name="M:MQL4CSharp.Base.MQLBase.AccountCurrency">
+            <summary>
+            Function: AccountCurrency
+            Description: Returns currency name of the current account.
+            URL: http://docs.mql4.com/account/accountcurrency
+            </summary>
+        </member>
+        <member name="M:MQL4CSharp.Base.MQLBase.AccountEquity">
+            <summary>
+            Function: AccountEquity
+            Description: Returns equity value of the current account.
+            URL: http://docs.mql4.com/account/accountequity
+            </summary>
+        </member>
+        <member name="M:MQL4CSharp.Base.MQLBase.AccountFreeMargin">
+            <summary>
+            Function: AccountFreeMargin
+            Description: Returns free margin value of the current account.
+            URL: http://docs.mql4.com/account/accountfreemargin
+            </summary>
+        </member>
+        <member name="M:MQL4CSharp.Base.MQLBase.AccountFreeMarginCheck(System.String,System.Int32,System.Double)">
+            <summary>
+            Function: AccountFreeMarginCheck
+            Description: Returns free margin that remains after the specified order has been opened at the current price on the current account.
+            URL: http://docs.mql4.com/account/accountfreemargincheck
+            </summary>
+            <param name="symbol">[in] Symbol for trading operation.</param>
+            <param name="cmd">[in] Operation type. It can be either OP_BUY or OP_SELL.</param>
+            <param name="volume">[in] Number of lots.</param>
+        </member>
+        <member name="M:MQL4CSharp.Base.MQLBase.AccountFreeMarginMode">
+            <summary>
+            Function: AccountFreeMarginMode
+            Description: Returns the calculation mode of free margin allowed to open orders on the current account.
+            URL: http://docs.mql4.com/account/accountfreemarginmode
+            </summary>
+        </member>
+        <member name="M:MQL4CSharp.Base.MQLBase.AccountLeverage">
+            <summary>
+            Function: AccountLeverage
+            Description: Returns leverage of the current account.
+            URL: http://docs.mql4.com/account/accountleverage
+            </summary>
+        </member>
+        <member name="M:MQL4CSharp.Base.MQLBase.AccountMargin">
+            <summary>
+            Function: AccountMargin
+            Description: Returns margin value of the current account.
+            URL: http://docs.mql4.com/account/accountmargin
+            </summary>
+        </member>
+        <member name="M:MQL4CSharp.Base.MQLBase.AccountName">
+            <summary>
+            Function: AccountName
+            Description: Returns the current account name.
+            URL: http://docs.mql4.com/account/accountname
+            </summary>
+        </member>
+        <member name="M:MQL4CSharp.Base.MQLBase.AccountNumber">
+            <summary>
+            Function: AccountNumber
+            Description: Returns the current account number.
+            URL: http://docs.mql4.com/account/accountnumber
+            </summary>
+        </member>
+        <member name="M:MQL4CSharp.Base.MQLBase.AccountProfit">
+            <summary>
+            Function: AccountProfit
+            Description: Returns profit value of the current account.
+            URL: http://docs.mql4.com/account/accountprofit
+            </summary>
+        </member>
+        <member name="M:MQL4CSharp.Base.MQLBase.AccountServer">
+            <summary>
+            Function: AccountServer
+            Description: Returns the connected server name.
+            URL: http://docs.mql4.com/account/accountserver
+            </summary>
+        </member>
+        <member name="M:MQL4CSharp.Base.MQLBase.AccountStopoutLevel">
+            <summary>
+            Function: AccountStopoutLevel
+            Description: Returns the value of the Stop Out level.
+            URL: http://docs.mql4.com/account/accountstopoutlevel
+            </summary>
+        </member>
+        <member name="M:MQL4CSharp.Base.MQLBase.AccountStopoutMode">
+            <summary>
+            Function: AccountStopoutMode
+            Description: Returns the calculation mode for the Stop Out level.
+            URL: http://docs.mql4.com/account/accountstopoutmode
+            </summary>
+        </member>
+        <member name="M:MQL4CSharp.Base.MQLBase.GetLastError">
+            <summary>
+            Function: GetLastError
+            Description: Returns the contents of the
+            URL: http://docs.mql4.com/check/getlasterror
+            </summary>
+        </member>
+        <member name="M:MQL4CSharp.Base.MQLBase.IsStopped">
+            <summary>
+            Function: IsStopped
+            Description: Checks the forced shutdown of an mql4 program.
+            URL: http://docs.mql4.com/check/isstopped
+            </summary>
+        </member>
+        <member name="M:MQL4CSharp.Base.MQLBase.UninitializeReason">
+            <summary>
+            Function: UninitializeReason
+            Description: Returns the code of a
+            URL: http://docs.mql4.com/check/uninitializereason
+            </summary>
+        </member>
+        <member name="M:MQL4CSharp.Base.MQLBase.MQLInfoInteger(System.Int32)">
+            <summary>
+            Function: MQLInfoInteger
+            Description: Returns the value of a corresponding property of a running mql4 program.
+            URL: http://docs.mql4.com/check/mqlinfointeger
+            </summary>
+            <param name="property_id">[in] Identifier of a property. Can be one of values of the enumeration.</param>
+        </member>
+        <member name="M:MQL4CSharp.Base.MQLBase.MQLInfoString(System.Int32)">
+            <summary>
+            Function: MQLInfoString
+            Description: Returns the value of a corresponding property of a running MQL4 program.
+            URL: http://docs.mql4.com/check/mqlinfostring
+            </summary>
+            <param name="property_id">[in] Identifier of a property. Can be one of the enumeration.</param>
+        </member>
+        <member name="M:MQL4CSharp.Base.MQLBase.MQLSetInteger(System.Int32,System.Int32)">
+            <summary>
+            Function: MQLSetInteger
+            Description: Sets the value of the
+            URL: http://docs.mql4.com/check/mqlsetinteger
+            </summary>
+            <param name="property_id">[in] Identifier of a property. Only is supported, as other properties cannot be changed.</param>
+            <param name="property_value">[in] Value of property. Can be one of the .</param>
+        </member>
+        <member name="M:MQL4CSharp.Base.MQLBase.TerminalInfoInteger(System.Int32)">
+            <summary>
+            Function: TerminalInfoInteger
+            Description: Returns the value of a corresponding property of the mql4 program environment.
+            URL: http://docs.mql4.com/check/terminalinfointeger
+            </summary>
+            <param name="property_id">[in] Identifier of a property. Can be one of the values of the enumeration.</param>
+        </member>
+        <member name="M:MQL4CSharp.Base.MQLBase.TerminalInfoDouble(System.Int32)">
+            <summary>
+            Function: TerminalInfoDouble
+            Description: Returns the value of a corresponding property of the mql4 program environment.
+            URL: http://docs.mql4.com/check/terminalinfodouble
+            </summary>
+            <param name="property_id">[in] Identifier of a property. Can be one of the values of the enumeration.</param>
+        </member>
+        <member name="M:MQL4CSharp.Base.MQLBase.TerminalInfoString(System.Int32)">
+            <summary>
+            Function: TerminalInfoString
+            Description: Returns the value of a corresponding property of the mql4 program environment. The property must be of string type.
+            URL: http://docs.mql4.com/check/terminalinfostring
+            </summary>
+            <param name="property_id">[in] Identifier of a property. Can be one of the values of the enumeration.</param>
+        </member>
+        <member name="M:MQL4CSharp.Base.MQLBase.Symbol">
+            <summary>
+            Function: Symbol
+            Description: Returns the name of a symbol of the current chart.
+            URL: http://docs.mql4.com/check/symbol
+            </summary>
+        </member>
+        <member name="M:MQL4CSharp.Base.MQLBase.Period">
+            <summary>
+            Function: Period
+            Description: Returns the current chart timeframe.
+            URL: http://docs.mql4.com/check/period
+            </summary>
+        </member>
+        <member name="M:MQL4CSharp.Base.MQLBase.Digits">
+            <summary>
+            Function: Digits
+            Description: Returns the number of decimal digits determining the accuracy of price of the current chart symbol.
+            URL: http://docs.mql4.com/check/digits
+            </summary>
+        </member>
+        <member name="M:MQL4CSharp.Base.MQLBase.Point">
+            <summary>
+            Function: Point
+            Description: Returns the point size of the current symbol in the quote currency.
+            URL: http://docs.mql4.com/check/point
+            </summary>
+        </member>
+        <member name="M:MQL4CSharp.Base.MQLBase.IsConnected">
+            <summary>
+            Function: IsConnected
+            Description: Checks connection between client terminal and server.
+            URL: http://docs.mql4.com/check/isconnected
+            </summary>
+        </member>
+        <member name="M:MQL4CSharp.Base.MQLBase.IsDemo">
+            <summary>
+            Function: IsDemo
+            Description: Checks if the Expert Advisor runs on a demo account.
+            URL: http://docs.mql4.com/check/isdemo
+            </summary>
+        </member>
+        <member name="M:MQL4CSharp.Base.MQLBase.IsDllsAllowed">
+            <summary>
+            Function: IsDllsAllowed
+            Description: Checks if the DLL function call is allowed for the Expert Advisor.
+            URL: http://docs.mql4.com/check/isdllsallowed
+            </summary>
+        </member>
+        <member name="M:MQL4CSharp.Base.MQLBase.IsExpertEnabled">
+            <summary>
+            Function: IsExpertEnabled
+            Description: Checks if Expert Advisors are enabled for running.
+            URL: http://docs.mql4.com/check/isexpertenabled
+            </summary>
+        </member>
+        <member name="M:MQL4CSharp.Base.MQLBase.IsLibrariesAllowed">
+            <summary>
+            Function: IsLibrariesAllowed
+            Description: Checks if the Expert Advisor can call library function.
+            URL: http://docs.mql4.com/check/islibrariesallowed
+            </summary>
+        </member>
+        <member name="M:MQL4CSharp.Base.MQLBase.IsOptimization">
+            <summary>
+            Function: IsOptimization
+            Description: Checks if Expert Advisor runs in the Strategy Tester optimization mode.
+            URL: http://docs.mql4.com/check/isoptimization
+            </summary>
+        </member>
+        <member name="M:MQL4CSharp.Base.MQLBase.IsTesting">
+            <summary>
+            Function: IsTesting
+            Description: Checks
+            URL: http://docs.mql4.com/check/istesting
+            </summary>
+        </member>
+        <member name="M:MQL4CSharp.Base.MQLBase.IsTradeAllowed">
+            <summary>
+            Function: IsTradeAllowed
+            Description: Checks
+            URL: http://docs.mql4.com/check/istradeallowed
+            </summary>
+        </member>
+        <member name="M:MQL4CSharp.Base.MQLBase.IsTradeAllowed(System.String,System.DateTime)">
+            <summary>
+            Function: IsTradeAllowed
+            Description: Checks
+            URL: http://docs.mql4.com/check/istradeallowed
+            </summary>
+            <param name="symbol">[in] Symbol.</param>
+            <param name="tested_time">[in] Time to check status.</param>
+        </member>
+        <member name="M:MQL4CSharp.Base.MQLBase.IsTradeContextBusy">
+            <summary>
+            Function: IsTradeContextBusy
+            Description: Returns the information about trade context.
+            URL: http://docs.mql4.com/check/istradecontextbusy
+            </summary>
+        </member>
+        <member name="M:MQL4CSharp.Base.MQLBase.IsVisualMode">
+            <summary>
+            Function: IsVisualMode
+            Description: Checks
+            URL: http://docs.mql4.com/check/isvisualmode
+            </summary>
+        </member>
+        <member name="M:MQL4CSharp.Base.MQLBase.TerminalCompany">
+            <summary>
+            Function: TerminalCompany
+            Description: Returns the name of company owning the client terminal.
+            URL: http://docs.mql4.com/check/terminalcompany
+            </summary>
+        </member>
+        <member name="M:MQL4CSharp.Base.MQLBase.TerminalName">
+            <summary>
+            Function: TerminalName
+            Description: Returns client terminal name.
+            URL: http://docs.mql4.com/check/terminalname
+            </summary>
+        </member>
+        <member name="M:MQL4CSharp.Base.MQLBase.TerminalPath">
+            <summary>
+            Function: TerminalPath
+            Description: Returns the directory, from which the client terminal was launched.
+            URL: http://docs.mql4.com/check/terminalpath
+            </summary>
+        </member>
+        <member name="M:MQL4CSharp.Base.MQLBase.MarketInfo(System.String,System.Int32)">
+            <summary>
+            Function: MarketInfo
+            Description: Returns various data about securities listed in the "Market Watch" window.
+            URL: http://docs.mql4.com/marketinformation/marketinfo
+            </summary>
+            <param name="symbol">[in] Symbol name.</param>
+            <param name="type">[in] Request of information to be returned. Can be any of values of request identifiers.</param>
+        </member>
+        <member name="M:MQL4CSharp.Base.MQLBase.SymbolsTotal(System.Boolean)">
+            <summary>
+            Function: SymbolsTotal
+            Description: Returns the number of available (selected in Market Watch or all) symbols.
+            URL: http://docs.mql4.com/marketinformation/symbolstotal
+            </summary>
+            <param name="selected">[in] Request mode. Can be true or false.</param>
+        </member>
+        <member name="M:MQL4CSharp.Base.MQLBase.SymbolName(System.Int32,System.Boolean)">
+            <summary>
+            Function: SymbolName
+            Description: Returns the name of a symbol.
+            URL: http://docs.mql4.com/marketinformation/symbolname
+            </summary>
+            <param name="pos">[in] Order number of a symbol.</param>
+            <param name="selected">[in] Request mode. If the value is true, the symbol is taken from the list of symbols selected in MarketWatch. If the value is false, the symbol is taken from the general list.</param>
+        </member>
+        <member name="M:MQL4CSharp.Base.MQLBase.SymbolSelect(System.String,System.Boolean)">
+            <summary>
+            Function: SymbolSelect
+            Description: Selects a symbol in the Market Watch window or removes a symbol from the window.
+            URL: http://docs.mql4.com/marketinformation/symbolselect
+            </summary>
+            <param name="name">[in] Symbol name.</param>
+            <param name="select">[in] Switch. If the value is false, a symbol should be removed from MarketWatch, otherwise a symbol should be selected in this window. A symbol can't be removed if the symbol chart is open, or there are open orders for this symbol.</param>
+        </member>
+        <member name="M:MQL4CSharp.Base.MQLBase.RefreshRates">
+            <summary>
+            Function: RefreshRates
+            Description: Refreshing of data in pre-defined variables and series arrays.
+            URL: http://docs.mql4.com/series/refreshrates
+            </summary>
+        </member>
+        <member name="M:MQL4CSharp.Base.MQLBase.Bars(System.String,MQL4CSharp.Base.Enums.TIMEFRAME)">
+            <summary>
+            Function: Bars
+            Description: Returns the number of bars count in the history for a specified symbol and period. There are 2 variants of functions calls.
+            URL: http://docs.mql4.com/series/barsfunction
+            </summary>
+            <param name="symbol_name">[in] Symbol name.</param>
+            <param name="timeframe">[in] Period.</param>
+        </member>
+        <member name="M:MQL4CSharp.Base.MQLBase.Bars(System.String,MQL4CSharp.Base.Enums.TIMEFRAME,System.DateTime,System.DateTime)">
+            <summary>
+            Function: Bars
+            Description: Returns the number of bars count in the history for a specified symbol and period. There are 2 variants of functions calls.
+            URL: http://docs.mql4.com/series/barsfunction
+            </summary>
+            <param name="symbol_name">[in] Symbol name.</param>
+            <param name="timeframe">[in] Period.</param>
+            <param name="start_time">[in] Bar time corresponding to the first element.</param>
+            <param name="stop_time">[in] Bar time corresponding to the last element.</param>
+        </member>
+        <member name="M:MQL4CSharp.Base.MQLBase.iBars(System.String,System.Int32)">
+            <summary>
+            Function: iBars
+            Description: Returns the number of bars on the specified chart.
+            URL: http://docs.mql4.com/series/ibars
+            </summary>
+            <param name="symbol">[in] Symbol the data of which should be used to calculate indicator. means the current symbol.</param>
+            <param name="timeframe">[in] Timeframe. It can be any of enumeration values. 0 means the current chart timeframe.</param>
+        </member>
+        <member name="M:MQL4CSharp.Base.MQLBase.iBarShift(System.String,System.Int32,System.DateTime,System.Boolean)">
+            <summary>
+            Function: iBarShift
+            Description: Search for a bar by its time. The function returns the index of the bar which covers the specified time.
+            URL: http://docs.mql4.com/series/ibarshift
+            </summary>
+            <param name="symbol">[in] Symbol name. means the current symbol.</param>
+            <param name="timeframe">[in] Timeframe. It can be any of enumeration values. 0 means the current chart timeframe.</param>
+            <param name="time">[in] Time value for searching.</param>
+            <param name="exact">[in] Return mode when the bar is not found (false - iBarShift returns the nearest, true - iBarShift returns -1).</param>
+        </member>
+        <member name="M:MQL4CSharp.Base.MQLBase.iClose(System.String,System.Int32,System.Int32)">
+            <summary>
+            Function: iClose
+            Description: Returns Close price value for the bar of specified symbol with timeframe and shift.
+            URL: http://docs.mql4.com/series/iclose
+            </summary>
+            <param name="symbol">[in] Symbol name. means the current symbol.</param>
+            <param name="timeframe">[in] Timeframe. It can be any of enumeration values. 0 means the current chart timeframe.</param>
+            <param name="shift">[in] Index of the value taken from the indicator buffer (shift relative to the current bar the given amount of periods ago).</param>
+        </member>
+        <member name="M:MQL4CSharp.Base.MQLBase.iHigh(System.String,System.Int32,System.Int32)">
+            <summary>
+            Function: iHigh
+            Description: Returns High price value for the bar of specified symbol with timeframe and shift.
+            URL: http://docs.mql4.com/series/ihigh
+            </summary>
+            <param name="symbol">[in] Symbol name. means the current symbol.</param>
+            <param name="timeframe">[in] Timeframe. It can be any of enumeration values. 0 means the current chart timeframe.</param>
+            <param name="shift">[in] Index of the value taken from the indicator buffer (shift relative to the current bar the given amount of periods ago).</param>
+        </member>
+        <member name="M:MQL4CSharp.Base.MQLBase.iHighest(System.String,System.Int32,System.Int32,System.Int32,System.Int32)">
+            <summary>
+            Function: iHighest
+            Description: Returns the shift of the maximum value over a specific number of bars depending on type.
+            URL: http://docs.mql4.com/series/ihighest
+            </summary>
+            <param name="symbol">[in] Symbol the data of which should be used for search. means the current symbol.</param>
+            <param name="timeframe">[in] Timeframe. It can be any of enumeration values. 0 means the current chart timeframe.</param>
+            <param name="type">[in] Series array identifier. It can be any of the enumeration values.</param>
+            <param name="count">[in] Number of bars (in direction from the start bar to the back one) on which the search is carried out.</param>
+            <param name="start">[in] Shift showing the bar, relative to the current bar, that the data should be taken from.</param>
+        </member>
+        <member name="M:MQL4CSharp.Base.MQLBase.iLow(System.String,System.Int32,System.Int32)">
+            <summary>
+            Function: iLow
+            Description: Returns Low price value for the bar of indicated symbol with timeframe and shift.
+            URL: http://docs.mql4.com/series/ilow
+            </summary>
+            <param name="symbol">[in] Symbol name. means the current symbol.</param>
+            <param name="timeframe">[in] Timeframe. It can be any of enumeration values. 0 means the current chart timeframe.</param>
+            <param name="shift">[in] Index of the value taken from the indicator buffer (shift relative to the current bar the given amount of periods ago).</param>
+        </member>
+        <member name="M:MQL4CSharp.Base.MQLBase.iLowest(System.String,System.Int32,System.Int32,System.Int32,System.Int32)">
+            <summary>
+            Function: iLowest
+            Description: Returns the shift of the lowest value over a specific number of bars depending on type.
+            URL: http://docs.mql4.com/series/ilowest
+            </summary>
+            <param name="symbol">[in] Symbol name. means the current symbol.</param>
+            <param name="timeframe">[in] Timeframe. It can be any of enumeration values. 0 means the current chart timeframe.</param>
+            <param name="type">[in] Series array identifier. It can be any of the enumeration values.</param>
+            <param name="count">[in] Number of bars (in direction from the start bar to the back one) on which the search is carried out.</param>
+            <param name="start">[in] Shift showing the bar, relative to the current bar, that the data should be taken from.</param>
+        </member>
+        <member name="M:MQL4CSharp.Base.MQLBase.iOpen(System.String,System.Int32,System.Int32)">
+            <summary>
+            Function: iOpen
+            Description: Returns Open price value for the bar of specified symbol with timeframe and shift.
+            URL: http://docs.mql4.com/series/iopen
+            </summary>
+            <param name="symbol">[in] Symbol name. means the current symbol.</param>
+            <param name="timeframe">[in] Timeframe. It can be any of enumeration values. 0 means the current chart timeframe.</param>
+            <param name="shift">[in] Index of the value taken from the indicator buffer (shift relative to the current bar the given amount of periods ago).</param>
+        </member>
+        <member name="M:MQL4CSharp.Base.MQLBase.iTime(System.String,System.Int32,System.Int32)">
+            <summary>
+            Function: iTime
+            Description: Returns Time value for the bar of specified symbol with timeframe and shift.
+            URL: http://docs.mql4.com/series/itime
+            </summary>
+            <param name="symbol">[in] Symbol name. means the current symbol.</param>
+            <param name="timeframe">[in] Timeframe. It can be any of enumeration values. 0 means the current chart timeframe.</param>
+            <param name="shift">[in] Index of the value taken from the indicator buffer (shift relative to the current bar the given amount of periods ago).</param>
+        </member>
+        <member name="M:MQL4CSharp.Base.MQLBase.iVolume(System.String,System.Int32,System.Int32)">
+            <summary>
+            Function: iVolume
+            Description: Returns Tick Volume value for the bar of specified symbol with timeframe and shift.
+            URL: http://docs.mql4.com/series/ivolume
+            </summary>
+            <param name="symbol">[in] Symbol name. means the current symbol.</param>
+            <param name="timeframe">[in] Timeframe. It can be any of enumeration values. 0 means the current chart timeframe.</param>
+            <param name="shift">[in] Index of the value taken from the indicator buffer (shift relative to the current bar the given amount of periods ago).</param>
+        </member>
+        <member name="M:MQL4CSharp.Base.MQLBase.ChartApplyTemplate(System.Int64,System.String)">
+            <summary>
+            Function: ChartApplyTemplate
+            Description: Applies a specific template from a specified file to the chart. The command is added to chart message queue and executed only after all previous commands have been processed.
+            URL: http://docs.mql4.com/chart_operations/chartapplytemplate
+            </summary>
+            <param name="chart_id">[in] Chart ID. 0 means the current chart.</param>
+            <param name="filename">[in] The name of the file containing the template.</param>
+        </member>
+        <member name="M:MQL4CSharp.Base.MQLBase.ChartSaveTemplate(System.Int64,System.String)">
+            <summary>
+            Function: ChartSaveTemplate
+            Description: Saves current chart settings in a template with a specified name. The command is added to chart message queue and executed only after all previous commands have been processed.
+            URL: http://docs.mql4.com/chart_operations/chartsavetemplate
+            </summary>
+            <param name="chart_id">[in] Chart ID. 0 means the current chart.</param>
+            <param name="filename">[in] The filename to save the template. The ".tpl" extension will be added to the filename automatically; there is no need to specify it. The template is saved in terminal_directory\Profiles\Templates\ and can be used for manual application in the terminal. If a template with the same filename already exists, the contents of this file will be overwritten.</param>
+        </member>
+        <member name="M:MQL4CSharp.Base.MQLBase.ChartWindowFind(System.Int64,System.String)">
+            <summary>
+            Function: ChartWindowFind
+            Description: The function returns the number of a subwindow where an indicator is drawn. There are 2 variants of the function.
+            URL: http://docs.mql4.com/chart_operations/chartwindowfind
+            </summary>
+            <param name="chart_id">[in] Chart ID. 0 denotes the current chart.</param>
+            <param name="indicator_shortname">[in] Short name of the indicator.</param>
+        </member>
+        <member name="M:MQL4CSharp.Base.MQLBase.ChartWindowFind">
+            <summary>
+            Function: ChartWindowFind
+            Description: The function returns the number of a subwindow where an indicator is drawn. There are 2 variants of the function.
+            URL: http://docs.mql4.com/chart_operations/chartwindowfind
+            </summary>
+        </member>
+        <member name="M:MQL4CSharp.Base.MQLBase.ChartOpen(System.String,MQL4CSharp.Base.Enums.TIMEFRAME)">
+            <summary>
+            Function: ChartOpen
+            Description: Opens a new chart with the specified symbol and period. The command is added to chart message queue and executed only after all previous commands have been processed.
+            URL: http://docs.mql4.com/chart_operations/chartopen
+            </summary>
+            <param name="symbol">[in] Chart symbol. means the symbol of the current chart (the Expert Advisor is attached to).</param>
+            <param name="period">[in] Chart period (timeframe). Can be one of the values. 0 means the current chart period.</param>
+        </member>
+        <member name="M:MQL4CSharp.Base.MQLBase.ChartFirst">
+            <summary>
+            Function: ChartFirst
+            Description: Returns the ID of the first chart of the client terminal.
+            URL: http://docs.mql4.com/chart_operations/chartfirst
+            </summary>
+        </member>
+        <member name="M:MQL4CSharp.Base.MQLBase.ChartNext(System.Int64)">
+            <summary>
+            Function: ChartNext
+            Description: Returns the chart ID of the chart next to the specified one.
+            URL: http://docs.mql4.com/chart_operations/chartnext
+            </summary>
+            <param name="chart_id">[in] Chart ID. 0 does not mean the current chart. 0 means "return the first chart ID".</param>
+        </member>
+        <member name="M:MQL4CSharp.Base.MQLBase.ChartClose(System.Int64)">
+            <summary>
+            Function: ChartClose
+            Description: Closes the specified chart.
+            URL: http://docs.mql4.com/chart_operations/chartclose
+            </summary>
+            <param name="chart_id">[in] Chart ID. 0 means the current chart.</param>
+        </member>
+        <member name="M:MQL4CSharp.Base.MQLBase.ChartSymbol(System.Int64)">
+            <summary>
+            Function: ChartSymbol
+            Description: Returns the symbol name for the specified chart.
+            URL: http://docs.mql4.com/chart_operations/chartsymbol
+            </summary>
+            <param name="chart_id">[in] Chart ID. 0 means the current chart.</param>
+        </member>
+        <member name="M:MQL4CSharp.Base.MQLBase.ChartRedraw(System.Int64)">
+            <summary>
+            Function: ChartRedraw
+            Description: This function calls a forced redrawing of a specified chart.
+            URL: http://docs.mql4.com/chart_operations/chartredraw
+            </summary>
+            <param name="chart_id">[in] Chart ID. 0 means the current chart.</param>
+        </member>
+        <member name="M:MQL4CSharp.Base.MQLBase.ChartSetDouble(System.Int64,System.Int32,System.Double)">
+            <summary>
+            Function: ChartSetDouble
+            Description: Sets a value for a corresponding property of the specified chart. Chart property should be of a
+            URL: http://docs.mql4.com/chart_operations/chartsetdouble
+            </summary>
+            <param name="chart_id">[in] Chart ID. 0 means the current chart.</param>
+            <param name="prop_id">[in] Chart property ID. Can be one of the values (except the read-only properties).</param>
+            <param name="value">[in] Property value.</param>
+        </member>
+        <member name="M:MQL4CSharp.Base.MQLBase.ChartSetInteger(System.Int64,System.Int32,System.Int64)">
+            <summary>
+            Function: ChartSetInteger
+            Description: Sets a value for a corresponding property of the specified chart. Chart property must be
+            URL: http://docs.mql4.com/chart_operations/chartsetinteger
+            </summary>
+            <param name="chart_id">[in] Chart ID. 0 means the current chart.</param>
+            <param name="prop_id">[in] Chart property ID. It can be one of the value (except the read-only properties).</param>
+            <param name="value">[in] Property value.</param>
+        </member>
+        <member name="M:MQL4CSharp.Base.MQLBase.ChartSetInteger(System.Int64,System.Int32,System.UInt32,System.Int64)">
+            <summary>
+            Function: ChartSetInteger
+            Description: Sets a value for a corresponding property of the specified chart. Chart property must be
+            URL: http://docs.mql4.com/chart_operations/chartsetinteger
+            </summary>
+            <param name="chart_id">[in] Chart ID. 0 means the current chart.</param>
+            <param name="property_id"></param>
+            <param name="sub_window">[in] Chart subwindow.</param>
+            <param name="value">[in] Property value.</param>
+        </member>
+        <member name="M:MQL4CSharp.Base.MQLBase.ChartSetString(System.Int64,System.Int32,System.String)">
+            <summary>
+            Function: ChartSetString
+            Description: Sets a value for a corresponding property of the specified chart. Chart property must be of the string type. The command is added to chart message queue and executed only after all previous commands have been processed.
+            URL: http://docs.mql4.com/chart_operations/chartsetstring
+            </summary>
+            <param name="chart_id">[in] Chart ID. 0 means the current chart.</param>
+            <param name="prop_id">[in] Chart property ID. Its value can be one of the values (except the read-only properties).</param>
+            <param name="str_value">[in] Property value string. String length cannot exceed 2045 characters (extra characters will be truncated).</param>
+        </member>
+        <member name="M:MQL4CSharp.Base.MQLBase.ChartNavigate(System.Int64,System.Int32,System.Int32)">
+            <summary>
+            Function: ChartNavigate
+            Description: Performs shift of the specified chart by the specified number of bars relative to the specified position in the chart. The command is added to chart message queue and executed only after all previous commands have been processed.
+            URL: http://docs.mql4.com/chart_operations/chartnavigate
+            </summary>
+            <param name="chart_id">[in] Chart ID. 0 means the current chart.</param>
+            <param name="position">[in] Chart position to perform a shift. Can be one of the values.</param>
+            <param name="shift">[in] Number of bars to shift the chart. Positive value means the right shift (to the end of chart), negative value means the left shift (to the beginning of chart). The zero shift can be used to navigate to the beginning or end of chart.</param>
+        </member>
+        <member name="M:MQL4CSharp.Base.MQLBase.ChartID">
+            <summary>
+            Function: ChartID
+            Description: Returns the ID of the current chart.
+            URL: http://docs.mql4.com/chart_operations/chartid
+            </summary>
+        </member>
+        <member name="M:MQL4CSharp.Base.MQLBase.ChartIndicatorDelete(System.Int64,System.Int32,System.String)">
+            <summary>
+            Function: ChartIndicatorDelete
+            Description: Removes an indicator with a specified name from the specified chart window. The command is added to chart message queue and executed only after all previous commands have been processed.
+            URL: http://docs.mql4.com/chart_operations/chartindicatordelete
+            </summary>
+            <param name="chart_id">[in] Chart ID. 0 denotes the current chart.</param>
+            <param name="sub_window">[in] Number of the chart subwindow. 0 denotes the main chart subwindow.</param>
+            <param name="indicator_shortname"></param>
+        </member>
+        <member name="M:MQL4CSharp.Base.MQLBase.ChartIndicatorName(System.Int64,System.Int32,System.Int32)">
+            <summary>
+            Function: ChartIndicatorName
+            Description: Returns the short name of the indicator by the number in the indicators list on the specified chart window.
+            URL: http://docs.mql4.com/chart_operations/chartindicatorname
+            </summary>
+            <param name="chart_id">[in] Chart ID. 0 denotes the current chart.</param>
+            <param name="sub_window">[in] Number of the chart subwindow. 0 denotes the main chart subwindow.</param>
+            <param name="index">[in] the index of the indicator in the list of indicators. The numeration of indicators start with zero, i.e. the first indicator in the list has the 0 index. To obtain the number of indicators in the list use the function.</param>
+        </member>
+        <member name="M:MQL4CSharp.Base.MQLBase.ChartIndicatorsTotal(System.Int64,System.Int32)">
+            <summary>
+            Function: ChartIndicatorsTotal
+            Description: Returns the number of all indicators applied to the specified chart window.
+            URL: http://docs.mql4.com/chart_operations/chartindicatorstotal
+            </summary>
+            <param name="chart_id">[in] Chart ID. 0 denotes the current chart.</param>
+            <param name="sub_window">[in] Number of the chart subwindow. 0 denotes the main chart subwindow.</param>
+        </member>
+        <member name="M:MQL4CSharp.Base.MQLBase.ChartWindowOnDropped">
+            <summary>
+            Function: ChartWindowOnDropped
+            Description: Returns the number (index) of the chart subwindow the Expert Advisor or script has been dropped to. 0 means the main chart window.
+            URL: http://docs.mql4.com/chart_operations/chartwindowondropped
+            </summary>
+        </member>
+        <member name="M:MQL4CSharp.Base.MQLBase.ChartPriceOnDropped">
+            <summary>
+            Function: ChartPriceOnDropped
+            Description: Returns the price coordinate corresponding to the chart point the Expert Advisor or script has been dropped to.
+            URL: http://docs.mql4.com/chart_operations/chartpriceondropped
+            </summary>
+        </member>
+        <member name="M:MQL4CSharp.Base.MQLBase.ChartTimeOnDropped">
+            <summary>
+            Function: ChartTimeOnDropped
+            Description: Returns the time coordinate corresponding to the chart point the Expert Advisor or script has been dropped to.
+            URL: http://docs.mql4.com/chart_operations/charttimeondropped
+            </summary>
+        </member>
+        <member name="M:MQL4CSharp.Base.MQLBase.ChartXOnDropped">
+            <summary>
+            Function: ChartXOnDropped
+            Description: Returns the X coordinate of the chart point the Expert Advisor or script has been dropped to.
+            URL: http://docs.mql4.com/chart_operations/chartxondropped
+            </summary>
+        </member>
+        <member name="M:MQL4CSharp.Base.MQLBase.ChartYOnDropped">
+            <summary>
+            Function: ChartYOnDropped
+            Description: Returns the Y coordinateof the chart point the Expert Advisor or script has been dropped to.
+            URL: http://docs.mql4.com/chart_operations/chartyondropped
+            </summary>
+        </member>
+        <member name="M:MQL4CSharp.Base.MQLBase.ChartSetSymbolPeriod(System.Int64,System.String,MQL4CSharp.Base.Enums.TIMEFRAME)">
+            <summary>
+            Function: ChartSetSymbolPeriod
+            Description: Changes the symbol and period of the specified chart. The function is asynchronous, i.e. it sends the command and does not wait for its execution completion. The command is added to chart message queue and executed only after all previous commands have been processed.
+            URL: http://docs.mql4.com/chart_operations/chartsetsymbolperiod
+            </summary>
+            <param name="chart_id">[in] Chart ID. 0 means the current chart.</param>
+            <param name="symbol">[in] Chart symbol. value means the current chart symbol (Expert Advisor is attached to)</param>
+            <param name="period">[in] Chart period (timeframe). Can be one of the values. 0 means the current chart period.</param>
+        </member>
+        <member name="M:MQL4CSharp.Base.MQLBase.ChartScreenShot(System.Int64,System.String,System.Int32,System.Int32,MQL4CSharp.Base.Enums.ALIGN_MODE)">
+            <summary>
+            Function: ChartScreenShot
+            Description: Saves current chart screen shot as a GIF, PNG or BMP file depending on specified extension. The command is added to chart message queue and executed only after all previous commands have been processed.
+            URL: http://docs.mql4.com/chart_operations/chartscreenshot
+            </summary>
+            <param name="chart_id">[in] Chart ID. 0 means the current chart.</param>
+            <param name="filename">[in] Screenshot file name. Cannot exceed 63 characters. Screenshot files are placed in the \Files directory.</param>
+            <param name="width">[in] Screenshot width in pixels.</param>
+            <param name="height">[in] Screenshot height in pixels.</param>
+            <param name="align_mode">[in] Output mode of a narrow screenshot. A value of the enumeration. ALIGN_RIGHT means align to the right margin (the output from the end). ALIGN_LEFT means Left justify.</param>
+        </member>
+        <member name="M:MQL4CSharp.Base.MQLBase.WindowBarsPerChart">
+            <summary>
+            Function: WindowBarsPerChart
+            Description: Returns the amount of bars visible on the chart.
+            URL: http://docs.mql4.com/chart_operations/windowbarsperchart
+            </summary>
+        </member>
+        <member name="M:MQL4CSharp.Base.MQLBase.WindowExpertName">
+            <summary>
+            Function: WindowExpertName
+            Description: Returns the name of the executed Expert Advisor, script, custom indicator, or library.
+            URL: http://docs.mql4.com/chart_operations/windowexpertname
+            </summary>
+        </member>
+        <member name="M:MQL4CSharp.Base.MQLBase.WindowFind(System.String)">
+            <summary>
+            Function: WindowFind
+            Description: Returns the window index containing this specified indicator.
+            URL: http://docs.mql4.com/chart_operations/windowfind
+            </summary>
+            <param name="name">[in] Indicator short name.</param>
+        </member>
+        <member name="M:MQL4CSharp.Base.MQLBase.WindowFirstVisibleBar">
+            <summary>
+            Function: WindowFirstVisibleBar
+            Description: Returns index of the first visible bar in the current chart window.
+            URL: http://docs.mql4.com/chart_operations/windowfirstvisiblebar
+            </summary>
+        </member>
+        <member name="M:MQL4CSharp.Base.MQLBase.WindowHandle(System.String,System.Int32)">
+            <summary>
+            Function: WindowHandle
+            Description: Returns the system handle of the chart window.
+            URL: http://docs.mql4.com/chart_operations/windowhandle
+            </summary>
+            <param name="symbol">[in] Symbol.</param>
+            <param name="timeframe">[in] Timeframe. It can be any of enumeration values. 0 means the current chart timeframe.</param>
+        </member>
+        <member name="M:MQL4CSharp.Base.MQLBase.WindowIsVisible(System.Int32)">
+            <summary>
+            Function: WindowIsVisible
+            Description: Returns the visibility flag of the chart subwindow.
+            URL: http://docs.mql4.com/chart_operations/windowisvisible
+            </summary>
+            <param name="index">[in] Subwindow index.</param>
+        </member>
+        <member name="M:MQL4CSharp.Base.MQLBase.WindowOnDropped">
+            <summary>
+            Function: WindowOnDropped
+            Description: Returns the window index where Expert Advisor, custom indicator or script was dropped.
+            URL: http://docs.mql4.com/chart_operations/windowondropped
+            </summary>
+        </member>
+        <member name="M:MQL4CSharp.Base.MQLBase.WindowPriceMax(System.Int32)">
+            <summary>
+            Function: WindowPriceMax
+            Description: Returns the maximal value of the vertical scale of the specified subwindow of the current chart.
+            URL: http://docs.mql4.com/chart_operations/windowpricemax
+            </summary>
+            <param name="index">[in] Chart subwindow index (0 - main chart window).</param>
+        </member>
+        <member name="M:MQL4CSharp.Base.MQLBase.WindowPriceMin(System.Int32)">
+            <summary>
+            Function: WindowPriceMin
+            Description: Returns the minimal value of the vertical scale of the specified subwindow of the current chart.
+            URL: http://docs.mql4.com/chart_operations/windowpricemin
+            </summary>
+            <param name="index">[in] Chart subwindow index (0 - main chart window).</param>
+        </member>
+        <member name="M:MQL4CSharp.Base.MQLBase.WindowPriceOnDropped">
+            <summary>
+            Function: WindowPriceOnDropped
+            Description: Returns the price of the chart point where Expert Advisor or script was dropped.
+            URL: http://docs.mql4.com/chart_operations/windowpriceondropped
+            </summary>
+        </member>
+        <member name="M:MQL4CSharp.Base.MQLBase.WindowRedraw">
+            <summary>
+            Function: WindowRedraw
+            Description: Redraws the current chart forcedly.
+            URL: http://docs.mql4.com/chart_operations/windowredraw
+            </summary>
+        </member>
+        <member name="M:MQL4CSharp.Base.MQLBase.WindowScreenShot(System.String,System.Int32,System.Int32,System.Int32,System.Int32,System.Int32)">
+            <summary>
+            Function: WindowScreenShot
+            Description: Saves current chart screen shot as a GIF file.
+            URL: http://docs.mql4.com/chart_operations/windowscreenshot
+            </summary>
+            <param name="filename">[in] Screen shot file name. Screenshot is saved to \Files folder.</param>
+            <param name="size_x">[in] Screen shot width in pixels.</param>
+            <param name="size_y">[in] Screen shot height in pixels.</param>
+            <param name="start_bar">[in] Index of the first visible bar in the screen shot. If 0 value is set, the current first visible bar will be shot. If no value or negative value has been set, the end-of-chart screen shot will be produced, indent being taken into consideration.</param>
+            <param name="chart_scale">[in] Horizontal chart scale for screen shot. Can be in the range from 0 to 5. If no value or negative value has been set, the current chart scale will be used.</param>
+            <param name="chart_mode">[in] Chart displaying mode. It can take the following values: CHART_BAR (0 is a sequence of bars), CHART_CANDLE (1 is a sequence of candlesticks), CHART_LINE (2 is a close prices line). If no value or negative value has been set, the chart will be shown in its current mode.</param>
+        </member>
+        <member name="M:MQL4CSharp.Base.MQLBase.WindowTimeOnDropped">
+            <summary>
+            Function: WindowTimeOnDropped
+            Description: Returns the time of the chart point where Expert Advisor or script was dropped.
+            URL: http://docs.mql4.com/chart_operations/windowtimeondropped
+            </summary>
+        </member>
+        <member name="M:MQL4CSharp.Base.MQLBase.WindowsTotal">
+            <summary>
+            Function: WindowsTotal
+            Description: Returns total number of indicator windows on the chart.
+            URL: http://docs.mql4.com/chart_operations/windowstotal
+            </summary>
+        </member>
+        <member name="M:MQL4CSharp.Base.MQLBase.WindowXOnDropped">
+            <summary>
+            Function: WindowXOnDropped
+            Description: Returns the value at X axis in pixels for the chart window client area point at which the Expert Advisor or script was dropped.
+            URL: http://docs.mql4.com/chart_operations/windowxondropped
+            </summary>
+        </member>
+        <member name="M:MQL4CSharp.Base.MQLBase.WindowYOnDropped">
+            <summary>
+            Function: WindowYOnDropped
+            Description: Returns the value at Y axis in pixels for the chart window client area point at which the Expert Advisor or script was dropped.
+            URL: http://docs.mql4.com/chart_operations/windowyondropped
+            </summary>
+        </member>
+        <member name="M:MQL4CSharp.Base.MQLBase.OrderClose(System.Int32,System.Double,System.Double,System.Int32,MQL4CSharp.Base.Enums.COLOR)">
+            <summary>
+            Function: OrderClose
+            Description: Closes opened order.
+            URL: http://docs.mql4.com/trading/orderclose
+            </summary>
+            <param name="ticket">[in] Unique number of the order ticket.</param>
+            <param name="lots">[in] Number of lots.</param>
+            <param name="price">[in] Closing price.</param>
+            <param name="slippage">[in] Value of the maximum price slippage in points.</param>
+            <param name="arrow_color">[in] Color of the closing arrow on the chart. If the parameter is missing or has CLR_NONE value closing arrow will not be drawn on the chart.</param>
+        </member>
+        <member name="M:MQL4CSharp.Base.MQLBase.OrderCloseBy(System.Int32,System.Int32,MQL4CSharp.Base.Enums.COLOR)">
+            <summary>
+            Function: OrderCloseBy
+            Description: Closes an opened order by another opposite opened order.
+            URL: http://docs.mql4.com/trading/ordercloseby
+            </summary>
+            <param name="ticket">[in] Unique number of the order ticket.</param>
+            <param name="opposite">[in] Unique number of the opposite order ticket.</param>
+            <param name="arrow_color">[in] Color of the closing arrow on the chart. If the parameter is missing or has CLR_NONE value closing arrow will not be drawn on the chart.</param>
+        </member>
+        <member name="M:MQL4CSharp.Base.MQLBase.OrderClosePrice">
+            <summary>
+            Function: OrderClosePrice
+            Description: Returns close price of the currently selected order.
+            URL: http://docs.mql4.com/trading/ordercloseprice
+            </summary>
+        </member>
+        <member name="M:MQL4CSharp.Base.MQLBase.OrderCloseTime">
+            <summary>
+            Function: OrderCloseTime
+            Description: Returns close time of the currently selected order.
+            URL: http://docs.mql4.com/trading/orderclosetime
+            </summary>
+        </member>
+        <member name="M:MQL4CSharp.Base.MQLBase.OrderComment">
+            <summary>
+            Function: OrderComment
+            Description: Returns comment of the currently selected order.
+            URL: http://docs.mql4.com/trading/ordercomment
+            </summary>
+        </member>
+        <member name="M:MQL4CSharp.Base.MQLBase.OrderCommission">
+            <summary>
+            Function: OrderCommission
+            Description: Returns calculated commission of the currently selected order.
+            URL: http://docs.mql4.com/trading/ordercommission
+            </summary>
+        </member>
+        <member name="M:MQL4CSharp.Base.MQLBase.OrderDelete(System.Int32,MQL4CSharp.Base.Enums.COLOR)">
+            <summary>
+            Function: OrderDelete
+            Description: Deletes previously opened pending order.
+            URL: http://docs.mql4.com/trading/orderdelete
+            </summary>
+            <param name="ticket">[in] Unique number of the order ticket.</param>
+            <param name="arrow_color">[in] Color of the arrow on the chart. If the parameter is missing or has CLR_NONE value arrow will not be drawn on the chart.</param>
+        </member>
+        <member name="M:MQL4CSharp.Base.MQLBase.OrderExpiration">
+            <summary>
+            Function: OrderExpiration
+            Description: Returns expiration date of the selected pending order.
+            URL: http://docs.mql4.com/trading/orderexpiration
+            </summary>
+        </member>
+        <member name="M:MQL4CSharp.Base.MQLBase.OrderLots">
+            <summary>
+            Function: OrderLots
+            Description: Returns amount of lots of the selected order.
+            URL: http://docs.mql4.com/trading/orderlots
+            </summary>
+        </member>
+        <member name="M:MQL4CSharp.Base.MQLBase.OrderMagicNumber">
+            <summary>
+            Function: OrderMagicNumber
+            Description: Returns an identifying (magic) number of the currently selected order.
+            URL: http://docs.mql4.com/trading/ordermagicnumber
+            </summary>
+        </member>
+        <member name="M:MQL4CSharp.Base.MQLBase.OrderModify(System.Int32,System.Double,System.Double,System.Double,System.DateTime,MQL4CSharp.Base.Enums.COLOR)">
+            <summary>
+            Function: OrderModify
+            Description: Modification of characteristics of the previously opened or pending orders.
+            URL: http://docs.mql4.com/trading/ordermodify
+            </summary>
+            <param name="ticket">[in] Unique number of the order ticket.</param>
+            <param name="price">[in] New open price of the pending order.</param>
+            <param name="stoploss">[in] New StopLoss level.</param>
+            <param name="takeprofit">[in] New TakeProfit level.</param>
+            <param name="expiration">[in] Pending order expiration time.</param>
+            <param name="arrow_color">[in] Arrow color for StopLoss/TakeProfit modifications in the chart. If the parameter is missing or has CLR_NONE value, the arrows will not be shown in the chart.</param>
+        </member>
+        <member name="M:MQL4CSharp.Base.MQLBase.OrderOpenPrice">
+            <summary>
+            Function: OrderOpenPrice
+            Description: Returns open price of the currently selected order.
+            URL: http://docs.mql4.com/trading/orderopenprice
+            </summary>
+        </member>
+        <member name="M:MQL4CSharp.Base.MQLBase.OrderOpenTime">
+            <summary>
+            Function: OrderOpenTime
+            Description: Returns open time of the currently selected order.
+            URL: http://docs.mql4.com/trading/orderopentime
+            </summary>
+        </member>
+        <member name="M:MQL4CSharp.Base.MQLBase.OrderPrint">
+            <summary>
+            Function: OrderPrint
+            Description: Prints information about the selected order in the log.
+            URL: http://docs.mql4.com/trading/orderprint
+            </summary>
+        </member>
+        <member name="M:MQL4CSharp.Base.MQLBase.OrderProfit">
+            <summary>
+            Function: OrderProfit
+            Description: Returns profit of the currently selected order.
+            URL: http://docs.mql4.com/trading/orderprofit
+            </summary>
+        </member>
+        <member name="M:MQL4CSharp.Base.MQLBase.OrderSelect(System.Int32,System.Int32,System.Int32)">
+            <summary>
+            Function: OrderSelect
+            Description: The function selects an order for further processing.
+            URL: http://docs.mql4.com/trading/orderselect
+            </summary>
+            <param name="index"></param>
+            <param name="select">[in] Selecting flags. It can be any of the following values:</param>
+            <param name="pool">SELECT_BY_POS - index in the order pool, SELECT_BY_TICKET - index is order ticket.</param>
+        </member>
+        <member name="M:MQL4CSharp.Base.MQLBase.OrderSend(System.String,System.Int32,System.Double,System.Double,System.Int32,System.Double,System.Double,System.String,System.Int32,System.DateTime,MQL4CSharp.Base.Enums.COLOR)">
+            <summary>
+            Function: OrderSend
+            Description: The main function used to open market or place a pending order.
+            URL: http://docs.mql4.com/trading/ordersend
+            </summary>
+            <param name="symbol">[in] Symbol for trading.</param>
+            <param name="cmd">[in] Operation type. It can be any of the enumeration.</param>
+            <param name="volume">[in] Number of lots.</param>
+            <param name="price">[in] Order price.</param>
+            <param name="slippage">[in] Maximum price slippage for buy or sell orders.</param>
+            <param name="stoploss">[in] Stop loss level.</param>
+            <param name="takeprofit">[in] Take profit level.</param>
+            <param name="comment">[in] Order comment text. Last part of the comment may be changed by server.</param>
+            <param name="magic">[in] Order magic number. May be used as user defined identifier.</param>
+            <param name="expiration">[in] Order expiration time (for pending orders only).</param>
+            <param name="arrow_color">[in] Color of the opening arrow on the chart. If parameter is missing or has CLR_NONE value opening arrow is not drawn on the chart.</param>
+        </member>
+        <member name="M:MQL4CSharp.Base.MQLBase.OrdersHistoryTotal">
+            <summary>
+            Function: OrdersHistoryTotal
+            Description: Returns the number of closed orders in the account history loaded into the terminal.
+            URL: http://docs.mql4.com/trading/ordershistorytotal
+            </summary>
+        </member>
+        <member name="M:MQL4CSharp.Base.MQLBase.OrderStopLoss">
+            <summary>
+            Function: OrderStopLoss
+            Description: Returns stop loss value of the currently selected order.
+            URL: http://docs.mql4.com/trading/orderstoploss
+            </summary>
+        </member>
+        <member name="M:MQL4CSharp.Base.MQLBase.OrdersTotal">
+            <summary>
+            Function: OrdersTotal
+            Description: Returns the number of market and pending orders.
+            URL: http://docs.mql4.com/trading/orderstotal
+            </summary>
+        </member>
+        <member name="M:MQL4CSharp.Base.MQLBase.OrderSwap">
+            <summary>
+            Function: OrderSwap
+            Description: Returns swap value of the currently selected order.
+            URL: http://docs.mql4.com/trading/orderswap
+            </summary>
+        </member>
+        <member name="M:MQL4CSharp.Base.MQLBase.OrderSymbol">
+            <summary>
+            Function: OrderSymbol
+            Description: Returns symbol name of the currently selected order.
+            URL: http://docs.mql4.com/trading/ordersymbol
+            </summary>
+        </member>
+        <member name="M:MQL4CSharp.Base.MQLBase.OrderTakeProfit">
+            <summary>
+            Function: OrderTakeProfit
+            Description: Returns take profit value of the currently selected order.
+            URL: http://docs.mql4.com/trading/ordertakeprofit
+            </summary>
+        </member>
+        <member name="M:MQL4CSharp.Base.MQLBase.OrderTicket">
+            <summary>
+            Function: OrderTicket
+            Description: Returns ticket number of the currently selected order.
+            URL: http://docs.mql4.com/trading/orderticket
+            </summary>
+        </member>
+        <member name="M:MQL4CSharp.Base.MQLBase.OrderType">
+            <summary>
+            Function: OrderType
+            Description: Returns order operation type of the currently selected order.
+            URL: http://docs.mql4.com/trading/ordertype
+            </summary>
+        </member>
+        <member name="M:MQL4CSharp.Base.MQLBase.SignalBaseGetDouble(MQL4CSharp.Base.Enums.SIGNAL_BASE_DOUBLE)">
+            <summary>
+            Function: SignalBaseGetDouble
+            Description: Returns the value of
+            URL: http://docs.mql4.com/signals/signalbasegetdouble
+            </summary>
+            <param name="property_id">[in] Signal property identifier. The value can be one of the values of the enumeration.</param>
+        </member>
+        <member name="M:MQL4CSharp.Base.MQLBase.SignalBaseGetInteger(MQL4CSharp.Base.Enums.SIGNAL_BASE_INTEGER)">
+            <summary>
+            Function: SignalBaseGetInteger
+            Description: Returns the value of
+            URL: http://docs.mql4.com/signals/signalbasegetinteger
+            </summary>
+            <param name="property_id">[in] Signal property identifier. The value can be one of the values of the enumeration.</param>
+        </member>
+        <member name="M:MQL4CSharp.Base.MQLBase.SignalBaseGetString(MQL4CSharp.Base.Enums.SIGNAL_BASE_STRING)">
+            <summary>
+            Function: SignalBaseGetString
+            Description: Returns the value of
+            URL: http://docs.mql4.com/signals/signalbasegetstring
+            </summary>
+            <param name="property_id">[in] Signal property identifier. The value can be one of the values of the enumeration.</param>
+        </member>
+        <member name="M:MQL4CSharp.Base.MQLBase.SignalBaseSelect(System.Int32)">
+            <summary>
+            Function: SignalBaseSelect
+            Description: Selects a signal from signals, available in terminal for further working with it.
+            URL: http://docs.mql4.com/signals/signalbaseselect
+            </summary>
+            <param name="index">[in] Signal index in base of trading signals.</param>
+        </member>
+        <member name="M:MQL4CSharp.Base.MQLBase.SignalBaseTotal">
+            <summary>
+            Function: SignalBaseTotal
+            Description: Returns the total amount of signals, available in terminal.
+            URL: http://docs.mql4.com/signals/signalbasetotal
+            </summary>
+        </member>
+        <member name="M:MQL4CSharp.Base.MQLBase.SignalInfoGetDouble(MQL4CSharp.Base.Enums.SIGNAL_INFO_DOUBLE)">
+            <summary>
+            Function: SignalInfoGetDouble
+            Description: Returns the value of
+            URL: http://docs.mql4.com/signals/signalinfogetdouble
+            </summary>
+            <param name="property_id">[in] Signal copy settings property identifier. The value can be one of the values of the enumeration.</param>
+        </member>
+        <member name="M:MQL4CSharp.Base.MQLBase.SignalInfoGetInteger(MQL4CSharp.Base.Enums.SIGNAL_INFO_INTEGER)">
+            <summary>
+            Function: SignalInfoGetInteger
+            Description: Returns the value of
+            URL: http://docs.mql4.com/signals/signalinfogetinteger
+            </summary>
+            <param name="property_id">[in] Signal copy settings property identifier. The value can be one of the values of the enumeration.</param>
+        </member>
+        <member name="M:MQL4CSharp.Base.MQLBase.SignalInfoGetString(MQL4CSharp.Base.Enums.SIGNAL_INFO_STRING)">
+            <summary>
+            Function: SignalInfoGetString
+            Description: Returns the value of
+            URL: http://docs.mql4.com/signals/signalinfogetstring
+            </summary>
+            <param name="property_id">[in] Signal copy settings property identifier. The value can be one of the values of the enumeration.</param>
+        </member>
+        <member name="M:MQL4CSharp.Base.MQLBase.SignalInfoSetDouble(MQL4CSharp.Base.Enums.SIGNAL_INFO_DOUBLE,System.Double)">
+            <summary>
+            Function: SignalInfoSetDouble
+            Description: Sets the value of
+            URL: http://docs.mql4.com/signals/signalinfosetdouble
+            </summary>
+            <param name="property_id">[in] Signal copy settings property identifier. The value can be one of the values of the enumeration.</param>
+            <param name="value">[in] The value of signal copy settings property.</param>
+        </member>
+        <member name="M:MQL4CSharp.Base.MQLBase.SignalInfoSetInteger(MQL4CSharp.Base.Enums.SIGNAL_INFO_INTEGER,System.Int64)">
+            <summary>
+            Function: SignalInfoSetInteger
+            Description: Sets the value of
+            URL: http://docs.mql4.com/signals/signalinfosetinteger
+            </summary>
+            <param name="property_id">[in] Signal copy settings property identifier. The value can be one of the values of the enumeration.</param>
+            <param name="value">[in] The value of signal copy settings property.</param>
+        </member>
+        <member name="M:MQL4CSharp.Base.MQLBase.SignalSubscribe(System.Int64)">
+            <summary>
+            Function: SignalSubscribe
+            Description: Subscribes to the trading signal.
+            URL: http://docs.mql4.com/signals/signalsubscribe
+            </summary>
+            <param name="signal_id">[in] Signal identifier.</param>
+        </member>
+        <member name="M:MQL4CSharp.Base.MQLBase.SignalUnsubscribe">
+            <summary>
+            Function: SignalUnsubscribe
+            Description: Cancels subscription.
+            URL: http://docs.mql4.com/signals/signalunsubscribe
+            </summary>
+        </member>
+        <member name="M:MQL4CSharp.Base.MQLBase.GlobalVariableCheck(System.String)">
+            <summary>
+            Function: GlobalVariableCheck
+            Description: Checks the existence of a global variable with the specified name
+            URL: http://docs.mql4.com/globals/globalvariablecheck
+            </summary>
+            <param name="name">[in] Global variable name.</param>
+        </member>
+        <member name="M:MQL4CSharp.Base.MQLBase.GlobalVariableTime(System.String)">
+            <summary>
+            Function: GlobalVariableTime
+            Description: Returns the time when the global variable was last accessed.
+            URL: http://docs.mql4.com/globals/globalvariabletime
+            </summary>
+            <param name="name">[in] Name of the global variable.</param>
+        </member>
+        <member name="M:MQL4CSharp.Base.MQLBase.GlobalVariableDel(System.String)">
+            <summary>
+            Function: GlobalVariableDel
+            Description: Deletes a global variable from the client terminal
+            URL: http://docs.mql4.com/globals/globalvariabledel
+            </summary>
+            <param name="name">[in] Global variable name.</param>
+        </member>
+        <member name="M:MQL4CSharp.Base.MQLBase.GlobalVariableGet(System.String)">
+            <summary>
+            Function: GlobalVariableGet
+            Description: Returns the value of an existing global variable of the client terminal. There are 2 variants of the function.
+            URL: http://docs.mql4.com/globals/globalvariableget
+            </summary>
+            <param name="name">[in] Global variable name.</param>
+        </member>
+        <member name="M:MQL4CSharp.Base.MQLBase.GlobalVariableName(System.Int32)">
+            <summary>
+            Function: GlobalVariableName
+            Description: Returns the name of a global variable by its ordinal number.
+            URL: http://docs.mql4.com/globals/globalvariablename
+            </summary>
+            <param name="index">[in] Sequence number in the list of global variables. It should be greater than or equal to 0 and less than .</param>
+        </member>
+        <member name="M:MQL4CSharp.Base.MQLBase.GlobalVariableSet(System.String,System.Double)">
+            <summary>
+            Function: GlobalVariableSet
+            Description: Sets a new value for a global variable. If the variable does not exist, the system creates a new global variable.
+            URL: http://docs.mql4.com/globals/globalvariableset
+            </summary>
+            <param name="name">[in] Global variable name.</param>
+            <param name="value">[in] The new numerical value.</param>
+        </member>
+        <member name="M:MQL4CSharp.Base.MQLBase.GlobalVariablesFlush">
+            <summary>
+            Function: GlobalVariablesFlush
+            Description: Forcibly saves contents of all global variables to a disk.
+            URL: http://docs.mql4.com/globals/globalvariablesflush
+            </summary>
+        </member>
+        <member name="M:MQL4CSharp.Base.MQLBase.GlobalVariableTemp(System.String)">
+            <summary>
+            Function: GlobalVariableTemp
+            Description: The function attempts to create a temporary global variable. If the variable doesn't exist, the system creates a new temporary global variable.
+            URL: http://docs.mql4.com/globals/globalvariabletemp
+            </summary>
+            <param name="name">[in] The name of a temporary global variable.</param>
+        </member>
+        <member name="M:MQL4CSharp.Base.MQLBase.GlobalVariableSetOnCondition(System.String,System.Double,System.Double)">
+            <summary>
+            Function: GlobalVariableSetOnCondition
+            Description: Sets the new value of the existing global variable if the current value equals to the third parameter check_value. If there is no global variable, the function will generate an error ERR_GLOBALVARIABLE_NOT_FOUND (4501) and return false.
+            URL: http://docs.mql4.com/globals/globalvariablesetoncondition
+            </summary>
+            <param name="name">[in] The name of a global variable.</param>
+            <param name="value">[in] New value.</param>
+            <param name="check_value">[in] The value to check the current value of the global variable.</param>
+        </member>
+        <member name="M:MQL4CSharp.Base.MQLBase.GlobalVariablesDeleteAll(System.String,System.DateTime)">
+            <summary>
+            Function: GlobalVariablesDeleteAll
+            Description: Deletes global variables of the client terminal.
+            URL: http://docs.mql4.com/globals/globalvariablesdeleteall
+            </summary>
+            <param name="prefix_name">[in] Name prefix global variables to remove. If you specify a prefix NULL or empty string, then all variables that meet the data criterion will be deleted.</param>
+            <param name="limit_data">[in] Optional parameter. Date to select global variables by the time of their last modification. The function removes global variables, which were changed before this date. If the parameter is zero, then all variables that meet the first criterion (prefix) are deleted.</param>
+        </member>
+        <member name="M:MQL4CSharp.Base.MQLBase.GlobalVariablesTotal">
+            <summary>
+            Function: GlobalVariablesTotal
+            Description: Returns the total number of global variables of the client terminal.
+            URL: http://docs.mql4.com/globals/globalvariablestotal
+            </summary>
+        </member>
+        <member name="M:MQL4CSharp.Base.MQLBase.HideTestIndicators(System.Boolean)">
+            <summary>
+            Function: HideTestIndicators
+            Description: The function sets a flag hiding indicators called by the Expert Advisor.
+            URL: http://docs.mql4.com/customind/hidetestindicators
+            </summary>
+            <param name="hide">[in] Hiding flag.</param>
+        </member>
+        <member name="M:MQL4CSharp.Base.MQLBase.IndicatorSetDouble(System.Int32,System.Double)">
+            <summary>
+            Function: IndicatorSetDouble
+            Description: The function sets the value of the corresponding indicator property. Indicator property must be of the double type. There are two variants of the function.
+            URL: http://docs.mql4.com/customind/indicatorsetdouble
+            </summary>
+            <param name="prop_id">[in] Identifier of the indicator property. The value can be one of the values of the enumeration.</param>
+            <param name="prop_value">[in] Value of property.</param>
+        </member>
+        <member name="M:MQL4CSharp.Base.MQLBase.IndicatorSetDouble(System.Int32,System.Int32,System.Double)">
+            <summary>
+            Function: IndicatorSetDouble
+            Description: The function sets the value of the corresponding indicator property. Indicator property must be of the double type. There are two variants of the function.
+            URL: http://docs.mql4.com/customind/indicatorsetdouble
+            </summary>
+            <param name="prop_id">[in] Identifier of the indicator property. The value can be one of the values of the enumeration.</param>
+            <param name="prop_modifier">[in] Modifier of the specified property. Only level properties require a modifier. Numbering of levels starts from 0. It means that in order to set property for the second level you need to specify 1 (1 less than when using ).</param>
+            <param name="prop_value">[in] Value of property.</param>
+        </member>
+        <member name="M:MQL4CSharp.Base.MQLBase.IndicatorSetInteger(System.Int32,System.Int32)">
+            <summary>
+            Function: IndicatorSetInteger
+            Description: The function sets the value of the corresponding indicator property. Indicator property must be of the int or color type. There are two variants of the function.
+            URL: http://docs.mql4.com/customind/indicatorsetinteger
+            </summary>
+            <param name="prop_id">[in] Identifier of the indicator property. The value can be one of the values of the enumeration.</param>
+            <param name="prop_value">[in] Value of property.</param>
+        </member>
+        <member name="M:MQL4CSharp.Base.MQLBase.IndicatorSetInteger(System.Int32,System.Int32,System.Int32)">
+            <summary>
+            Function: IndicatorSetInteger
+            Description: The function sets the value of the corresponding indicator property. Indicator property must be of the int or color type. There are two variants of the function.
+            URL: http://docs.mql4.com/customind/indicatorsetinteger
+            </summary>
+            <param name="prop_id">[in] Identifier of the indicator property. The value can be one of the values of the enumeration.</param>
+            <param name="prop_modifier">[in] Modifier of the specified property. Only level properties require a modifier.</param>
+            <param name="prop_value">[in] Value of property.</param>
+        </member>
+        <member name="M:MQL4CSharp.Base.MQLBase.IndicatorSetString(System.Int32,System.String)">
+            <summary>
+            Function: IndicatorSetString
+            Description: The function sets the value of the corresponding indicator property. Indicator property must be of the string type. There are two variants of the function.
+            URL: http://docs.mql4.com/customind/indicatorsetstring
+            </summary>
+            <param name="prop_id">[in] Identifier of the indicator property. The value can be one of the values of the enumeration.</param>
+            <param name="prop_value">[in] Value of property.</param>
+        </member>
+        <member name="M:MQL4CSharp.Base.MQLBase.IndicatorSetString(System.Int32,System.Int32,System.String)">
+            <summary>
+            Function: IndicatorSetString
+            Description: The function sets the value of the corresponding indicator property. Indicator property must be of the string type. There are two variants of the function.
+            URL: http://docs.mql4.com/customind/indicatorsetstring
+            </summary>
+            <param name="prop_id">[in] Identifier of the indicator property. The value can be one of the values of the enumeration.</param>
+            <param name="prop_modifier">[in] Modifier of the specified property. Only level properties require a modifier.</param>
+            <param name="prop_value">[in] Value of property.</param>
+        </member>
+        <member name="M:MQL4CSharp.Base.MQLBase.IndicatorBuffers(System.Int32)">
+            <summary>
+            Function: IndicatorBuffers
+            Description: Allocates memory for buffers used for custom indicator calculations.
+            URL: http://docs.mql4.com/customind/indicatorbuffers
+            </summary>
+            <param name="count">[in] Amount of buffers to be allocated. Should be within the range between indicator_buffers and 512 buffers.</param>
+        </member>
+        <member name="M:MQL4CSharp.Base.MQLBase.IndicatorCounted">
+            <summary>
+            Function: IndicatorCounted
+            Description: The function returns the amount of bars not changed after the indicator had been launched last.
+            URL: http://docs.mql4.com/customind/indicatorcounted
+            </summary>
+        </member>
+        <member name="M:MQL4CSharp.Base.MQLBase.IndicatorDigits(System.Int32)">
+            <summary>
+            Function: IndicatorDigits
+            Description: Sets precision format (the count of digits after decimal point) to visualize indicator values.
+            URL: http://docs.mql4.com/customind/indicatordigits
+            </summary>
+            <param name="digits">[in] Precision format, the count of digits after decimal point.</param>
+        </member>
+        <member name="M:MQL4CSharp.Base.MQLBase.IndicatorShortName(System.String)">
+            <summary>
+            Function: IndicatorShortName
+            Description: Sets the "short" name of a custom indicator to be shown in the DataWindow and in the chart subwindow.
+            URL: http://docs.mql4.com/customind/indicatorshortname
+            </summary>
+            <param name="name">[in] New short name.</param>
+        </member>
+        <member name="M:MQL4CSharp.Base.MQLBase.SetIndexArrow(System.Int32,System.Int32)">
+            <summary>
+            Function: SetIndexArrow
+            Description: Sets an arrow symbol for indicators line of the DRAW_ARROW type.
+            URL: http://docs.mql4.com/customind/setindexarrow
+            </summary>
+            <param name="index">[in] Line index. Must lie between 0 and 7.</param>
+            <param name="code">[in] Symbol code from or predefined .</param>
+        </member>
+        <member name="M:MQL4CSharp.Base.MQLBase.SetIndexDrawBegin(System.Int32,System.Int32)">
+            <summary>
+            Function: SetIndexDrawBegin
+            Description: Sets the bar number (from the data beginning) from which the drawing of the given indicator line must start.
+            URL: http://docs.mql4.com/customind/setindexdrawbegin
+            </summary>
+            <param name="index">[in] Line index. Must lie between 0 and 7.</param>
+            <param name="begin">[in] First drawing bar position number.</param>
+        </member>
+        <member name="M:MQL4CSharp.Base.MQLBase.SetIndexEmptyValue(System.Int32,System.Double)">
+            <summary>
+            Function: SetIndexEmptyValue
+            Description: Sets drawing line empty value.
+            URL: http://docs.mql4.com/customind/setindexemptyvalue
+            </summary>
+            <param name="index">[in] Line index. Must lie between 0 and 7.</param>
+            <param name="value">[in] New "empty" value.</param>
+        </member>
+        <member name="M:MQL4CSharp.Base.MQLBase.SetIndexLabel(System.Int32,System.String)">
+            <summary>
+            Function: SetIndexLabel
+            Description: Sets drawing line description for showing in the DataWindow and in the tooltip.
+            URL: http://docs.mql4.com/customind/setindexlabel
+            </summary>
+            <param name="index">[in] Line index. Must lie between 0 and 7.</param>
+            <param name="text">[in] Label text. NULL means that index value is not shown in the DataWindow.</param>
+        </member>
+        <member name="M:MQL4CSharp.Base.MQLBase.SetIndexShift(System.Int32,System.Int32)">
+            <summary>
+            Function: SetIndexShift
+            Description: Sets offset for the drawing line.
+            URL: http://docs.mql4.com/customind/setindexshift
+            </summary>
+            <param name="index">[in] Line index. Must lie between 0 and 7.</param>
+            <param name="shift">[in] Shift value in bars.</param>
+        </member>
+        <member name="M:MQL4CSharp.Base.MQLBase.SetIndexStyle(System.Int32,System.Int32,System.Int32,System.Int32,MQL4CSharp.Base.Enums.COLOR)">
+            <summary>
+            Function: SetIndexStyle
+            Description: Sets the new type, style, width and color for a given indicator line.
+            URL: http://docs.mql4.com/customind/setindexstyle
+            </summary>
+            <param name="index">[in] Line index. Must lie between 0 and 7.</param>
+            <param name="type">[in] Shape style. Can be one of listed.</param>
+            <param name="style">[in] Drawing style. It is used for one-pixel thick lines. It can be one of the listed. EMPTY value means that the style will not be changed.</param>
+            <param name="width">[in] Line width. Valid values are: 1,2,3,4,5. EMPTY value means that width will not be changed.</param>
+            <param name="clr">[in] Line color. Absence of this parameter means that the color will not be changed.</param>
+        </member>
+        <member name="M:MQL4CSharp.Base.MQLBase.SetLevelStyle(System.Int32,System.Int32,MQL4CSharp.Base.Enums.COLOR)">
+            <summary>
+            Function: SetLevelStyle
+            Description: The function sets a new style, width and color of horizontal levels of indicator to be output in a separate window.
+            URL: http://docs.mql4.com/customind/setlevelstyle
+            </summary>
+            <param name="draw_style">[in] Drawing style. Can be one of the listed. EMPTY value means that the style will not be changed.</param>
+            <param name="line_width">[in] Line width. Valid values are 1,2,3,4,5. EMPTY value indicates that the width will not be changed.</param>
+            <param name="clr">[in] Line color. Empty value CLR_NONE means that the color will not be changed.</param>
+        </member>
+        <member name="M:MQL4CSharp.Base.MQLBase.SetLevelValue(System.Int32,System.Double)">
+            <summary>
+            Function: SetLevelValue
+            Description: The function sets a value for a given horizontal level of the indicator to be output in a separate window.
+            URL: http://docs.mql4.com/customind/setlevelvalue
+            </summary>
+            <param name="level">[in] Level index (0-31).</param>
+            <param name="value">[in] Value for the given indicator level.</param>
+        </member>
+        <member name="M:MQL4CSharp.Base.MQLBase.ObjectCreate(System.Int64,System.String,MQL4CSharp.Base.Enums.OBJECT_TYPE,System.Int32,System.DateTime,System.Double,System.DateTime,System.Double)">
+            <summary>
+            Function: ObjectCreate
+            Description: The function creates an object with the specified name, type, and the initial coordinates in the specified chart subwindow of the specified chart. There are two variants of the function:
+            URL: http://docs.mql4.com/objects/objectcreate
+            </summary>
+            <param name="chart_id">[in] Chart identifier.</param>
+            <param name="object_name">[in] Name of the object. The name must be unique within a chart, including its subwindows.</param>
+            <param name="object_type">[in] Object type. The value can be one of the values of the enumeration.</param>
+            <param name="sub_window">[in] Number of the chart subwindow. 0 means the main chart window. The specified subwindow must exist (window index must be greater or equal to 0 and less than ), otherwise the function returns false.</param>
+            <param name="time1">[in] The time coordinate of the first anchor point.</param>
+            <param name="price1">[in] The price coordinate of the first anchor point.</param>
+            <param name="timeN">[in] The time coordinate of the N-th anchor point.</param>
+            <param name="priceN">[in] The price coordinate of the N-th anchor point.</param>
+        </member>
+        <member name="M:MQL4CSharp.Base.MQLBase.ObjectCreate(System.String,MQL4CSharp.Base.Enums.OBJECT_TYPE,System.Int32,System.DateTime,System.Double,System.DateTime,System.Double,System.DateTime,System.Double)">
+            <summary>
+            Function: ObjectCreate
+            Description: The function creates an object with the specified name, type, and the initial coordinates in the specified chart subwindow of the specified chart. There are two variants of the function:
+            URL: http://docs.mql4.com/objects/objectcreate
+            </summary>
+            <param name="object_name">[in] Name of the object. The name must be unique within a chart, including its subwindows.</param>
+            <param name="object_type">[in] Object type. The value can be one of the values of the enumeration.</param>
+            <param name="sub_window">[in] Number of the chart subwindow. 0 means the main chart window. The specified subwindow must exist (window index must be greater or equal to 0 and less than ), otherwise the function returns false.</param>
+            <param name="time1">[in] The time coordinate of the first anchor point.</param>
+            <param name="price1">[in] The price coordinate of the first anchor point.</param>
+            <param name="time2">[in] The time coordinate of the second anchor point.</param>
+            <param name="price2">[in] The price coordinate of the second anchor point.</param>
+            <param name="time3">[in] The time coordinate of the third anchor point.</param>
+            <param name="price3">[in] The price coordinate of the third anchor point.</param>
+        </member>
+        <member name="M:MQL4CSharp.Base.MQLBase.ObjectName(System.Int32)">
+            <summary>
+            Function: ObjectName
+            Description: The function returns the name of the corresponding object by its index in the objects list.
+            URL: http://docs.mql4.com/objects/objectname
+            </summary>
+            <param name="object_index">[in] Object index. This value must be greater or equal to 0 and less than .</param>
+        </member>
+        <member name="M:MQL4CSharp.Base.MQLBase.ObjectDelete(System.Int64,System.String)">
+            <summary>
+            Function: ObjectDelete
+            Description: The function removes the object with the specified name at the specified chart. There are two variants of the function:
+            URL: http://docs.mql4.com/objects/objectdelete
+            </summary>
+            <param name="chart_id">[in] Chart identifier.</param>
+            <param name="object_name">[in] Name of object to be deleted.</param>
+        </member>
+        <member name="M:MQL4CSharp.Base.MQLBase.ObjectDelete(System.String)">
+            <summary>
+            Function: ObjectDelete
+            Description: The function removes the object with the specified name at the specified chart. There are two variants of the function:
+            URL: http://docs.mql4.com/objects/objectdelete
+            </summary>
+            <param name="object_name">[in] Name of object to be deleted.</param>
+        </member>
+        <member name="M:MQL4CSharp.Base.MQLBase.ObjectsDeleteAll(System.Int64,System.Int32,System.Int32)">
+            <summary>
+            Function: ObjectsDeleteAll
+            Description: Removes all objects from the specified chart, specified chart subwindow, of the specified type.
+            URL: http://docs.mql4.com/objects/objectsdeleteall
+            </summary>
+            <param name="chart_id">[in] Chart identifier.</param>
+            <param name="sub_window">[in] Number of the chart window. Must be greater or equal to -1 (-1 mean all subwindows, 0 means the main chart window) and less than .</param>
+            <param name="object_type">[in] Type of the object. The value can be one of the values of the enumeration. EMPTY (-1) means all types.</param>
+        </member>
+        <member name="M:MQL4CSharp.Base.MQLBase.ObjectsDeleteAll(System.Int32,System.Int32)">
+            <summary>
+            Function: ObjectsDeleteAll
+            Description: Removes all objects from the specified chart, specified chart subwindow, of the specified type.
+            URL: http://docs.mql4.com/objects/objectsdeleteall
+            </summary>
+            <param name="sub_window">[in] Number of the chart window. Must be greater or equal to -1 (-1 mean all subwindows, 0 means the main chart window) and less than .</param>
+            <param name="object_type">[in] Type of the object. The value can be one of the values of the enumeration. EMPTY (-1) means all types.</param>
+        </member>
+        <member name="M:MQL4CSharp.Base.MQLBase.ObjectsDeleteAll(System.Int64,System.String,System.Int32,System.Int32)">
+            <summary>
+            Function: ObjectsDeleteAll
+            Description: Removes all objects from the specified chart, specified chart subwindow, of the specified type.
+            URL: http://docs.mql4.com/objects/objectsdeleteall
+            </summary>
+            <param name="chart_id">[in] Chart identifier.</param>
+            <param name="prefix">[in] Prefix in object names. All objects whose names start with this set of characters will be removed from chart. You can specify prefix as 'name' or 'name*' both variants will work the same. If an empty string is specified as the prefix, objects with all possible names will be removed.</param>
+            <param name="sub_window">[in] Number of the chart window. Must be greater or equal to -1 (-1 mean all subwindows, 0 means the main chart window) and less than .</param>
+            <param name="object_type">[in] Type of the object. The value can be one of the values of the enumeration. EMPTY (-1) means all types.</param>
+        </member>
+        <member name="M:MQL4CSharp.Base.MQLBase.ObjectFind(System.Int64,System.String)">
+            <summary>
+            Function: ObjectFind
+            Description: The function searches for an object having the specified name. There are two variants of the function:
+            URL: http://docs.mql4.com/objects/objectfind
+            </summary>
+            <param name="chart_id">[in] Chart identifier.</param>
+            <param name="object_name">[in] The name of the object to find.</param>
+        </member>
+        <member name="M:MQL4CSharp.Base.MQLBase.ObjectFind(System.String)">
+            <summary>
+            Function: ObjectFind
+            Description: The function searches for an object having the specified name. There are two variants of the function:
+            URL: http://docs.mql4.com/objects/objectfind
+            </summary>
+            <param name="object_name">[in] The name of the object to find.</param>
+        </member>
+        <member name="M:MQL4CSharp.Base.MQLBase.ObjectGetTimeByValue(System.String,System.Double,System.Int32)">
+            <summary>
+            Function: ObjectGetTimeByValue
+            Description: The function returns the time value for the specified price value of the specified object.
+            URL: http://docs.mql4.com/objects/objectgettimebyvalue
+            </summary>
+            <param name="object_name">[in] Name of the object.</param>
+            <param name="value">[in] Price value.</param>
+            <param name="line_id">[in] Line identifier.</param>
+        </member>
+        <member name="M:MQL4CSharp.Base.MQLBase.ObjectGetValueByTime(System.Int64,System.String,System.DateTime,System.Int32)">
+            <summary>
+            Function: ObjectGetValueByTime
+            Description: The function returns the price value for the specified time value of the specified object.
+            URL: http://docs.mql4.com/objects/objectgetvaluebytime
+            </summary>
+            <param name="chart_id">[in] Chart identifier.</param>
+            <param name="object_name">[in] Name of the object.</param>
+            <param name="time">[in] Time value.</param>
+            <param name="line_id">[in] Line identifier.</param>
+        </member>
+        <member name="M:MQL4CSharp.Base.MQLBase.ObjectMove(System.String,System.Int32,System.DateTime,System.Double)">
+            <summary>
+            Function: ObjectMove
+            Description: The function changes coordinates of the specified anchor point of the object at the specified chart. There are two variants of the function:
+            URL: http://docs.mql4.com/objects/objectmove
+            </summary>
+            <param name="object_name">[in] Name of the object.</param>
+            <param name="point_index">[in] Index of the anchor point. The number of anchor points depends on the .</param>
+            <param name="time">[in] Time coordinate of the selected anchor point.</param>
+            <param name="price">[in] Price coordinate of the selected anchor point.</param>
+        </member>
+        <member name="M:MQL4CSharp.Base.MQLBase.ObjectsTotal(System.Int64,System.Int32,System.Int32)">
+            <summary>
+            Function: ObjectsTotal
+            Description: The function returns the number of objects of the specified type in the specified chart. There are two variants of the function:
+            URL: http://docs.mql4.com/objects/objectstotal
+            </summary>
+            <param name="chart_id">[in] Chart identifier.</param>
+            <param name="sub_window">[in] Number of the chart subwindow. 0 means the main chart window, -1 means all the subwindows of the chart, including the main window.</param>
+            <param name="type">[in] Type of the object. The value can be one of the values of the enumeration. EMPTY(-1) means all types.</param>
+        </member>
+        <member name="M:MQL4CSharp.Base.MQLBase.ObjectsTotal(System.Int32)">
+            <summary>
+            Function: ObjectsTotal
+            Description: The function returns the number of objects of the specified type in the specified chart. There are two variants of the function:
+            URL: http://docs.mql4.com/objects/objectstotal
+            </summary>
+            <param name="type">[in] Type of the object. The value can be one of the values of the enumeration. EMPTY(-1) means all types.</param>
+        </member>
+        <member name="M:MQL4CSharp.Base.MQLBase.ObjectGetDouble(System.Int64,System.String,System.Int32,System.Int32)">
+            <summary>
+            Function: ObjectGetDouble
+            Description: The function returns the value of the corresponding object property. The object property must be of the
+            URL: http://docs.mql4.com/objects/objectgetdouble
+            </summary>
+            <param name="chart_id">[in] Chart identifier. 0 means the current chart.</param>
+            <param name="object_name">[in] Name of the object.</param>
+            <param name="prop_id">[in] ID of the object property. The value can be one of the values of the enumeration.</param>
+            <param name="prop_modifier">[in] Modifier of the specified property. For the first variant, the default modifier value is equal to 0. Most properties do not require a modifier. It denotes the number of the level in and in the graphical object Andrew's pitchfork. The numeration of levels starts from zero.</param>
+        </member>
+        <member name="M:MQL4CSharp.Base.MQLBase.ObjectGetInteger(System.Int64,System.String,System.Int32,System.Int32)">
+            <summary>
+            Function: ObjectGetInteger
+            Description: The function returns the value of the corresponding object property. The object property must be of the
+            URL: http://docs.mql4.com/objects/objectgetinteger
+            </summary>
+            <param name="chart_id">[in] Chart identifier. 0 means the current chart.</param>
+            <param name="object_name">[in] Name of the object.</param>
+            <param name="prop_id">[in] ID of the object property. The value can be one of the values of the enumeration.</param>
+            <param name="prop_modifier">[in] Modifier of the specified property. For the first variant, the default modifier value is equal to 0. Most properties do not require a modifier. It denotes the number of the level in and in the graphical object Andrew's pitchfork. The numeration of levels starts from zero.</param>
+        </member>
+        <member name="M:MQL4CSharp.Base.MQLBase.ObjectGetString(System.Int64,System.String,System.Int32,System.Int32)">
+            <summary>
+            Function: ObjectGetString
+            Description: The function returns the value of the corresponding object property. The object property must be of the
+            URL: http://docs.mql4.com/objects/objectgetstring
+            </summary>
+            <param name="chart_id">[in] Chart identifier. 0 means the current chart.</param>
+            <param name="object_name">[in] Name of the object.</param>
+            <param name="prop_id">[in] ID of the object property. The value can be one of the values of the enumeration.</param>
+            <param name="prop_modifier">[in] Modifier of the specified property. For the first variant, the default modifier value is equal to 0. Most properties do not require a modifier. It denotes the number of the level in and in the graphical object Andrew's pitchfork. The numeration of levels starts from zero.</param>
+        </member>
+        <member name="M:MQL4CSharp.Base.MQLBase.ObjectSetDouble(System.Int64,System.String,System.Int32,System.Double)">
+            <summary>
+            Function: ObjectSetDouble
+            Description: The function sets the value of the corresponding object property. The object property must be of the
+            URL: http://docs.mql4.com/objects/objectsetdouble
+            </summary>
+            <param name="chart_id">[in] Chart identifier. 0 means the current chart.</param>
+            <param name="object_name">[in] Name of the object.</param>
+            <param name="prop_id">[in] ID of the object property. The value can be one of the values of the enumeration.</param>
+            <param name="prop_value">[in] The value of the property.</param>
+        </member>
+        <member name="M:MQL4CSharp.Base.MQLBase.ObjectSetDouble(System.Int64,System.String,System.Int32,System.Int32,System.Double)">
+            <summary>
+            Function: ObjectSetDouble
+            Description: The function sets the value of the corresponding object property. The object property must be of the
+            URL: http://docs.mql4.com/objects/objectsetdouble
+            </summary>
+            <param name="chart_id">[in] Chart identifier. 0 means the current chart.</param>
+            <param name="object_name">[in] Name of the object.</param>
+            <param name="prop_id">[in] ID of the object property. The value can be one of the values of the enumeration.</param>
+            <param name="prop_modifier">[in] Modifier of the specified property. It denotes the number of the level in and in the graphical object Andrew's pitchfork. The numeration of levels starts from zero.</param>
+            <param name="prop_value">[in] The value of the property.</param>
+        </member>
+        <member name="M:MQL4CSharp.Base.MQLBase.ObjectSetInteger(System.Int64,System.String,System.Int32,System.Int64)">
+            <summary>
+            Function: ObjectSetInteger
+            Description: The function sets the value of the corresponding object property. The object property must be of the
+            URL: http://docs.mql4.com/objects/objectsetinteger
+            </summary>
+            <param name="chart_id">[in] Chart identifier. 0 means the current chart.</param>
+            <param name="object_name">[in] Name of the object.</param>
+            <param name="prop_id">[in] ID of the object property. The value can be one of the values of the enumeration.</param>
+            <param name="prop_value">[in] The value of the property.</param>
+        </member>
+        <member name="M:MQL4CSharp.Base.MQLBase.ObjectSetInteger(System.Int64,System.String,System.Int32,System.Int32,System.Int64)">
+            <summary>
+            Function: ObjectSetInteger
+            Description: The function sets the value of the corresponding object property. The object property must be of the
+            URL: http://docs.mql4.com/objects/objectsetinteger
+            </summary>
+            <param name="chart_id">[in] Chart identifier. 0 means the current chart.</param>
+            <param name="object_name">[in] Name of the object.</param>
+            <param name="prop_id">[in] ID of the object property. The value can be one of the values of the enumeration.</param>
+            <param name="prop_modifier">[in] Modifier of the specified property. It denotes the number of the level in and in the graphical object Andrew's pitchfork. The numeration of levels starts from zero.</param>
+            <param name="prop_value">[in] The value of the property.</param>
+        </member>
+        <member name="M:MQL4CSharp.Base.MQLBase.ObjectSetString(System.Int64,System.String,System.Int32,System.String)">
+            <summary>
+            Function: ObjectSetString
+            Description: The function sets the value of the corresponding object property. The object property must be of the
+            URL: http://docs.mql4.com/objects/objectsetstring
+            </summary>
+            <param name="chart_id">[in] Chart identifier. 0 means the current chart.</param>
+            <param name="object_name">[in] Name of the object.</param>
+            <param name="prop_id">[in] ID of the object property. The value can be one of the values of the enumeration.</param>
+            <param name="prop_value">[in] The value of the property.</param>
+        </member>
+        <member name="M:MQL4CSharp.Base.MQLBase.ObjectSetString(System.Int64,System.String,System.Int32,System.Int32,System.String)">
+            <summary>
+            Function: ObjectSetString
+            Description: The function sets the value of the corresponding object property. The object property must be of the
+            URL: http://docs.mql4.com/objects/objectsetstring
+            </summary>
+            <param name="chart_id">[in] Chart identifier. 0 means the current chart.</param>
+            <param name="object_name">[in] Name of the object.</param>
+            <param name="prop_id">[in] ID of the object property. The value can be one of the values of the enumeration.</param>
+            <param name="prop_modifier">[in] Modifier of the specified property. It denotes the number of the level in and in the graphical object Andrew's pitchfork. The numeration of levels starts from zero.</param>
+            <param name="prop_value">[in] The value of the property.</param>
+        </member>
+        <member name="M:MQL4CSharp.Base.MQLBase.TextSetFont(System.String,System.Int32,System.UInt32,System.Int32)">
+            <summary>
+            Function: TextSetFont
+            Description: The function sets the font for displaying the text using drawing methods and returns the result of that operation. Arial font with the size -120 (12 pt) is used by default.
+            URL: http://docs.mql4.com/objects/textsetfont
+            </summary>
+            <param name="name">[in] Font name in the system or the name of the resource containing the font or the path to font file on the disk.</param>
+            <param name="size">[in] The font size that can be set using positive and negative values. In case of positive values, the size of a displayed text does not depend on the operating system's font size settings. In case of negative values, the value is set in tenths of a point and the text size depends on the operating system settings ("standard scale" or "large scale"). See the Note below for more information about the differences between the modes.</param>
+            <param name="flags">[in] Combination of describing font style.</param>
+            <param name="orientation">[in] Text's horizontal inclination to X axis, the unit of measurement is 0.1 degrees. It means that orientation=450 stands for inclination equal to 45 degrees.</param>
+        </member>
+        <member name="M:MQL4CSharp.Base.MQLBase.ObjectDescription(System.String)">
+            <summary>
+            Function: ObjectDescription
+            Description: Returns the object description.
+            URL: http://docs.mql4.com/objects/objectdescription
+            </summary>
+            <param name="object_name">[in] Object name.</param>
+        </member>
+        <member name="M:MQL4CSharp.Base.MQLBase.ObjectGet(System.String,System.Int32)">
+            <summary>
+            Function: ObjectGet
+            Description: Returns the value of the specified object property.
+            URL: http://docs.mql4.com/objects/objectget
+            </summary>
+            <param name="object_name">[in] Object name.</param>
+            <param name="index">[in] Object property index. It can be any of the enumeration values.</param>
+        </member>
+        <member name="M:MQL4CSharp.Base.MQLBase.ObjectGetFiboDescription(System.String,System.Int32)">
+            <summary>
+            Function: ObjectGetFiboDescription
+            Description: Returns the level description of a Fibonacci object.
+            URL: http://docs.mql4.com/objects/objectgetfibodescription
+            </summary>
+            <param name="object_name">[in] Fibonacci object name.</param>
+            <param name="index">[in] Index of the Fibonacci level (0-31).</param>
+        </member>
+        <member name="M:MQL4CSharp.Base.MQLBase.ObjectGetShiftByValue(System.String,System.Double)">
+            <summary>
+            Function: ObjectGetShiftByValue
+            Description: The function calculates and returns bar index (shift related to the current bar) for the given price.
+            URL: http://docs.mql4.com/objects/objectgetshiftbyvalue
+            </summary>
+            <param name="object_name">[in] Object name.</param>
+            <param name="value">[in] Price value.</param>
+        </member>
+        <member name="M:MQL4CSharp.Base.MQLBase.ObjectGetValueByShift(System.String,System.Int32)">
+            <summary>
+            Function: ObjectGetValueByShift
+            Description: The function calculates and returns the price value for the specified bar (shift related to the current bar).
+            URL: http://docs.mql4.com/objects/objectgetvaluebyshift
+            </summary>
+            <param name="object_name">[in] Object name.</param>
+            <param name="shift">[in] Bar index.</param>
+        </member>
+        <member name="M:MQL4CSharp.Base.MQLBase.ObjectSet(System.String,System.Int32,System.Double)">
+            <summary>
+            Function: ObjectSet
+            Description: Changes the value of the specified object property.
+            URL: http://docs.mql4.com/objects/objectset
+            </summary>
+            <param name="object_name">[in] Object name.</param>
+            <param name="index">[in] Object property index. It can be any of enumeration values.</param>
+            <param name="value">[in] New value of the given property.</param>
+        </member>
+        <member name="M:MQL4CSharp.Base.MQLBase.ObjectSetFiboDescription(System.String,System.Int32,System.String)">
+            <summary>
+            Function: ObjectSetFiboDescription
+            Description: The function sets a new description to a level of a Fibonacci object.
+            URL: http://docs.mql4.com/objects/objectsetfibodescription
+            </summary>
+            <param name="object_name">[in] Object name.</param>
+            <param name="index">[in] Index of the Fibonacci level (0-31).</param>
+            <param name="text">[in] New description of the level.</param>
+        </member>
+        <member name="M:MQL4CSharp.Base.MQLBase.ObjectSetText(System.String,System.String,System.Int32,System.String,MQL4CSharp.Base.Enums.COLOR)">
+            <summary>
+            Function: ObjectSetText
+            Description: The function c
+            URL: http://docs.mql4.com/objects/objectsettext
+            </summary>
+            <param name="object_name">[in] Object name.</param>
+            <param name="text">[in] A text describing the object.</param>
+            <param name="font_size">[in] Font size in points.</param>
+            <param name="font_name">[in] Font name.</param>
+            <param name="text_color">[in] Font color.</param>
+        </member>
+        <member name="M:MQL4CSharp.Base.MQLBase.ObjectType(System.String)">
+            <summary>
+            Function: ObjectType
+            Description: The function returns the object type value.
+            URL: http://docs.mql4.com/objects/objecttype
+            </summary>
+            <param name="object_name">[in] Object name.</param>
+        </member>
+        <member name="M:MQL4CSharp.Base.MQLBase.iAC(System.String,System.Int32,System.Int32)">
+            <summary>
+            Function: iAC
+            Description: Calculates the Bill Williams' Accelerator/Decelerator oscillator and returns its value.
+            URL: http://docs.mql4.com/indicators/iac
+            </summary>
+            <param name="symbol">[in] Symbol name on the data of which the indicator will be calculated. means the current symbol.</param>
+            <param name="timeframe">[in] Timeframe. It can be any of enumeration values. 0 means the current chart timeframe.</param>
+            <param name="shift">[in] Index of the value taken from the indicator buffer (shift relative to the current bar the given amount of periods ago).</param>
+        </member>
+        <member name="M:MQL4CSharp.Base.MQLBase.iAD(System.String,System.Int32,System.Int32)">
+            <summary>
+            Function: iAD
+            Description: Calculates the Accumulation/Distribution indicator and returns its value.
+            URL: http://docs.mql4.com/indicators/iad
+            </summary>
+            <param name="symbol">[in] Symbol name on the data of which the indicator will be calculated. means the current symbol.</param>
+            <param name="timeframe">[in] Timeframe. It can be any of enumeration values. 0 means the current chart timeframe.</param>
+            <param name="shift">[in] Index of the value taken from the indicator buffer (shift relative to the current bar the given amount of periods ago).</param>
+        </member>
+        <member name="M:MQL4CSharp.Base.MQLBase.iADX(System.String,System.Int32,System.Int32,System.Int32,System.Int32,System.Int32)">
+            <summary>
+            Function: iADX
+            Description: Calculates the Average Directional Movement Index indicator and returns its value.
+            URL: http://docs.mql4.com/indicators/iadx
+            </summary>
+            <param name="symbol">[in] Symbol name on the data of which the indicator will be calculated. means the current symbol.</param>
+            <param name="timeframe">[in] Timeframe. It can be any of enumeration values. 0 means the current chart timeframe.</param>
+            <param name="period">[in] Averaging period for calculation.</param>
+            <param name="applied_price">[in] Applied price. It can be any of enumeration values.</param>
+            <param name="mode">[in] Indicator line index. It can be any of the enumeration value. (0 - MODE_MAIN, 1 - MODE_PLUSDI, 2 - MODE_MINUSDI).</param>
+            <param name="shift">[in] Index of the value taken from the indicator buffer (shift relative to the current bar the given amount of periods ago).</param>
+        </member>
+        <member name="M:MQL4CSharp.Base.MQLBase.iAlligator(System.String,System.Int32,System.Int32,System.Int32,System.Int32,System.Int32,System.Int32,System.Int32,System.Int32,System.Int32,System.Int32,System.Int32)">
+            <summary>
+            Function: iAlligator
+            Description: Calculates the Alligator indicator and returns its value.
+            URL: http://docs.mql4.com/indicators/ialligator
+            </summary>
+            <param name="symbol">[in] Symbol name on the data of which the indicator will be calculated. means the current symbol.</param>
+            <param name="timeframe">[in] Timeframe. It can be any of enumeration values. 0 means the current chart timeframe.</param>
+            <param name="jaw_period">[in] Blue line averaging period (Alligator's Jaw).</param>
+            <param name="jaw_shift">[in] Blue line shift relative to the chart.</param>
+            <param name="teeth_period">[in] Red line averaging period (Alligator's Teeth).</param>
+            <param name="teeth_shift">[in] Red line shift relative to the chart.</param>
+            <param name="lips_period">[in] Green line averaging period (Alligator's Lips).</param>
+            <param name="lips_shift">[in] Green line shift relative to the chart.</param>
+            <param name="ma_method">[in] MA method. It can be any of Moving Average methods. It can be any of enumeration values.</param>
+            <param name="applied_price">[in] Applied price. It can be any of enumeration values.</param>
+            <param name="mode">[in] Data source, identifier of the . It can be any of the following values:</param>
+            <param name="shift">MODE_GATORJAW - Gator Jaw (blue) balance line,MODE_GATORTEETH - Gator Teeth (red) balance line,MODE_GATORLIPS - Gator Lips (green) balance line.</param>
+        </member>
+        <member name="M:MQL4CSharp.Base.MQLBase.iAO(System.String,System.Int32,System.Int32)">
+            <summary>
+            Function: iAO
+            Description: Calculates the Awesome oscillator and returns its value.
+            URL: http://docs.mql4.com/indicators/iao
+            </summary>
+            <param name="symbol">[in] Symbol name on the data of which the indicator will be calculated. means the current symbol.</param>
+            <param name="timeframe">[in] Timeframe. It can be any of enumeration values. 0 means the current chart timeframe.</param>
+            <param name="shift">[in] Index of the value taken from the indicator buffer (shift relative to the current bar the given amount of periods ago).</param>
+        </member>
+        <member name="M:MQL4CSharp.Base.MQLBase.iATR(System.String,System.Int32,System.Int32,System.Int32)">
+            <summary>
+            Function: iATR
+            Description: Calculates the Average True Range indicator and returns its value.
+            URL: http://docs.mql4.com/indicators/iatr
+            </summary>
+            <param name="symbol">[in] Symbol name on the data of which the indicator will be calculated. means the current symbol.</param>
+            <param name="timeframe">[in] Timeframe. It can be any of enumeration values. 0 means the current chart timeframe.</param>
+            <param name="period">[in] Averaging period.</param>
+            <param name="shift">[in] Index of the value taken from the indicator buffer (shift relative to the current bar the given amount of periods ago).</param>
+        </member>
+        <member name="M:MQL4CSharp.Base.MQLBase.iBearsPower(System.String,System.Int32,System.Int32,System.Int32,System.Int32)">
+            <summary>
+            Function: iBearsPower
+            Description: Calculates the Bears Power indicator and returns its value.
+            URL: http://docs.mql4.com/indicators/ibearspower
+            </summary>
+            <param name="symbol">[in] Symbol name on the data of which the indicator will be calculated. means the current symbol.</param>
+            <param name="timeframe">[in] Timeframe. It can be any of enumeration values. 0 means the current chart timeframe.</param>
+            <param name="period">[in] Averaging period.</param>
+            <param name="applied_price">[in] Applied price. It can be any of enumeration values.</param>
+            <param name="shift">[in] Index of the value taken from the indicator buffer (shift relative to the current bar the given amount of periods ago).</param>
+        </member>
+        <member name="M:MQL4CSharp.Base.MQLBase.iBands(System.String,System.Int32,System.Int32,System.Double,System.Int32,System.Int32,System.Int32,System.Int32)">
+            <summary>
+            Function: iBands
+            Description: Calculates the Bollinger Bands indicator and returns its value.
+            URL: http://docs.mql4.com/indicators/ibands
+            </summary>
+            <param name="symbol">[in] Symbol name on the data of which the indicator will be calculated. means the current symbol.</param>
+            <param name="timeframe">[in] Timeframe. It can be any of enumeration values. 0 means the current chart timeframe.</param>
+            <param name="period">[in] Averaging period to calculate the main line.</param>
+            <param name="deviation">[in] Number of standard deviations from the main line.</param>
+            <param name="bands_shift">[in] The indicator shift relative to the chart.</param>
+            <param name="applied_price">[in] Applied price. It can be any of enumeration values.</param>
+            <param name="mode">[in] Indicator line index. It can be any of the enumeration value (0 - MODE_MAIN, 1 - MODE_UPPER, 2 - MODE_LOWER).</param>
+            <param name="shift">[in] Index of the value taken from the indicator buffer (shift relative to the current bar the given amount of periods ago).</param>
+        </member>
+        <member name="M:MQL4CSharp.Base.MQLBase.iBullsPower(System.String,System.Int32,System.Int32,System.Int32,System.Int32)">
+            <summary>
+            Function: iBullsPower
+            Description: Calculates the Bulls Power indicator and returns its value.
+            URL: http://docs.mql4.com/indicators/ibullspower
+            </summary>
+            <param name="symbol">[in] Symbol name on the data of which the indicator will be calculated. means the current symbol.</param>
+            <param name="timeframe">[in] Timeframe. It can be any of enumeration values. 0 means the current chart timeframe.</param>
+            <param name="period">[in] Averaging period for calculation.</param>
+            <param name="applied_price">[in] Applied price. It can be any of enumeration values.</param>
+            <param name="shift">[in] Index of the value taken from the indicator buffer (shift relative to the current bar the given amount of periods ago).</param>
+        </member>
+        <member name="M:MQL4CSharp.Base.MQLBase.iCCI(System.String,System.Int32,System.Int32,System.Int32,System.Int32)">
+            <summary>
+            Function: iCCI
+            Description: Calculates the Commodity Channel Index indicator and returns its value.
+            URL: http://docs.mql4.com/indicators/icci
+            </summary>
+            <param name="symbol">[in] Symbol name on the data of which the indicator will be calculated. means the current symbol.</param>
+            <param name="timeframe">[in] Timeframe. It can be any of enumeration values. 0 means the current chart timeframe.</param>
+            <param name="period">[in] Averaging period for calculation.</param>
+            <param name="applied_price">[in] Applied price. It can be any of enumeration values.</param>
+            <param name="shift">[in] Index of the value taken from the indicator buffer (shift relative to the current bar the given amount of periods ago).</param>
+        </member>
+        <member name="M:MQL4CSharp.Base.MQLBase.iDeMarker(System.String,System.Int32,System.Int32,System.Int32)">
+            <summary>
+            Function: iDeMarker
+            Description: Calculates the DeMarker indicator and returns its value.
+            URL: http://docs.mql4.com/indicators/idemarker
+            </summary>
+            <param name="symbol">[in] Symbol name on the data of which the indicator will be calculated. means the current symbol.</param>
+            <param name="timeframe">[in] Timeframe. It can be any of enumeration values. 0 means the current chart timeframe.</param>
+            <param name="period">[in] Averaging period for calculation.</param>
+            <param name="shift">[in] Index of the value taken from the indicator buffer (shift relative to the current bar the given amount of periods ago).</param>
+        </member>
+        <member name="M:MQL4CSharp.Base.MQLBase.iEnvelopes(System.String,System.Int32,System.Int32,System.Int32,System.Int32,System.Int32,System.Double,System.Int32,System.Int32)">
+            <summary>
+            Function: iEnvelopes
+            Description: Calculates the Envelopes indicator and returns its value.
+            URL: http://docs.mql4.com/indicators/ienvelopes
+            </summary>
+            <param name="symbol">[in] Symbol name on the data of which the indicator will be calculated. means the current symbol.</param>
+            <param name="timeframe">[in] Timeframe. It can be any of enumeration values. 0 means the current chart timeframe.</param>
+            <param name="ma_period">[in] Averaging period for calculation of the main line.</param>
+            <param name="ma_method">[in] Moving Average method. It can be any of enumeration values.</param>
+            <param name="ma_shift">[in] MA shift. Indicator line offset relate to the chart by timeframe.</param>
+            <param name="applied_price">[in] Applied price. It can be any of enumeration values.</param>
+            <param name="deviation">[in] Percent deviation from the main line.</param>
+            <param name="mode">[in] Indicator line index. It can be any of enumeration value (0 - MODE_MAIN, 1 - MODE_UPPER, 2 - MODE_LOWER).</param>
+            <param name="shift">[in] Index of the value taken from the indicator buffer (shift relative to the current bar the given amount of periods ago).</param>
+        </member>
+        <member name="M:MQL4CSharp.Base.MQLBase.iForce(System.String,System.Int32,System.Int32,System.Int32,System.Int32,System.Int32)">
+            <summary>
+            Function: iForce
+            Description: Calculates the Force Index indicator and returns its value.
+            URL: http://docs.mql4.com/indicators/iforce
+            </summary>
+            <param name="symbol">[in] Symbol name on the data of which the indicator will be calculated. means the current symbol.</param>
+            <param name="timeframe">[in] Timeframe. It can be any of enumeration values. 0 means the current chart timeframe.</param>
+            <param name="period">[in] Averaging period for calculation.</param>
+            <param name="ma_method">[in] Moving Average method. It can be any of enumeration values.</param>
+            <param name="applied_price">[in] Applied price. It can be any of enumeration values.</param>
+            <param name="shift">[in] Index of the value taken from the indicator buffer (shift relative to the current bar the given amount of periods ago).</param>
+        </member>
+        <member name="M:MQL4CSharp.Base.MQLBase.iFractals(System.String,System.Int32,System.Int32,System.Int32)">
+            <summary>
+            Function: iFractals
+            Description: Calculates the Fractals indicator and returns its value.
+            URL: http://docs.mql4.com/indicators/ifractals
+            </summary>
+            <param name="symbol">[in] Symbol name on the data of which the indicator will be calculated. means the current symbol.</param>
+            <param name="timeframe">[in] Timeframe. It can be any of enumeration values. 0 means the current chart timeframe.</param>
+            <param name="mode">[in] Indicator line index. It can be any of the enumeration value.</param>
+            <param name="shift">[in] Index of the value taken from the indicator buffer (shift relative to the current bar the given amount of periods ago).</param>
+        </member>
+        <member name="M:MQL4CSharp.Base.MQLBase.iGator(System.String,System.Int32,System.Int32,System.Int32,System.Int32,System.Int32,System.Int32,System.Int32,System.Int32,System.Int32,System.Int32,System.Int32)">
+            <summary>
+            Function: iGator
+            Description: Calculates the Gator oscillator and returns its value.
+            URL: http://docs.mql4.com/indicators/igator
+            </summary>
+            <param name="symbol">[in] Symbol name on the data of which the indicator will be calculated. means the current symbol.</param>
+            <param name="timeframe">[in] Timeframe. It can be any of enumeration values. 0 means the current chart timeframe.</param>
+            <param name="jaw_period">[in] Blue line averaging period (Alligator's Jaw).</param>
+            <param name="jaw_shift">[in] Blue line shift relative to the chart.</param>
+            <param name="teeth_period">[in] Red line averaging period (Alligator's Teeth).</param>
+            <param name="teeth_shift">[in] Red line shift relative to the chart.</param>
+            <param name="lips_period">[in] Green line averaging period (Alligator's Lips).</param>
+            <param name="lips_shift">[in] Green line shift relative to the chart.</param>
+            <param name="ma_method">[in] MA method. It can be any of enumeration value.</param>
+            <param name="applied_price">[in] Applied price. It can be any of enumeration values.</param>
+            <param name="mode">[in] Indicator line index. It can be any of enumeration value.</param>
+            <param name="shift">MODE_GATORJAW - blue line (Jaw line),MODE_GATORTEETH - red line (Teeth line),MODE_GATORLIPS - green line (Lips line).</param>
+        </member>
+        <member name="M:MQL4CSharp.Base.MQLBase.iIchimoku(System.String,System.Int32,System.Int32,System.Int32,System.Int32,System.Int32,System.Int32)">
+            <summary>
+            Function: iIchimoku
+            Description: Calculates the Ichimoku Kinko Hyo indicator and returns its value.
+            URL: http://docs.mql4.com/indicators/iichimoku
+            </summary>
+            <param name="symbol">[in] Symbol name on the data of which the indicator will be calculated. means the current symbol.</param>
+            <param name="timeframe">[in] Timeframe. It can be any of enumeration values. 0 means the current chart timeframe.</param>
+            <param name="tenkan_sen">[in] Tenkan Sen averaging period.</param>
+            <param name="kijun_sen">[in] Kijun Sen averaging period.</param>
+            <param name="senkou_span_b">[in] Senkou SpanB averaging period.</param>
+            <param name="mode">[in] Source of data. It can be one of the enumeration (1 - MODE_TENKANSEN, 2 - MODE_KIJUNSEN, 3 - MODE_SENKOUSPANA, 4 - MODE_SENKOUSPANB, 5 - MODE_CHIKOUSPAN).</param>
+            <param name="shift">[in] Index of the value taken from the indicator buffer (shift relative to the current bar the given amount of periods ago).</param>
+        </member>
+        <member name="M:MQL4CSharp.Base.MQLBase.iBWMFI(System.String,System.Int32,System.Int32)">
+            <summary>
+            Function: iBWMFI
+            Description: Calculates the Market Facilitation Index indicator and returns its value.
+            URL: http://docs.mql4.com/indicators/ibwmfi
+            </summary>
+            <param name="symbol">[in] Symbol name on the data of which the indicator will be calculated. means the current symbol.</param>
+            <param name="timeframe">[in] Timeframe. It can be any of enumeration values. 0 means the current chart timeframe.</param>
+            <param name="shift">[in] Index of the value taken from the indicator buffer (shift relative to the current bar the given amount of periods ago).</param>
+        </member>
+        <member name="M:MQL4CSharp.Base.MQLBase.iMomentum(System.String,System.Int32,System.Int32,System.Int32,System.Int32)">
+            <summary>
+            Function: iMomentum
+            Description: Calculates the Momentum indicator and returns its value.
+            URL: http://docs.mql4.com/indicators/imomentum
+            </summary>
+            <param name="symbol">[in] Symbol name on the data of which the indicator will be calculated. means the current symbol.</param>
+            <param name="timeframe">[in] Timeframe. It can be any of enumeration values. 0 means the current chart timeframe.</param>
+            <param name="period">[in] Averaging period (amount of bars) for calculation of price changes.</param>
+            <param name="applied_price">[in] Applied price. It can be any of enumeration values.</param>
+            <param name="shift">[in] Index of the value taken from the indicator buffer (shift relative to the current bar the given amount of periods ago).</param>
+        </member>
+        <member name="M:MQL4CSharp.Base.MQLBase.iMFI(System.String,System.Int32,System.Int32,System.Int32)">
+            <summary>
+            Function: iMFI
+            Description: Calculates the Money Flow Index indicator and returns its value.
+            URL: http://docs.mql4.com/indicators/imfi
+            </summary>
+            <param name="symbol">[in] Symbol name on the data of which the indicator will be calculated. means the current symbol.</param>
+            <param name="timeframe">[in] Timeframe. It can be any of enumeration values. 0 means the current chart timeframe.</param>
+            <param name="period">[in] Period (amount of bars) for calculation of the indicator.</param>
+            <param name="shift">[in] Index of the value taken from the indicator buffer (shift relative to the current bar the given amount of periods ago).</param>
+        </member>
+        <member name="M:MQL4CSharp.Base.MQLBase.iMA(System.String,System.Int32,System.Int32,System.Int32,System.Int32,System.Int32,System.Int32)">
+            <summary>
+            Function: iMA
+            Description: Calculates the Moving Average indicator and returns its value.
+            URL: http://docs.mql4.com/indicators/ima
+            </summary>
+            <param name="symbol">[in] Symbol name on the data of which the indicator will be calculated. means the current symbol.</param>
+            <param name="timeframe">[in] Timeframe. It can be any of enumeration values. 0 means the current chart timeframe.</param>
+            <param name="ma_period">[in] Averaging period for calculation.</param>
+            <param name="ma_shift">[in] MA shift. Indicators line offset relate to the chart by timeframe.</param>
+            <param name="ma_method">[in] Moving Average method. It can be any of enumeration values.</param>
+            <param name="applied_price">[in] Applied price. It can be any of enumeration values.</param>
+            <param name="shift">[in] Index of the value taken from the indicator buffer (shift relative to the current bar the given amount of periods ago).</param>
+        </member>
+        <member name="M:MQL4CSharp.Base.MQLBase.iOsMA(System.String,System.Int32,System.Int32,System.Int32,System.Int32,System.Int32,System.Int32)">
+            <summary>
+            Function: iOsMA
+            Description: iOsMA
+            URL: http://docs.mql4.com/indicators/iosma
+            </summary>
+            <param name="symbol">[in] Symbol name on the data of which the indicator will be calculated. means the current symbol.</param>
+            <param name="timeframe">[in] Timeframe. It can be any of enumeration values. 0 means the current chart timeframe.</param>
+            <param name="fast_ema_period">[in] Fast EMA averaging period.</param>
+            <param name="slow_ema_period">[in] Slow EMA averaging period.</param>
+            <param name="signal_period">[in] Signal line averaging period.</param>
+            <param name="applied_price">[in] Applied price. It can be any of enumeration values.</param>
+            <param name="shift">[in] Index of the value taken from the indicator buffer (shift relative to the current bar the given amount of periods ago).</param>
+        </member>
+        <member name="M:MQL4CSharp.Base.MQLBase.iMACD(System.String,System.Int32,System.Int32,System.Int32,System.Int32,System.Int32,System.Int32,System.Int32)">
+            <summary>
+            Function: iMACD
+            Description: Calculates the Moving Averages Convergence/Divergence indicator and returns its value.
+            URL: http://docs.mql4.com/indicators/imacd
+            </summary>
+            <param name="symbol">[in] Symbol name on the data of which the indicator will be calculated. means the current symbol.</param>
+            <param name="timeframe">[in] Timeframe. It can be any of enumeration values. 0 means the current chart timeframe.</param>
+            <param name="fast_ema_period">[in] Fast EMA averaging period.</param>
+            <param name="slow_ema_period">[in] Slow EMA averaging period.</param>
+            <param name="signal_period">[in] Signal line averaging period.</param>
+            <param name="applied_price">[in] Applied price. It can be any of enumeration values.</param>
+            <param name="mode">[in] Indicator line index. It can be one of the enumeration values (0-MODE_MAIN, 1-MODE_SIGNAL).</param>
+            <param name="shift">[in] Index of the value taken from the indicator buffer (shift relative to the current bar the given amount of periods ago).</param>
+        </member>
+        <member name="M:MQL4CSharp.Base.MQLBase.iOBV(System.String,System.Int32,System.Int32,System.Int32)">
+            <summary>
+            Function: iOBV
+            Description: Calculates the On Balance Volume indicator and returns its value.
+            URL: http://docs.mql4.com/indicators/iobv
+            </summary>
+            <param name="symbol">[in] Symbol name on the data of which the indicator will be calculated. means the current symbol.</param>
+            <param name="timeframe">[in] Timeframe. It can be any of enumeration values. 0 means the current chart timeframe.</param>
+            <param name="applied_price">[in] Applied price. It can be any of enumeration values.</param>
+            <param name="shift">[in] Index of the value taken from the indicator buffer (shift relative to the current bar the given amount of periods ago).</param>
+        </member>
+        <member name="M:MQL4CSharp.Base.MQLBase.iSAR(System.String,System.Int32,System.Double,System.Double,System.Int32)">
+            <summary>
+            Function: iSAR
+            Description: Calculates the Parabolic Stop and Reverse system indicator and returns its value.
+            URL: http://docs.mql4.com/indicators/isar
+            </summary>
+            <param name="symbol">[in] Symbol name on the data of which the indicator will be calculated. means the current symbol.</param>
+            <param name="timeframe">[in] Timeframe. It can be any of enumeration values. 0 means the current chart timeframe.</param>
+            <param name="step">[in] The step of price increment, usually 0.02.</param>
+            <param name="maximum">[in] The maximum step, usually 0.2.</param>
+            <param name="shift">[in] Index of the value taken from the indicator buffer (shift relative to the current bar the given amount of periods ago).</param>
+        </member>
+        <member name="M:MQL4CSharp.Base.MQLBase.iRSI(System.String,System.Int32,System.Int32,System.Int32,System.Int32)">
+            <summary>
+            Function: iRSI
+            Description: Calculates the Relative Strength Index indicator and returns its value.
+            URL: http://docs.mql4.com/indicators/irsi
+            </summary>
+            <param name="symbol">[in] Symbol name on the data of which the indicator will be calculated. means the current symbol.</param>
+            <param name="timeframe">[in] Timeframe. It can be any of enumeration values. 0 means the current chart timeframe.</param>
+            <param name="period">[in] Averaging period for calculation.</param>
+            <param name="applied_price">[in] Applied price. It can be any of enumeration values.</param>
+            <param name="shift">[in] Index of the value taken from the indicator buffer (shift relative to the current bar the given amount of periods ago).</param>
+        </member>
+        <member name="M:MQL4CSharp.Base.MQLBase.iRVI(System.String,System.Int32,System.Int32,System.Int32,System.Int32)">
+            <summary>
+            Function: iRVI
+            Description: Calculates the Relative Vigor Index indicator and returns its value.
+            URL: http://docs.mql4.com/indicators/irvi
+            </summary>
+            <param name="symbol">[in] Symbol name on the data of which the indicator will be calculated. means the current symbol.</param>
+            <param name="timeframe">[in] Timeframe. It can be any of enumeration values. 0 means the current chart timeframe.</param>
+            <param name="period">[in] Averaging period for calculation.</param>
+            <param name="mode">[in] Indicator line index. It can be any of enumeration value.</param>
+            <param name="shift">[in] Index of the value taken from the indicator buffer (shift relative to the current bar the given amount of periods ago).</param>
+        </member>
+        <member name="M:MQL4CSharp.Base.MQLBase.iStdDev(System.String,System.Int32,System.Int32,System.Int32,System.Int32,System.Int32,System.Int32)">
+            <summary>
+            Function: iStdDev
+            Description: Calculates the Standard Deviation indicator and returns its value.
+            URL: http://docs.mql4.com/indicators/istddev
+            </summary>
+            <param name="symbol">[in] Symbol name on the data of which the indicator will be calculated. means the current symbol.</param>
+            <param name="timeframe">[in] Timeframe. It can be any of enumeration values. 0 means the current chart timeframe.</param>
+            <param name="ma_period">[in] Moving Average period.</param>
+            <param name="ma_shift">[in] Moving Average shift.</param>
+            <param name="ma_method">[in] Moving Average method. It can be any of enumeration values.</param>
+            <param name="applied_price">[in] Applied price. It can be any of enumeration values.</param>
+            <param name="shift">[in] Index of the value taken from the indicator buffer (shift relative to the current bar the given amount of periods ago).</param>
+        </member>
+        <member name="M:MQL4CSharp.Base.MQLBase.iStochastic(System.String,System.Int32,System.Int32,System.Int32,System.Int32,System.Int32,System.Int32,System.Int32,System.Int32)">
+            <summary>
+            Function: iStochastic
+            Description: Calculates the Stochastic Oscillator and returns its value.
+            URL: http://docs.mql4.com/indicators/istochastic
+            </summary>
+            <param name="symbol">[in] Symbol name on the data of which the indicator will be calculated. means the current symbol.</param>
+            <param name="timeframe">[in] Timeframe. It can be any of enumeration values. 0 means the current chart timeframe.</param>
+            <param name="Kperiod">[in] Period of the %K line.</param>
+            <param name="Dperiod">[in] Period of the %D line.</param>
+            <param name="slowing">[in] Slowing value.</param>
+            <param name="method">[in] Moving Average method. It can be any of enumeration values.</param>
+            <param name="price_field">[in] Price field parameter. Can be one of this values: 0 - Low/High or 1 - Close/Close.</param>
+            <param name="mode">[in] Indicator line index. It can be any of the enumeration value (0 - MODE_MAIN, 1 - MODE_SIGNAL).</param>
+            <param name="shift">[in] Index of the value taken from the indicator buffer (shift relative to the current bar the given amount of periods ago).</param>
+        </member>
+        <member name="M:MQL4CSharp.Base.MQLBase.iWPR(System.String,System.Int32,System.Int32,System.Int32)">
+            <summary>
+            Function: iWPR
+            Description: Calculates the Larry Williams' Percent Range and returns its value.
+            URL: http://docs.mql4.com/indicators/iwpr
+            </summary>
+            <param name="symbol">[in] Symbol name on the data of which the indicator will be calculated. means the current symbol.</param>
+            <param name="timeframe">[in] Timeframe. It can be any of enumeration values. 0 means the current chart timeframe.</param>
+            <param name="period">[in] Averaging period for calculation.</param>
+            <param name="shift">[in] Index of the value taken from the indicator buffer (shift relative to the current bar the given amount of periods ago).</param>
+        </member>
+        <member name="M:MQL4CSharp.Base.MQLBase.ObjectCreate(System.String,MQL4CSharp.Base.Enums.OBJECT_TYPE,System.Int32,System.DateTime,System.Double)">
+            <summary>
+            Function: ObjectCreate
+            Description: The function creates an object with the specified name, type, and the initial coordinates in the specified chart subwindow of the specified chart. There are two variants of the function:
+            URL: http://docs.mql4.com/objects/objectcreate
+            </summary>
+            <param name="object_name">[in] Name of the object. The name must be unique within a chart, including its subwindows.</param>
+            <param name="object_type">[in] Object type. The value can be one of the values of the enumeration.</param>
+            <param name="sub_window">[in] Number of the chart subwindow. 0 means the main chart window. The specified subwindow must exist (window index must be greater or equal to 0 and less than ), otherwise the function returns false.</param>
+            <param name="time1">[in] The time coordinate of the first anchor point.</param>
+            <param name="price1">[in] The price coordinate of the first anchor point.</param>
+            <param name="timeN">[in] The time coordinate of the N-th anchor point.</param>
+            <param name="priceN">[in] The price coordinate of the N-th anchor point.</param>
+        </member>
+        <member name="M:MQL4CSharp.Base.MQLBase.MarketTime(System.String)">
+            <summary>
+            Function: MarketInfo
+            Description: Returns various data about securities listed in the "Market Watch" window.
+            URL: http://docs.mql4.com/marketinformation/marketinfo
+            </summary>
+            <param name="symbol">[in] Symbol name.</param>
+            <param name="type">[in] Request of information to be returned. Can be any of values of request identifiers.</param>
+        </member>
+        <member name="M:MQL4CSharp.Base.REST.MQLRESTBase.AddRoutesFromStandardMethods(Grapevine.Server.RestServer,System.Func{MQL4CSharp.Base.REST.MQLRestContext,System.Object},System.Collections.Generic.IEnumerable{System.Reflection.MethodInfo})">
+            <summary>
+            add routes to call directly methods of MQLBase
+            </summary>
+            <param name="server"></param>
+            <param name="instanceGetter"></param>
+            <param name="methods"></param>
+        </member>
+        <member name="T:MQL4CSharp.Properties.Resources">
+            <summary>
+              Classe di risorse fortemente tipizzata per la ricerca di stringhe localizzate e così via.
+            </summary>
+        </member>
+        <member name="P:MQL4CSharp.Properties.Resources.ResourceManager">
+            <summary>
+              Restituisce l'istanza di ResourceManager nella cache utilizzata da questa classe.
+            </summary>
+        </member>
+        <member name="P:MQL4CSharp.Properties.Resources.Culture">
+            <summary>
+              Esegue l'override della proprietà CurrentUICulture del thread corrente per tutte le
+              ricerche di risorse eseguite utilizzando questa classe di risorse fortemente tipizzata.
+            </summary>
+        </member>
+        <member name="M:MQL4CSharp.UserDefined.Filter.TimeOfDayFilter.#ctor(MQL4CSharp.Base.BaseStrategy,NodaTime.LocalTime,NodaTime.LocalTime)">
+            
+             @param strategy
+             @param timeStart : eg "07:30"
+             @param timeStop : eg "14:00"
+        </member>
+        <member name="F:MQL4CSharp.UserDefined.Input.NewsReport.name">
+            News Report Name
+        </member>
+        <member name="F:MQL4CSharp.UserDefined.Input.NewsReport.currency">
+            The currency this report relates to. Eg: GBP, USD, EUR
+            Filter will use this to pick which symbol to apply filter to
+        </member>
+        <member name="F:MQL4CSharp.UserDefined.Input.NewsReport.noEntryMinutesPrior">
+            the filter will not open a trade X minutes prior to the release
+        </member>
+        <member name="F:MQL4CSharp.UserDefined.Input.NewsReport.noEntryMinutesPost">
+            the filter will not open a trade X minutes after to the release
+        </member>
+        <member name="F:MQL4CSharp.UserDefined.Input.NewsReport.closeOutMinutesPrior">
+            the filter will close open trades X minutes prior the release
+        </member>
+        <member name="T:MQL4CSharp.UserDefined.Strategy.MQLRESTStrategy">
+            <summary>
+            Attach this one to your chart just to enable the REST API.
+            It does nothing, but every MQLExpert has a REST endpoint
+            </summary>
+        </member>
+    </members>
+</doc>

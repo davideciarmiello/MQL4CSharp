@@ -222,6 +222,9 @@ namespace MQL4CSharp.Base
 
         public bool ChartExpertAdvisorDisable(long chart_id)
         {
+            //call ChartExpertAdvisorName, that store a actual ExpertAdvisor in cache
+            if (string.IsNullOrEmpty(ChartExpertAdvisorName(chart_id)))
+                return true;
             var template = "<chart>\r\n</chart>";
             var res = ChartApplyTemplate(chart_id, Encoding.UTF8.GetBytes(template));
             ChartExpertAdvisorNameWait(chart_id, "");

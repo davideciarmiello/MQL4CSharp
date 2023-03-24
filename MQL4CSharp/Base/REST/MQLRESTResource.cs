@@ -25,11 +25,12 @@ namespace MQL4CSharp.Base.REST
         [RestRoute(PathInfo = @"^/([0-9]+/)?(?i)help$")]
         public IHttpContext Help(IHttpContext context)
         {
+            var baseUrl = $"{context.Request.Url.OriginalString.Replace(context.Request.Url.PathAndQuery, "/").TrimEnd('/')}/";
             var allmethods = AddedRoutesMethods.OrderBy(x => x.Key)
                 .SelectMany(pair => pair.Value, (pair, info) =>
                 {
                     var comment = info.GetXmlDocsSummary();
-                    return $"Api Url: {pair.Key}\r\n{(string.IsNullOrEmpty(comment) ? comment : comment + "\r\n")}{GetMethodDescr(info)}";
+                    return $"Api Url: {baseUrl}{info.Name.ToLowerInvariant()} or {baseUrl}chartid/{info.Name.ToLowerInvariant()}\r\n{(string.IsNullOrEmpty(comment) ? comment : comment + "\r\n")}{GetMethodDescr(info)}";
                 })
                 .ToList();
             context.Response.SendResponse($"All Methods:\r\n{allmethods.Join("\r\n\r\n")}");

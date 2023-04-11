@@ -14,6 +14,13 @@
             Class with methods customized of standard methods
             </summary>
         </member>
+        <member name="M:MQL4CSharp.Base.MQLBaseExtended.AccountNumber">
+            <summary>
+            Function: AccountNumber
+            Description: Returns the current account number.
+            URL: http://docs.mql4.com/account/accountnumber
+            </summary>
+        </member>
         <member name="M:MQL4CSharp.Base.MQLBase.Alert(System.String)">
             <summary>
             Function: Alert

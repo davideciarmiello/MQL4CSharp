@@ -21,7 +21,7 @@ namespace MQL4CSharp
     {
         private static readonly ILog LOG = LogManager.GetLogger(typeof(RestServerHelper));
 
-        internal static ConcurrentDictionary<long, RestServer> instances = new ConcurrentDictionary<long, RestServer>();
+        public static ConcurrentDictionary<long, RestServer> Instances = new ConcurrentDictionary<long, RestServer>();
          
         [DllExport("RestServerStart", CallingConvention = CallingConvention.StdCall)]
         public static bool RestServerStart(Int64 ix, [MarshalAs(UnmanagedType.LPWStr)] string listenAddress)
@@ -30,7 +30,7 @@ namespace MQL4CSharp
             {
                 //https://scottoffen.github.io/grapevine-legacy/en/
                 RestServer restServer;
-                instances.TryGetValue(ix, out restServer);
+                Instances.TryGetValue(ix, out restServer);
                 if (restServer?.IsListening == true)
                     return true;
 
@@ -67,7 +67,7 @@ namespace MQL4CSharp
                 }
 
                 restServer.Start();
-                instances.AddOrUpdate(ix, restServer, (l, server) => restServer);
+                Instances.AddOrUpdate(ix, restServer, (l, server) => restServer);
                 LOG.Info($"RestServer started {listenAddress}");
                 return true;
             }
@@ -84,13 +84,13 @@ namespace MQL4CSharp
             try
             {
                 RestServer restServer;
-                instances.TryGetValue(ix, out restServer);
+                Instances.TryGetValue(ix, out restServer);
                 if (restServer == null)
                     return;
                 if (restServer.IsListening == true)
                     restServer.Stop();
                 restServer.Dispose();
-                instances.TryRemove(ix, out restServer);
+                Instances.TryRemove(ix, out restServer);
                 LOG.Info($"RestServer stopped");
             }
             catch (Exception e)

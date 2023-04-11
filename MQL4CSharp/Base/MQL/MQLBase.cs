@@ -269,7 +269,7 @@ namespace MQL4CSharp.Base
         /// Description: Returns the current account number.
         /// URL: http://docs.mql4.com/account/accountnumber
         /// </summary>
-        public int AccountNumber()
+        public virtual int AccountNumber()
         {
             List<Object> parameters = new List<Object>();
             return (int)ExecCommand(MQLCommand.AccountNumber_1, parameters); // MQLCommand ENUM = 20
@@ -425,7 +425,7 @@ namespace MQL4CSharp.Base
         /// URL: http://docs.mql4.com/check/terminalinfostring
         /// </summary>
         /// <param name="property_id">[in] Identifier of a property. Can be one of the values of the enumeration.</param>
-        public string TerminalInfoString(int property_id)
+        public virtual string TerminalInfoString(int property_id)
         {
             List<Object> parameters = new List<Object>();
             parameters.Add(property_id);

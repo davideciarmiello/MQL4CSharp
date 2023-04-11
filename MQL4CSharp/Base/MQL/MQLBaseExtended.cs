@@ -4,8 +4,10 @@ using Newtonsoft.Json.Linq;
 using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.IO;
 using System.Linq;
+using System.Reflection;
 using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
@@ -26,6 +28,75 @@ namespace MQL4CSharp.Base
         {
         }
 
+        private int _lastAccountNumber;
+        /// <summary>
+        /// Function: AccountNumber
+        /// Description: Returns the current account number.
+        /// URL: http://docs.mql4.com/account/accountnumber
+        /// </summary>
+        public override int AccountNumber()
+        {
+            var res = base.AccountNumber();
+            if (res == _lastAccountNumber)
+                return res;
+            _lastAccountNumber = res;
+            try { InitStorageInfo(res); }
+            catch { /**/ }
+            return res;
+        }
+
+        internal void InitStorageInfo()
+        {
+            try
+            {
+                if (string.IsNullOrEmpty(CachedDataStorageInstance.TerminalDataPath))
+                    CachedDataStorageInstance.TerminalDataPath = TerminalInfoString((int)TERMINAL_INFO_STRING.TERMINAL_DATA_PATH);
+            }
+            catch { /**/ }
+            try
+            {
+                var accountNumber = base.AccountNumber();
+                InitStorageInfo(accountNumber);
+                _lastAccountNumber = accountNumber;
+            }
+            catch { /**/}
+        }
+
+        protected virtual void InitStorageInfo(int accountNumber)
+        {
+            var storage = GetCacheStorage();
+            var changed = false;
+            if (storage.TerminalPath == null)
+            {
+                storage.TerminalPath = TerminalInfoString((int)TERMINAL_INFO_STRING.TERMINAL_PATH);
+                changed = true;
+            }
+            using (var p = Process.GetCurrentProcess())
+            {
+                if (p.Id != storage.TerminalPID)
+                {
+                    storage.TerminalPID = p.Id;
+                    changed = true;
+                }
+            }
+            if (storage.AccountNumber != accountNumber)
+            {
+                storage.AccountNumber = accountNumber > 0 ? accountNumber : (int?)null;
+                storage.AccountName = accountNumber > 0 ? AccountName() : null;
+                storage.AccountServer = accountNumber > 0 ? AccountServer() : null;
+                changed = true;
+            }
+            if (changed)
+                CacheStorageWrite();
+        }
+
+        /// <summary>
+        /// Function: ChartApplyTemplate
+        /// Description: Applies a specific template from a specified file to the chart. The command is added to chart message queue and executed only after all previous commands have been processed.
+        /// URL: http://docs.mql4.com/chart_operations/chartapplytemplate
+        /// </summary>
+        /// <param name="chart_id">[in] Chart ID. 0 means the current chart.</param>
+        /// <param name="filecontent">[in] The content of the file containing the template in base64.</param>
         public bool ChartApplyTemplate(long chart_id, byte[] filecontent)
         {
             var filename = GenerateFileName("templates", "tpl");
@@ -87,6 +158,13 @@ namespace MQL4CSharp.Base
 
         #region Expert Advisor
 
+        /// <summary>
+        /// Function: ChartSaveTemplate
+        /// Description: Saves current chart settings in a template with a specified name. The command is added to chart message queue and executed only after all previous commands have been processed.
+        /// URL: http://docs.mql4.com/chart_operations/chartsavetemplate
+        /// </summary>
+        /// <param name="chart_id">[in] Chart ID. 0 means the current chart.</param>
+        /// <param name="filename">[in] The filename to save the template. The ".tpl" extension will be added to the filename automatically; there is no need to specify it. The template is saved in terminal_directory\Profiles\Templates\ and can be used for manual application in the terminal. If a template with the same filename already exists, the contents of this file will be overwritten.</param>
         public override bool ChartSaveTemplate(long chart_id, string filename)
         {
             var res = base.ChartSaveTemplate(chart_id, filename);
@@ -151,36 +229,20 @@ namespace MQL4CSharp.Base
             }
         }
 
-        private static string _cacheStorageFileName;
-        private static DateTime? _cacheStorageWriteDate;
-        private static CachedDataStorage _cacheStorage;
         private CachedDataStorage GetCacheStorage()
         {
-            _cacheStorageFileName = _cacheStorageFileName ?? GetFileInfo("history", "mql4csharp.json").FullName;
-            if (_cacheStorage == null && !File.Exists(_cacheStorageFileName))
-            {
-                _cacheStorage = new CachedDataStorage();
-                CacheStorageWrite();
-            }
-            var lastWrite = File.GetLastWriteTime(_cacheStorageFileName);
-            if (_cacheStorage == null || lastWrite > _cacheStorageWriteDate)
-            {
-                _cacheStorage = JsonConvert.DeserializeObject<CachedDataStorage>(File.ReadAllText(_cacheStorageFileName));
-                _cacheStorageWriteDate = lastWrite;
-            }
-            return _cacheStorage;
+            if (string.IsNullOrEmpty(CachedDataStorageInstance.TerminalDataPath))
+                try { CachedDataStorageInstance.TerminalDataPath = TerminalInfoString((int)TERMINAL_INFO_STRING.TERMINAL_DATA_PATH); }
+                catch { /**/ }
+            var instance = CachedDataStorageInstance.GetCacheStorage();
+            return instance;
         }
-        private static object _lockObj = new object();
+
         private void CacheStorageWrite()
         {
-            var settings = new JsonSerializerSettings { Formatting = Formatting.Indented };
-            var data = JsonConvert.SerializeObject(_cacheStorage, settings);
-            lock (_lockObj)
-            {
-                File.WriteAllText(_cacheStorageFileName, data);
-                _cacheStorageWriteDate = File.GetLastWriteTime(_cacheStorageFileName);
-            }
+            CachedDataStorageInstance.CacheStorageWrite();
         }
+
         #endregion
 
 
@@ -253,7 +315,7 @@ namespace MQL4CSharp.Base
             return ChartExpertAdvisorEnablePrivate(chart_id, expert_name, fileInfo != null ? File.ReadAllText(fileInfo.FullName) : null);
         }
 
-        
+
         private void ChartExpertAdvisorNameWait(long chart_id, string expert_name)
         {
             try
@@ -303,6 +365,8 @@ namespace MQL4CSharp.Base
             if (Path.IsPathRooted(fileName))
                 return new FileInfo(fileName);
             var dataPath = terminalDataPath ?? (terminalDataPath = TerminalInfoString((int)TERMINAL_INFO_STRING.TERMINAL_DATA_PATH));
+            if (string.IsNullOrEmpty(CachedDataStorageInstance.TerminalDataPath))
+                CachedDataStorageInstance.TerminalDataPath = dataPath;
             var fileInfo = new FileInfo(Path.Combine(dataPath, fileName.StartsWith($"{directory}\\") ? "." : directory ?? ".", fileName));
             if (!fileInfo.Exists && extension != null && !fileName.EndsWith(extension))
                 fileInfo = new FileInfo($"{fileInfo.FullName}.{extension}");

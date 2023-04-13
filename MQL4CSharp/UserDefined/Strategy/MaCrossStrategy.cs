@@ -111,11 +111,11 @@ namespace MQL4CSharp.UserDefined.Strategy
         {
             if (signal.getSignal() == SignalResult.BUYMARKET)
             {
-                return this.MarketInfo(symbol, (int)MARKET_INFO.MODE_ASK);
+                return this.MarketInfo(symbol, MARKET_INFO.MODE_ASK);
             }
             else 
             {
-                return this.MarketInfo(symbol, (int)MARKET_INFO.MODE_BID);
+                return this.MarketInfo(symbol, MARKET_INFO.MODE_BID);
             }
         }
 

@@ -322,11 +322,11 @@ namespace MQL4CSharp.Base
                 int slippage = 5;
                 if (OrderType() == (int)TRADE_OPERATION.OP_BUY)
                 {
-                    OrderClose(OrderTicket(), OrderLots(), this.MarketInfo(symbol, (int)MARKET_INFO.MODE_BID), slippage, COLOR.Red);
+                    OrderClose(OrderTicket(), OrderLots(), this.MarketInfo(symbol, MARKET_INFO.MODE_BID), slippage, COLOR.Red);
                 }
                 else if (OrderType() == (int)TRADE_OPERATION.OP_SELL)
                 {
-                    OrderClose(OrderTicket(), OrderLots(), this.MarketInfo(symbol, (int)MARKET_INFO.MODE_ASK), slippage, COLOR.Red);
+                    OrderClose(OrderTicket(), OrderLots(), this.MarketInfo(symbol, MARKET_INFO.MODE_ASK), slippage, COLOR.Red);
                 }
             }
             catch (Exception e)
@@ -338,14 +338,14 @@ namespace MQL4CSharp.Base
 
         public double pipToPoint(String symbol)
         {
-            int digits = (int) MarketInfo(symbol, (int) MARKET_INFO.MODE_DIGITS);
+            int digits = (int) MarketInfo(symbol,  MARKET_INFO.MODE_DIGITS);
             if (digits == 3 || digits == 5)
             {
-                return Math.Round(10 * MarketInfo(symbol, (int)MARKET_INFO.MODE_TICKSIZE), digits);
+                return Math.Round(10 * MarketInfo(symbol, MARKET_INFO.MODE_TICKSIZE), digits);
             }
             else
             {
-                return Math.Round(MarketInfo(symbol, (int)MARKET_INFO.MODE_TICKSIZE), digits);
+                return Math.Round(MarketInfo(symbol, MARKET_INFO.MODE_TICKSIZE), digits);
             }
         }
 
@@ -466,7 +466,7 @@ namespace MQL4CSharp.Base
                         || (signal.getSignal() == SignalResult.BUYSTOP && !openBuyStopOrder && !openBuyOrder) 
                         || (signal.getSignal() == SignalResult.SELLSTOP && !openSellStopOrder && !openSellOrder))
                 {
-                    LOG.Info(String.Format("Executing Trade at " + DateUtil.FromUnixTime((long)MarketInfo(symbol, (int)MARKET_INFO.MODE_TIME)) +
+                    LOG.Info(String.Format("Executing Trade at " + DateUtil.FromUnixTime((long)MarketInfo(symbol, MARKET_INFO.MODE_TIME)) +
                                             "\n\tsymbol:\t{0}" +
                                             "\n\top:\t\t{1}" +
                                             "\n\tlots:\t\t{2}" +

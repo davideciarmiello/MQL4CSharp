@@ -24,6 +24,7 @@ namespace MQL4CSharp.UserDefined.Strategy
 
         public override void OnDeinit()
         {
+            RestServerHelper.RestServerStop(ix);
         }
 
         private bool _storageInfoInizialized;

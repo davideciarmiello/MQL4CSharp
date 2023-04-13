@@ -27,6 +27,7 @@ using MQL4CSharp.Base.Exceptions;
 using System.Globalization;
 using System.Linq;
 using System.Threading.Tasks;
+using MQL4CSharp.Util;
 
 namespace MQL4CSharp.Base.MQL
 {
@@ -115,7 +116,7 @@ namespace MQL4CSharp.Base.MQL
                 else if (param is double || param is decimal)
                 {
                     // Make sure we use a dot as decimal character
-                    param = Convert.ToDecimal(p).ToString(Decimali99SeparatorePuntoMigliaiaVuoto);
+                    param = Convert.ToDecimal(p).ToString(Extensions.Decimali99SeparatorePuntoMigliaiaVuoto);
                 }
 
                 if (!commandParams.ToString().Equals(""))
@@ -126,24 +127,6 @@ namespace MQL4CSharp.Base.MQL
             }
             return commandParams.ToString();
         }
-        public static readonly NumberFormatInfo Decimali99SeparatorePuntoMigliaiaVuoto = _GetNewNumberFormat(99, ".", "");
-        public static readonly NumberFormatInfo Decimali99SeparatorePuntoMigliaiaVirgola = _GetNewNumberFormat(99, ".", ",");
-        public static readonly NumberFormatInfo Decimali99SeparatoreVirgolaMigliaiaVuoto = _GetNewNumberFormat(99, ",", "");
-        public static readonly NumberFormatInfo Decimali99SeparatoreVirgolaMigliaiaPunto = _GetNewNumberFormat(99, ",", ".");
-        internal static NumberFormatInfo _GetNewNumberFormat(int numeroDecimali, string separatoreDecimali, string separatoreMigliaia)
-        {
-            var format = CultureInfo.InvariantCulture.NumberFormat.Clone() as NumberFormatInfo;
-            format.NumberDecimalDigits = numeroDecimali;
-            format.NumberDecimalSeparator = separatoreDecimali;
-            format.NumberGroupSeparator = separatoreMigliaia;
-
-            format.CurrencyDecimalDigits = numeroDecimali;
-            format.CurrencyDecimalSeparator = separatoreDecimali;
-            format.CurrencyGroupSeparator = separatoreMigliaia;
-
-            return format;
-        }
-
 
         private void setCommandResponse(int id, object response, int errorCode)
         {

@@ -29,55 +29,55 @@ namespace mql4csharp
     public class Initializer
     {
 
-        [DllExport("UnloadAll", CallingConvention = CallingConvention.StdCall)]
-        public static void UnloadAll(Int64 ix)
+        [DllExport("ExecOnDeinitCompleted", CallingConvention = CallingConvention.StdCall)]
+        public static void ExecOnDeinitCompleted(Int64 ix, int reason)
         {
-            try
-            {
-                RestServerHelper.RestServerStop(ix);
-            }
-            catch { /**/ }
-            try
-            {
-                DLLObjectWrapper.getInstance().getMQLThreadPool(ix)?.Dispose();
-            }
-            catch { /**/ }
-            try
-            {
-                GC.Collect();
-                GC.WaitForPendingFinalizers();
+            //try
+            //{
+            //    RestServerHelper.RestServerStop(ix);
+            //}
+            //catch { /**/ }
+            //try
+            //{
+            //    DLLObjectWrapper.getInstance().getMQLThreadPool(ix)?.Dispose();
+            //}
+            //catch { /**/ }
+            //try
+            //{
+            //    GC.Collect();
+            //    GC.WaitForPendingFinalizers();
 
-                //var otherAssemblyDomain = AppDomain.CurrentDomain;
-                //try
-                //{
-                //    AppDomain.Unload(otherAssemblyDomain);
-                //}
-                //catch (Exception)
-                //{
-                //    GC.Collect();
-                //    GC.WaitForPendingFinalizers();
-                //    var i = 0;
-                //    while (i < 3)   // quit after three tries
-                //    {
-                //        Thread.Sleep(500);     // wait a few secs before trying again...
-                //        try
-                //        {
-                //            AppDomain.Unload(otherAssemblyDomain);
-                //        }
-                //        catch (Exception)
-                //        {
-                //            // log exception
-                //            i++;
-                //            continue;
-                //        }
-                //        break;
-                //    }
-                //}
-            }
-            catch (Exception e)
-            {
-                //LOG.Error(e);
-            }
+            //    //var otherAssemblyDomain = AppDomain.CurrentDomain;
+            //    //try
+            //    //{
+            //    //    AppDomain.Unload(otherAssemblyDomain);
+            //    //}
+            //    //catch (Exception)
+            //    //{
+            //    //    GC.Collect();
+            //    //    GC.WaitForPendingFinalizers();
+            //    //    var i = 0;
+            //    //    while (i < 3)   // quit after three tries
+            //    //    {
+            //    //        Thread.Sleep(500);     // wait a few secs before trying again...
+            //    //        try
+            //    //        {
+            //    //            AppDomain.Unload(otherAssemblyDomain);
+            //    //        }
+            //    //        catch (Exception)
+            //    //        {
+            //    //            // log exception
+            //    //            i++;
+            //    //            continue;
+            //    //        }
+            //    //        break;
+            //    //    }
+            //    //}
+            //}
+            //catch (Exception e)
+            //{
+            //    //LOG.Error(e);
+            //}
         }
     }
 }

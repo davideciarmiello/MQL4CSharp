@@ -259,6 +259,11 @@ namespace MQL4CSharp.Base.Enums
         iStdDev_1 = 238,
         iStochastic_1 = 239,
         iWPR_1 = 240,
+        Print_1 = 241,
+        SymbolInfoDouble_1 = 242,
+        SymbolInfoInteger_1 = 243,
+        SymbolInfoString_1 = 244,
+
 
         ObjectCreate_3 = 1001,
         iCustom_1 = 1000,

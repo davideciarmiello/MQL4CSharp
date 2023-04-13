@@ -21,6 +21,24 @@
             URL: http://docs.mql4.com/account/accountnumber
             </summary>
         </member>
+        <member name="M:MQL4CSharp.Base.MQLBaseExtended.ChartApplyTemplate(System.Int64,System.Byte[])">
+            <summary>
+            Function: ChartApplyTemplate
+            Description: Applies a specific template from a specified file to the chart. The command is added to chart message queue and executed only after all previous commands have been processed.
+            URL: http://docs.mql4.com/chart_operations/chartapplytemplate
+            </summary>
+            <param name="chart_id">[in] Chart ID. 0 means the current chart.</param>
+            <param name="filecontent">[in] The content of the file containing the template in base64.</param>
+        </member>
+        <member name="M:MQL4CSharp.Base.MQLBaseExtended.ChartSaveTemplate(System.Int64,System.String)">
+            <summary>
+            Function: ChartSaveTemplate
+            Description: Saves current chart settings in a template with a specified name. The command is added to chart message queue and executed only after all previous commands have been processed.
+            URL: http://docs.mql4.com/chart_operations/chartsavetemplate
+            </summary>
+            <param name="chart_id">[in] Chart ID. 0 means the current chart.</param>
+            <param name="filename">[in] The filename to save the template. The ".tpl" extension will be added to the filename automatically; there is no need to specify it. The template is saved in terminal_directory\Profiles\Templates\ and can be used for manual application in the terminal. If a template with the same filename already exists, the contents of this file will be overwritten.</param>
+        </member>
         <member name="M:MQL4CSharp.Base.MQLBase.Alert(System.String)">
             <summary>
             Function: Alert
@@ -36,6 +54,14 @@
             URL: http://docs.mql4.com/common/comment
             </summary>
             <param name="argument">[in] Any values, separated by commas. To delimit output information into several lines, a line break symbol "\n" or "\r\n" is used. Number of parameters cannot exceed 64. Total length of the input comment (including invisible symbols) cannot exceed 2045 characters (excess symbols will be cut out during output).</param>
+        </member>
+        <member name="M:MQL4CSharp.Base.MQLBase.Print(System.String)">
+            <summary>
+            Function: Print
+            Description: Displays a message in a separate window.
+            URL: http://docs.mql4.com/common/print
+            </summary>
+            <param name="argument"></param>
         </member>
         <member name="M:MQL4CSharp.Base.MQLBase.SendFTP(System.String,System.String)">
             <summary>
@@ -400,7 +426,7 @@
             URL: http://docs.mql4.com/check/terminalpath
             </summary>
         </member>
-        <member name="M:MQL4CSharp.Base.MQLBase.MarketInfo(System.String,System.Int32)">
+        <member name="M:MQL4CSharp.Base.MQLBase.MarketInfo(System.String,MQL4CSharp.Base.Enums.MARKET_INFO)">
             <summary>
             Function: MarketInfo
             Description: Returns various data about securities listed in the "Market Watch" window.
@@ -434,6 +460,30 @@
             </summary>
             <param name="name">[in] Symbol name.</param>
             <param name="select">[in] Switch. If the value is false, a symbol should be removed from MarketWatch, otherwise a symbol should be selected in this window. A symbol can't be removed if the symbol chart is open, or there are open orders for this symbol.</param>
+        </member>
+        <member name="M:MQL4CSharp.Base.MQLBase.SymbolInfoDouble(System.String,MQL4CSharp.Base.Enums.SYMBOL_INFO_DOUBLE)">
+            <summary>
+            Returns the corresponding property of a specified symbol. There are 2 variants of the function.
+            </summary>
+            <param name="name"></param>
+            <param name="prop_id"></param>
+            <returns></returns>
+        </member>
+        <member name="M:MQL4CSharp.Base.MQLBase.SymbolInfoInteger(System.String,MQL4CSharp.Base.Enums.SYMBOL_INFO_INTEGER)">
+            <summary>
+            Returns the corresponding property of a specified symbol. There are 2 variants of the function.
+            </summary>
+            <param name="name"></param>
+            <param name="prop_id"></param>
+            <returns></returns>
+        </member>
+        <member name="M:MQL4CSharp.Base.MQLBase.SymbolInfoString(System.String,MQL4CSharp.Base.Enums.SYMBOL_INFO_STRING)">
+            <summary>
+            Returns the corresponding property of a specified symbol. There are 2 variants of the function.
+            </summary>
+            <param name="name"></param>
+            <param name="prop_id"></param>
+            <returns></returns>
         </member>
         <member name="M:MQL4CSharp.Base.MQLBase.RefreshRates">
             <summary>
@@ -2248,12 +2298,6 @@
               ricerche di risorse eseguite utilizzando questa classe di risorse fortemente tipizzata.
             </summary>
         </member>
-        <member name="M:MQL4CSharp.UserDefined.Filter.TimeOfDayFilter.#ctor(MQL4CSharp.Base.BaseStrategy,NodaTime.LocalTime,NodaTime.LocalTime)">
-            
-             @param strategy
-             @param timeStart : eg "07:30"
-             @param timeStop : eg "14:00"
-        </member>
         <member name="F:MQL4CSharp.UserDefined.Input.NewsReport.name">
             News Report Name
         </member>
@@ -2270,11 +2314,24 @@
         <member name="F:MQL4CSharp.UserDefined.Input.NewsReport.closeOutMinutesPrior">
             the filter will close open trades X minutes prior the release
         </member>
+        <member name="M:MQL4CSharp.UserDefined.Filter.TimeOfDayFilter.#ctor(MQL4CSharp.Base.BaseStrategy,NodaTime.LocalTime,NodaTime.LocalTime)">
+            
+             @param strategy
+             @param timeStart : eg "07:30"
+             @param timeStop : eg "14:00"
+        </member>
         <member name="T:MQL4CSharp.UserDefined.Strategy.MQLRESTStrategy">
             <summary>
             Attach this one to your chart just to enable the REST API.
             It does nothing, but every MQLExpert has a REST endpoint
             </summary>
+        </member>
+        <member name="M:MQL4CSharp.Util.Extensions.ParseDecimalFromJsStr(System.String)">
+            <summary>
+            esegue parse di numero con . come separatore di decimali
+            </summary>
+            <param name="saldoText"></param>
+            <returns></returns>
         </member>
     </members>
 </doc>

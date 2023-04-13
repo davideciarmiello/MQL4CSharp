@@ -38,7 +38,7 @@ namespace MQL4CSharp.UserDefined.Filter
 
         public override bool filter(String symbol, TIMEFRAME timeframe)
         {
-            DateTime currentMarketTime = DateUtil.FromUnixTime((long) strategy.MarketInfo(symbol, (int) MARKET_INFO.MODE_TIME));
+            DateTime currentMarketTime = DateUtil.FromUnixTime((long) strategy.MarketInfo(symbol,  MARKET_INFO.MODE_TIME));
 
             foreach(NewsReport newsReport in newsReports)
             {

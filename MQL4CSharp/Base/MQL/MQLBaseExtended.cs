@@ -147,11 +147,11 @@ namespace MQL4CSharp.Base
             var orderType = OrderType();
             if (orderType == (int)TRADE_OPERATION.OP_BUY)
             {
-                return OrderClose(ticket, OrderLots(), MarketInfo(symbol, (int)MARKET_INFO.MODE_BID), slippage, COLOR.Red);
+                return OrderClose(ticket, OrderLots(), SymbolInfoPrice(symbol, false), slippage, COLOR.Red);
             }
             if (orderType == (int)TRADE_OPERATION.OP_SELL)
             {
-                return OrderClose(ticket, OrderLots(), MarketInfo(symbol, (int)MARKET_INFO.MODE_ASK), slippage, COLOR.Red);
+                return OrderClose(ticket, OrderLots(), SymbolInfoPrice(symbol, true), slippage, COLOR.Red);
             }
             return false;
         }

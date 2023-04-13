@@ -55,7 +55,7 @@ namespace MQL4CSharp.UserDefined.StopLoss
         
             if(orderType == (int)TRADE_OPERATION.OP_BUY)
             {
-                double bid = strategy.MarketInfo(symbol, (int)MARKET_INFO.MODE_BID);
+                double bid = strategy.MarketInfo(symbol, MARKET_INFO.MODE_BID);
                 if(bid > orderOpenPrice + stopPips* strategy.pipToPoint(symbol))
                 {
                     double newStop = bid - stopPips * strategy.pipToPoint(symbol);
@@ -67,7 +67,7 @@ namespace MQL4CSharp.UserDefined.StopLoss
             }
             else if(orderType == (int)TRADE_OPERATION.OP_SELL)
             {
-                double ask = strategy.MarketInfo(symbol, (int)MARKET_INFO.MODE_ASK);
+                double ask = strategy.MarketInfo(symbol, MARKET_INFO.MODE_ASK);
                 if(ask<orderOpenPrice - stopPips* strategy.pipToPoint(symbol))
                 {
                     double newStop = ask + stopPips * strategy.pipToPoint(symbol);

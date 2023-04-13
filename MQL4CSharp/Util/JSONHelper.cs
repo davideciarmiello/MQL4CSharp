@@ -15,22 +15,44 @@ limitations under the License.
 */
 
 using System.Web.Script.Serialization;
+using MQL4CSharp.Base.MQL;
+using Newtonsoft.Json;
 
 namespace mql4sharp.helpers
 {
     public static class JSONHelper
     {
-        public static string ToJSON(this object obj)
+        //public static string ToJSON(this object obj)
+        //{
+        //    JavaScriptSerializer serializer = new JavaScriptSerializer();
+        //    return serializer.Serialize(obj);
+        //}
+
+        //public static string ToJSON(this object obj, int recursionDepth)
+        //{
+        //    JavaScriptSerializer serializer = new JavaScriptSerializer();
+        //    serializer.RecursionLimit = recursionDepth;
+        //    return serializer.Serialize(obj);
+        //}
+
+
+
+
+        #region Json
+
+        public static string ToJson<T>(this T value, bool indented = false)
         {
-            JavaScriptSerializer serializer = new JavaScriptSerializer();
-            return serializer.Serialize(obj);
+            var settings = new JsonSerializerSettings { Formatting = indented ? Formatting.Indented : Formatting.None };
+            var str = JsonConvert.SerializeObject(value, settings);
+            return str;
         }
 
-        public static string ToJSON(this object obj, int recursionDepth)
+        public static T FromJson<T>(this string value)
         {
-            JavaScriptSerializer serializer = new JavaScriptSerializer();
-            serializer.RecursionLimit = recursionDepth;
-            return serializer.Serialize(obj);
+            var res = JsonConvert.DeserializeObject<T>(value);
+            return res;
         }
+
+        #endregion
     }
 }

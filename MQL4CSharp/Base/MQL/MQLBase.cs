@@ -5,6 +5,7 @@ using MQL4CSharp.Base.Enums;
 using MQL4CSharp.Base.MQL;
 using mqlsharp.Util;
 using System.Threading.Tasks;
+using MQL4CSharp.Base.Exceptions;
 
 namespace MQL4CSharp.Base
 {
@@ -53,6 +54,19 @@ namespace MQL4CSharp.Base
             List<Object> parameters = new List<Object>();
             parameters.Add(argument);
             ExecCommand(MQLCommand.Comment_1, parameters); // MQLCommand ENUM = 2
+        }
+
+        /// <summary>
+        /// Function: Print
+        /// Description: Displays a message in a separate window.
+        /// URL: http://docs.mql4.com/common/print
+        /// </summary>
+        /// <param name="argument"></param>
+        public void Print(string argument)
+        {
+            List<Object> parameters = new List<Object>();
+            parameters.Add(argument);
+            ExecCommand(MQLCommand.Print_1, parameters); // MQLCommand ENUM = 241
         }
 
         /// <summary>
@@ -641,7 +655,7 @@ namespace MQL4CSharp.Base
         /// </summary>
         /// <param name="symbol">[in] Symbol name.</param>
         /// <param name="type">[in] Request of information to be returned. Can be any of values of request identifiers.</param>
-        public double MarketInfo(string symbol, int type)
+        public double MarketInfo(string symbol, MARKET_INFO type)
         {
             List<Object> parameters = new List<Object>();
             parameters.Add(symbol);
@@ -690,6 +704,66 @@ namespace MQL4CSharp.Base
             parameters.Add(name);
             parameters.Add(select);
             return (bool)ExecCommand(MQLCommand.SymbolSelect_1, parameters); // MQLCommand ENUM = 54
+        }
+
+        /// <summary>
+        /// Returns the corresponding property of a specified symbol. There are 2 variants of the function.
+        /// </summary>
+        /// <param name="name"></param>
+        /// <param name="prop_id"></param>
+        /// <returns></returns>
+        public double SymbolInfoDouble(string name, SYMBOL_INFO_DOUBLE prop_id)
+        {
+            List<Object> parameters = new List<Object>();
+            parameters.Add(name);
+            parameters.Add(prop_id);
+            return (double)ExecCommand(MQLCommand.SymbolInfoDouble_1, parameters);
+        }
+
+        internal double SymbolInfoPrice(string name, bool ask)
+        {
+            try
+            {
+                return SymbolInfoDouble(name, ask ? SYMBOL_INFO_DOUBLE.SYMBOL_ASK : SYMBOL_INFO_DOUBLE.SYMBOL_BID);
+            }
+            catch (UnknownSymbolException)
+            {
+                try
+                {
+                    if (SymbolSelect(name, true))
+                        return SymbolInfoDouble(name, ask ? SYMBOL_INFO_DOUBLE.SYMBOL_ASK : SYMBOL_INFO_DOUBLE.SYMBOL_BID);
+                }
+                catch {/**/}
+                throw;
+            }
+        }
+
+        /// <summary>
+        /// Returns the corresponding property of a specified symbol. There are 2 variants of the function.
+        /// </summary>
+        /// <param name="name"></param>
+        /// <param name="prop_id"></param>
+        /// <returns></returns>
+        public int SymbolInfoInteger(string name, SYMBOL_INFO_INTEGER prop_id)
+        {
+            List<Object> parameters = new List<Object>();
+            parameters.Add(name);
+            parameters.Add(prop_id);
+            return (int)ExecCommand(MQLCommand.SymbolInfoInteger_1, parameters);
+        }
+
+        /// <summary>
+        /// Returns the corresponding property of a specified symbol. There are 2 variants of the function.
+        /// </summary>
+        /// <param name="name"></param>
+        /// <param name="prop_id"></param>
+        /// <returns></returns>
+        public string SymbolInfoString(string name, SYMBOL_INFO_STRING prop_id)
+        {
+            List<Object> parameters = new List<Object>();
+            parameters.Add(name);
+            parameters.Add(prop_id);
+            return (string)ExecCommand(MQLCommand.SymbolInfoString_1, parameters);
         }
 
         /// <summary>

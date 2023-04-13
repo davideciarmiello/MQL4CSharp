@@ -7,6 +7,7 @@ using System.Linq;
 using System.Reflection;
 using System.Text;
 using System.Threading.Tasks;
+using mql4sharp.helpers;
 
 namespace MQL4CSharp.Base.MQL
 {
@@ -45,7 +46,7 @@ namespace MQL4CSharp.Base.MQL
             if (_cacheStorage == null || lastWrite > _cacheStorageWriteDate)
             {
                 _cacheStorageText = File.ReadAllText(_cacheStorageFileName);
-                _cacheStorage = JsonConvert.DeserializeObject<CachedDataStorage>(_cacheStorageText);
+                _cacheStorage = _cacheStorageText.FromJson<CachedDataStorage>();
                 _cacheStorageWriteDate = lastWrite;
             }
             return _cacheStorage;
@@ -55,8 +56,7 @@ namespace MQL4CSharp.Base.MQL
         {
             if (_cacheStorage == null)
                 return;
-            var settings = new JsonSerializerSettings { Formatting = Formatting.Indented };
-            var data = JsonConvert.SerializeObject(_cacheStorage, settings);
+            var data = _cacheStorage.ToJson(indented: true);
             lock (_lockObj)
             {
                 if (data == _cacheStorageText)

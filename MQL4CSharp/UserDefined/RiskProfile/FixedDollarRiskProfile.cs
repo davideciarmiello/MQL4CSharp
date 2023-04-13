@@ -38,9 +38,9 @@ namespace MQL4CSharp.UserDefined.RiskProfile
 
         public override double getLotSize(String symbol, double stopDistance)
         {
-            double minLots = strategy.MarketInfo(symbol, (int)MARKET_INFO.MODE_MINLOT);
+            double minLots = strategy.MarketInfo(symbol, MARKET_INFO.MODE_MINLOT);
             double stopPips = stopDistance/strategy.pipToPoint(symbol);
-            double tickvalue = strategy.MarketInfo(symbol, (int)MARKET_INFO.MODE_TICKVALUE);
+            double tickvalue = strategy.MarketInfo(symbol, MARKET_INFO.MODE_TICKVALUE);
             double calcLotSize = Math.Round((dollarRisk/tickvalue) / stopPips/10, 2);
             return Math.Min(maxLots, Math.Max(minLots, calcLotSize));
         }

@@ -87,7 +87,7 @@ namespace MQL4CSharp
                 Instances.TryGetValue(ix, out restServer);
                 if (restServer == null)
                     return;
-                if (restServer.IsListening == true)
+                if (restServer.IsListening)
                     restServer.Stop();
                 restServer.Dispose();
                 Instances.TryRemove(ix, out restServer);

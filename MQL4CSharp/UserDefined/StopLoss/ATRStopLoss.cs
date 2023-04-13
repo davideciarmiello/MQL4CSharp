@@ -37,11 +37,11 @@ namespace MQL4CSharp.UserDefined.StopLoss
         {
             if (signal.getSignal() < 0)
             {
-                return strategy.MarketInfo(symbol, (int)MARKET_INFO.MODE_BID) + strategy.iATR(symbol, (int)timeframe, atrPeriods, atrShift);
+                return strategy.MarketInfo(symbol, MARKET_INFO.MODE_BID) + strategy.iATR(symbol, (int)timeframe, atrPeriods, atrShift);
             }
             else
             {
-                return strategy.MarketInfo(symbol, (int)MARKET_INFO.MODE_ASK) - strategy.iATR(symbol, (int)timeframe, atrPeriods, atrShift);
+                return strategy.MarketInfo(symbol, MARKET_INFO.MODE_ASK) - strategy.iATR(symbol, (int)timeframe, atrPeriods, atrShift);
             }
         }
 

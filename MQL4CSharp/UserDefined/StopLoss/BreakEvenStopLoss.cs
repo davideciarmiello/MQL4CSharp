@@ -56,7 +56,7 @@ namespace MQL4CSharp.UserDefined.StopLoss
                 newStop = orderOpenPrice + (decimal)commisionPips* (decimal)strategy.pipToPoint(symbol);
                 if (newStop != orderStopLoss)
                 {
-                    decimal bid = (decimal) strategy.MarketInfo(symbol, (int)MARKET_INFO.MODE_BID);
+                    decimal bid = (decimal) strategy.MarketInfo(symbol, MARKET_INFO.MODE_BID);
                     if (bid > newStop + stopPips* (decimal)strategy.pipToPoint(symbol))
                     {
                         strategy.OrderModify(ticket, (double)orderOpenPrice, (double)newStop, strategy.OrderTakeProfit(), strategy.OrderExpiration(), 0);
@@ -68,7 +68,7 @@ namespace MQL4CSharp.UserDefined.StopLoss
                 newStop = orderOpenPrice - (decimal)commisionPips * (decimal)strategy.pipToPoint(symbol);
                 if (newStop != orderStopLoss)
                 {
-                    decimal ask = (decimal) strategy.MarketInfo(symbol, (int)MARKET_INFO.MODE_ASK);
+                    decimal ask = (decimal) strategy.MarketInfo(symbol, MARKET_INFO.MODE_ASK);
                     if (ask<newStop - stopPips* (decimal)strategy.pipToPoint(symbol))
                     {
                         strategy.OrderModify(ticket, (double)orderOpenPrice, (double)newStop, strategy.OrderTakeProfit(), strategy.OrderExpiration(), 0);

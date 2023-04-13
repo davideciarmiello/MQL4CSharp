@@ -37,11 +37,11 @@ namespace MQL4CSharp.UserDefined.TakeProfit
 
             if (signal.getSignal() == (int)SignalResult.SELLMARKET)
             {
-                return strategy.MarketInfo(symbol, (int)MARKET_INFO.MODE_BID) - pips* strategy.pipToPoint(symbol);
+                return strategy.MarketInfo(symbol, MARKET_INFO.MODE_BID) - pips* strategy.pipToPoint(symbol);
             }
             else
             {
-                    return strategy.MarketInfo(symbol, (int)MARKET_INFO.MODE_ASK) + pips* strategy.pipToPoint(symbol);
+                    return strategy.MarketInfo(symbol, MARKET_INFO.MODE_ASK) + pips* strategy.pipToPoint(symbol);
             }
         }
 

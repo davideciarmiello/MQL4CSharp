@@ -36,7 +36,7 @@ namespace MQL4CSharp.Base.MQL
         private bool executingOnInit;
         private bool executingOnTick;
         private bool executingOnTimer;
-        private bool executingOnDeinit;
+        public bool executingOnDeinit;
 
         public Int64 ix;
         MQLCommandManager commandManager;
@@ -95,7 +95,7 @@ namespace MQL4CSharp.Base.MQL
             }
         }
 
-        static void OnDeinitThread(Int64 ix)
+        static void OnDeinitThread(Int64 ix, int reason)
         {
             try
             {
@@ -105,6 +105,7 @@ namespace MQL4CSharp.Base.MQL
             {
                 getInstance(ix).executingOnDeinit = false;
             }
+            RestServerHelper.RestServerStop(ix);
         }
 
         static void OnTickThread(Int64 ix)
@@ -249,6 +250,8 @@ namespace MQL4CSharp.Base.MQL
         [DllExport("ExecOnInit", CallingConvention = CallingConvention.StdCall)]
         public static void ExecOnInit(Int64 ix, [MarshalAs(UnmanagedType.LPWStr)] string CSharpFullTypeName)
         {
+            if (CSharpFullTypeName?.Contains(".") == false)
+                CSharpFullTypeName = $"MQL4CSharp.UserDefined.Strategy.{CSharpFullTypeName}";
             ExecOnInit(ix, Type.GetType(CSharpFullTypeName));
         }
 
@@ -294,12 +297,12 @@ namespace MQL4CSharp.Base.MQL
 
 
         [DllExport("ExecOnDeinit", CallingConvention = CallingConvention.StdCall)]
-        public static void ExecOnDeinit(Int64 ix)
+        public static void ExecOnDeinit(Int64 ix, int reason)
         {
             getInstance(ix).executingOnDeinit = true;
             try
             {
-                getThreadPool(ix).QueueWorkItem(OnDeinitThread, ix);
+                getThreadPool(ix).QueueWorkItem(OnDeinitThread, ix, reason);
             }
             catch (Exception e)
             {

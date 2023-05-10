@@ -22,7 +22,7 @@ namespace MQL4CSharp
         private static readonly ILog LOG = LogManager.GetLogger(typeof(RestServerHelper));
 
         public static ConcurrentDictionary<long, RestServer> Instances = new ConcurrentDictionary<long, RestServer>();
-         
+
         [DllExport("RestServerStart", CallingConvention = CallingConvention.StdCall)]
         public static bool RestServerStart(Int64 ix, [MarshalAs(UnmanagedType.LPWStr)] string listenAddress)
         {
@@ -38,8 +38,10 @@ namespace MQL4CSharp
                 var hostAndPort = (listenAddress ?? "").Split(':');
                 if (!string.IsNullOrEmpty(hostAndPort.First()))
                     restServer.Host = hostAndPort.First().Trim();
-                if (hostAndPort.Length == 2 && !string.IsNullOrEmpty(hostAndPort.Last()))
-                    restServer.Port = hostAndPort.Last().Trim();
+                var port = hostAndPort.Length == 2 && !string.IsNullOrEmpty(hostAndPort.Last()) ? hostAndPort.Last().Trim() : null;
+                if (string.IsNullOrEmpty(port) || port == "0")
+                    port = PortFinder.FindNextLocalOpenPort(1234);
+                restServer.Port = port;
                 restServer.Router.ScanAssemblies();
 
                 var registerdTypes = restServer.Router.RoutingTable.Select(x => x.Name)

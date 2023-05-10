@@ -720,7 +720,7 @@ namespace MQL4CSharp.Base
             return (double)ExecCommand(MQLCommand.SymbolInfoDouble_1, parameters);
         }
 
-        internal double SymbolInfoPrice(string name, bool ask)
+        public double SymbolInfoPrice(string name, bool ask)
         {
             try
             {

@@ -17,7 +17,7 @@ namespace MQL4CSharp.UserDefined.Strategy
         public MQLRESTStrategy(long ix) : base(ix)
         {
         }
-        
+
         public override void OnInit()
         {
         }
@@ -30,7 +30,7 @@ namespace MQL4CSharp.UserDefined.Strategy
         private bool _storageInfoInizialized;
         public override void OnTick()
         {
-            if (_storageInfoInizialized) 
+            if (_storageInfoInizialized)
                 return;
             _storageInfoInizialized = true;
             InitStorageInfo();
@@ -39,7 +39,7 @@ namespace MQL4CSharp.UserDefined.Strategy
                 var s = RestServerHelper.Instances.GetValueOrDefault(ix);
                 if (s?.IsListening == true)
                 {
-                    var address = (s.UseHttps ? "https" : "http") + "://" + (string.IsNullOrEmpty(s.Host ) ? "127.0.0.1" : s.Host);
+                    var address = (s.UseHttps ? "https" : "http") + "://" + (string.IsNullOrEmpty(s.Host) ? "127.0.0.1" : s.Host);
                     if (!string.IsNullOrEmpty(s.Port) && s.Port != (s.UseHttps ? "443" : "80"))
                         address += $":{s.Port}";
                     var storage = CachedDataStorageInstance.GetCacheStorage();

@@ -90,8 +90,11 @@ namespace MQL4CSharp.Base.MQL
         public string Period { get; set; }
 
         public bool EAEnabled { get; set; }
+        public string EAEnabledFlags { get; set; }
         public string EAName { get; set; }
         public string EASettings { get; set; }
 
+        [JsonIgnore]
+        public string[] CurrentTemplateContent { get; set; }
     }
 }

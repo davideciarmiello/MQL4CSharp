@@ -43,6 +43,9 @@
     <Reference Include="Costura, Version=3.3.3.0, Culture=neutral, PublicKeyToken=9919ef960d84173d, processorArchitecture=MSIL">
       <HintPath>..\packages\Costura.Fody.3.3.3\lib\net40\Costura.dll</HintPath>
     </Reference>
+    <Reference Include="EPPlus, Version=4.5.3.3, Culture=neutral, PublicKeyToken=ea159fdaa78159a1, processorArchitecture=MSIL">
+      <HintPath>..\packages\EPPlus.4.5.3.3\lib\net40\EPPlus.dll</HintPath>
+    </Reference>
     <Reference Include="Grapevine, Version=4.2.2.0, Culture=neutral, processorArchitecture=MSIL">
       <HintPath>..\packages\Grapevine.4.2.2\lib\net40\Grapevine.dll</HintPath>
     </Reference>
@@ -59,6 +62,7 @@
       <HintPath>..\packages\NodaTime.1.3.1\lib\net35-Client\NodaTime.dll</HintPath>
       <Private>True</Private>
     </Reference>
+    <Reference Include="PresentationCore" />
     <Reference Include="RGiesecke.DllExport.Metadata, Version=1.0.0.0, Culture=neutral, PublicKeyToken=8f52d83c1a22df51, processorArchitecture=MSIL">
       <HintPath>..\packages\UnmanagedExports.1.2.7\lib\net\RGiesecke.DllExport.Metadata.dll</HintPath>
       <Private>False</Private>
@@ -69,8 +73,10 @@
     <Reference Include="System" />
     <Reference Include="System.Configuration" />
     <Reference Include="System.Core" />
+    <Reference Include="System.Drawing" />
     <Reference Include="System.Net" />
     <Reference Include="System.Runtime.Serialization" />
+    <Reference Include="System.Security" />
     <Reference Include="System.Web" />
     <Reference Include="System.Web.Extensions" />
     <Reference Include="System.Xml.Linq" />
@@ -135,12 +141,15 @@
     </Compile>
     <Compile Include="RestServerHelper.cs" />
     <Compile Include="UserDefined\Input\FileOrderPlacerItem.cs" />
+    <Compile Include="UserDefined\Input\OrderDef.cs" />
     <Compile Include="UserDefined\Managers\FileOrderPlacerManager.cs" />
     <Compile Include="UserDefined\Filter\NewsCloseOutFilter.cs" />
     <Compile Include="UserDefined\Filter\NewsInputFilter.cs" />
     <Compile Include="UserDefined\Filter\TimeOfDayFilter.cs" />
     <Compile Include="UserDefined\Input\CSVOrder.cs" />
     <Compile Include="UserDefined\Input\CSVOrders.cs" />
+    <Compile Include="UserDefined\Managers\OrdersLogger.cs" />
+    <Compile Include="UserDefined\Managers\OrdersLoggerStaticMethods.cs" />
     <Compile Include="UserDefined\RiskProfile\FixedLotsRiskProfile.cs" />
     <Compile Include="UserDefined\RiskProfile\FixedDollarRiskProfile.cs" />
     <Compile Include="UserDefined\RiskProfile\PercentRiskProfile.cs" />
@@ -171,6 +180,7 @@
     <None Include="Mql\mc_helpers.mqh" />
     <None Include="Mql\mc_returns.mqh" />
     <None Include="Mql\mql4csharp.mq4" />
+    <None Include="Mql\orderdef.mqh" />
     <None Include="packages.config" />
     <None Include="log4net.config">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>

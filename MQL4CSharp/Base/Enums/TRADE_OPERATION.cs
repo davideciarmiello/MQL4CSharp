@@ -24,5 +24,7 @@ namespace MQL4CSharp.Base.Enums
         OP_SELLLIMIT = 3, // Sell limit pending order
         OP_BUYSTOP = 4, // Buy stop pending order
         OP_SELLSTOP = 5, // Sell stop pending order
+        OP_BALANCE = 6, 
+        OP_CREDIT = 7
     }
 }

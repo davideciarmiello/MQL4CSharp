@@ -30,6 +30,18 @@
             <param name="chart_id">[in] Chart ID. 0 means the current chart.</param>
             <param name="filecontent">[in] The content of the file containing the template in base64.</param>
         </member>
+        <member name="M:MQL4CSharp.Base.MQLBaseExtended.OrderGetOrderDefString">
+            <summary>
+            Returns the corresponding string of current order
+            </summary>
+            <returns></returns>
+        </member>
+        <member name="M:MQL4CSharp.Base.MQLBaseExtended.OrderGetOrderDefModel">
+            <summary>
+            Returns the corresponding string of current order
+            </summary>
+            <returns></returns>
+        </member>
         <member name="M:MQL4CSharp.Base.MQLBaseExtended.ChartSaveTemplate(System.Int64,System.String)">
             <summary>
             Function: ChartSaveTemplate

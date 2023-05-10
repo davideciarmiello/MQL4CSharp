@@ -16,6 +16,9 @@ using MQL4CSharp.Base.MQL;
 using MQL4CSharp.Util;
 using Newtonsoft.Json;
 using System.Runtime;
+using MQL4CSharp.UserDefined.Input;
+using System.Xml.Linq;
+using MQL4CSharp.Base.Exceptions;
 
 namespace MQL4CSharp.Base
 {
@@ -28,7 +31,7 @@ namespace MQL4CSharp.Base
         {
         }
 
-        private int _lastAccountNumber;
+        internal int _lastAccountNumber;
         /// <summary>
         /// Function: AccountNumber
         /// Description: Returns the current account number.
@@ -58,6 +61,7 @@ namespace MQL4CSharp.Base
                 var accountNumber = base.AccountNumber();
                 InitStorageInfo(accountNumber);
                 _lastAccountNumber = accountNumber;
+                InitFileWatcher();
             }
             catch { /**/}
         }
@@ -110,13 +114,98 @@ namespace MQL4CSharp.Base
                 DeleteFile(10, filename.FullName, TimeSpan.FromSeconds(30), false);
             }
         }
+
+        private Mt4CharmModel ChartModelLoadAndGet(long chart_id, bool requiredActive)
+        {
+            try
+            {
+                ChartGetTemplatePrivate(chart_id, true, onlyFromFileChr: requiredActive == false);
+            }
+            catch
+            {
+                if (requiredActive)
+                    throw;
+            }
+            var chart = GetCacheStorage().Charts.GetValueOrDefault(chart_id);
+            if (chart == null)
+                throw new ChartNotFoundException($"ChartId: {chart_id}");
+            return chart;
+        }
+
+        private object lockObj = new object();
+        private FileSystemWatcher fileSystemWatcher;
+        private void InitFileWatcher()
+        {
+            if (fileSystemWatcher != null)
+                return;
+            var chartDir = new DirectoryInfo(Path.Combine(CachedDataStorageInstance.GetTerminalDataPath(), "profiles\\default"));
+            if (chartDir.Exists != true)
+                return;
+            var watcher = new FileSystemWatcher();
+            watcher.NotifyFilter = NotifyFilters.LastWrite | NotifyFilters.LastWrite;
+            watcher.Path = chartDir.FullName;
+            watcher.Filter = "*.chr";
+            var dict = new ConcurrentDictionary<string, DateTime>();
+            watcher.Changed += (sender, args) =>
+            {
+                lock (lockObj)
+                {
+                    try
+                    {
+                        Thread.Sleep(50);
+                        var fileDate = File.GetLastWriteTimeUtc(args.FullPath);
+                        if (dict.GetValueOrDefault(args.FullPath) == fileDate)
+                            return;
+                        dict.AddOrUpdate(args.FullPath, s => fileDate, (s, time) => fileDate);
+                        var template = File.ReadAllLines(args.FullPath);
+                        var id = ExtractTemplateValue(template.Take(10), "id");
+                        if (id == null)
+                            return;
+                        var chartid = Convert.ToInt64(id);
+                        var isMine = GetCacheStorage().Charts?.ContainsKey(chartid) == true;
+                        if (!isMine && !string.IsNullOrEmpty(ChartSymbol(chartid)))
+                            isMine = true;
+                        if (isMine)
+                            SaveTemplateDataOnCache(chartid, template);
+                    }
+                    catch {/**/}
+                }
+            };
+            fileSystemWatcher = watcher;
+            watcher.EnableRaisingEvents = true;
+        }
+
         public byte[] ChartGetTemplate(long chart_id)
         {
+            return ChartGetTemplatePrivate(chart_id, false);
+        }
+        private byte[] ChartGetTemplatePrivate(long chart_id, bool returnNull = false, bool onlyFromFileChr = false)
+        {
+            var chartDir = new DirectoryInfo(Path.Combine(CachedDataStorageInstance.GetTerminalDataPath(), "profiles\\default"));
+            if (chartDir.Exists)
+            {
+                InitFileWatcher();
+                foreach (var fileInfo in chartDir.GetFiles("*.chr"))
+                {
+                    try
+                    {
+                        var template = File.ReadAllLines(fileInfo.FullName);
+                        if (!template.Contains($"id={chart_id}"))
+                            continue;
+                        SaveTemplateDataOnCache(chart_id, template);
+                        var res = returnNull ? null : File.ReadAllBytes(fileInfo.FullName);
+                        return res;
+                    }
+                    catch {/**/}
+                }
+                if (onlyFromFileChr)
+                    return null;
+            }
             var filename = GenerateFileName("templates", "tpl");
             try
             {
                 var resBool = ChartSaveTemplate(chart_id, filename.Name);
-                var res = File.ReadAllBytes(filename.FullName);
+                var res = returnNull ? null : File.ReadAllBytes(filename.FullName);
                 return res;
             }
             finally
@@ -156,6 +245,29 @@ namespace MQL4CSharp.Base
             return false;
         }
 
+        /// <summary>
+        /// Returns the corresponding string of current order
+        /// </summary>
+        /// <returns></returns>
+        public string OrderGetOrderDefString()
+        {
+            List<Object> parameters = new List<Object>();
+            return (string)ExecCommand(MQLCommand.OrderGetOrderDefString_1, parameters);
+        }
+
+        private ConcurrentDictionary<int, OrderDef> orderDefCache = new ConcurrentDictionary<int, OrderDef>();
+        /// <summary>
+        /// Returns the corresponding string of current order
+        /// </summary>
+        /// <returns></returns>
+        public OrderDef OrderGetOrderDefModel()
+        {
+            var str = OrderGetOrderDefString();
+            var model = OrderDef.ConvertStringToOrderDef(str, i => i > 0 ? orderDefCache.GetOrAdd(i, i1 => new OrderDef()) : new OrderDef());
+            return model;
+        }
+
+
         #region Expert Advisor
 
         /// <summary>
@@ -171,8 +283,8 @@ namespace MQL4CSharp.Base
             try
             {
                 var fileInfo = GetFileInfo("templates", filename, "tpl");
-                if (fileInfo.Exists)
-                    SaveTemplateDataOnCache(0, File.ReadAllLines(fileInfo.FullName));
+                if (fileInfo.Exists && res)
+                    SaveTemplateDataOnCache(chart_id, File.ReadAllLines(fileInfo.FullName));
             }
             catch { /**/ }
             return res;
@@ -181,8 +293,9 @@ namespace MQL4CSharp.Base
         #region Gestione data in cache
         private string ExtractTemplateValue(IEnumerable<string> template, string key)
         {
-            var item = template.FirstOrDefault(x => x.StartsWith($"{key}="));
-            item = item == null ? null : item.Substring(key.Length + 1).Trim();
+            key = $"{key}=";
+            var item = template.FirstOrDefault(x => x.StartsWith(key));
+            item = item?.Substring(key.Length).Trim();
             return item == "" ? null : item;
         }
         private void SaveTemplateDataOnCache(long chart_id, string[] template)
@@ -199,10 +312,10 @@ namespace MQL4CSharp.Base
                 var storage = GetCacheStorage();
                 storage.Charts = storage.Charts ?? new ConcurrentDictionary<long, Mt4CharmModel>();
                 var chart = storage.Charts.GetOrAdd(chart_id, l => new Mt4CharmModel() { Id = chart_id });
-                var oldData = new { chart.EAEnabled, chart.EAName, chart.EASettings, chart.Symbol, chart.Period };
+                Func<Mt4CharmModel, string> chartKey = m => $"{m.Symbol}|{m.Period}|{m.EAEnabled}|{m.EAEnabledFlags}|{m.EAName}|{m.EASettings}|";
+                var oldData = chartKey(chart);
                 FillChartModel(chart, template);
-                if (oldData.EAEnabled != chart.EAEnabled || oldData.EAName != chart.EAName || oldData.EASettings != chart.EASettings ||
-                    oldData.Symbol != chart.Symbol || oldData.Period != chart.Period)
+                if (oldData != chartKey(chart))
                 {
                     CacheStorageWrite();
                 }
@@ -212,6 +325,8 @@ namespace MQL4CSharp.Base
 
         private void FillChartModel(Mt4CharmModel chart, string[] template)
         {
+            chart.CurrentTemplateContent = template;
+
             if (chart.Id == 0)
             {
                 var id = ExtractTemplateValue(template.Take(10), "id");
@@ -219,14 +334,53 @@ namespace MQL4CSharp.Base
             }
             if (chart.Symbol == null)
                 chart.Symbol = ExtractTemplateValue(template.Take(10), "symbol");
-            chart.Period = ExtractTemplateValue(template.Take(10), "period");
-            var expert = template.SkipWhile(s => s != "<expert>").Skip(1).TakeWhile(s => s != "</expert>").ToList();
-            chart.EAEnabled = ExtractTemplateValue(expert, "flags") == "343";
+            chart.Period = ExtractTemplateValue(template.Take(10), "period") ?? chart.Period;
+
+            var expert = ExtractExpertFromTemplate(template);
+            var flag = ExtractTemplateValue(expert, "flags");
+            chart.EAEnabled = new[] { "343", "342", "341", "855", "279", "23" }.Contains(flag ?? "");
+            if (chart.EAEnabled)
+                chart.EAEnabledFlags = flag;
             if (expert.Any())
             {
                 chart.EAName = ExtractTemplateValue(expert, "name");
-                chart.EASettings = template.SkipWhile(s => s != "<inputs>").Skip(1).TakeWhile(s => s != "</inputs>").Join("\r\n");
+                chart.EASettings = expert.SkipWhile(s => s != "<inputs>").Skip(1).TakeWhile(s => s != "</inputs>").Join("\r\n");
             }
+        }
+
+        private static List<string> ExtractExpertFromTemplate(string[] template)
+        {
+            var lstFullPath = new List<string>();
+            var templateWithFullPath = template
+                .Select((x, i) =>
+                {
+                    var retStr = x;
+                    if (x.StartsWith("</"))
+                    {
+                        var key = x.Trim('<', '/', '>');
+                        if (lstFullPath.LastOrDefault() == key)
+                        {
+                            retStr = $"</{lstFullPath.Join("_")}>";
+                            lstFullPath.RemoveAt(lstFullPath.Count - 1);
+                        }
+                    }
+                    else if (x.StartsWith("<"))
+                    {
+                        var key = x.Trim('<', '/', '>');
+                        lstFullPath.Add(key);
+                        retStr = $"<{lstFullPath.Join("_")}>";
+                    }
+                    return retStr;
+                })
+                .ToList();
+            lstFullPath.Clear();
+
+            var idxBegin = templateWithFullPath.LastIndexOf("<chart_expert>");
+            var idxEnd = templateWithFullPath.IndexOf("</chart_expert>", idxBegin + 1);
+            if (idxBegin <= -1 || idxEnd <= -1)
+                return new List<string>();
+            var lst = template.Take(idxEnd + 1).Skip(idxBegin).ToList();
+            return lst;
         }
 
         private CachedDataStorage GetCacheStorage()
@@ -245,23 +399,14 @@ namespace MQL4CSharp.Base
 
         #endregion
 
-
         public string ChartExpertAdvisorLastActiveName(long chart_id)
         {
-            var chart = GetCacheStorage().Charts.GetValueOrDefault(chart_id);
-            if (!string.IsNullOrEmpty(chart?.EAName))
-                return chart?.EAName ?? "";
-            ChartGetTemplate(chart_id);
-            chart = GetCacheStorage().Charts.GetValueOrDefault(chart_id);
+            var chart = ChartModelLoadAndGet(chart_id, false);
             return chart?.EAName ?? "";
         }
         public string ChartExpertAdvisorLastActiveSettings(long chart_id)
         {
-            var chart = GetCacheStorage().Charts.GetValueOrDefault(chart_id);
-            if (!string.IsNullOrEmpty(chart?.EASettings))
-                return chart?.EASettings ?? "";
-            ChartGetTemplate(chart_id);
-            chart = GetCacheStorage().Charts.GetValueOrDefault(chart_id);
+            var chart = ChartModelLoadAndGet(chart_id, false);
             return chart?.EASettings ?? "";
         }
         public bool ChartExpertAdvisorEnableLastActive(long chart_id)
@@ -277,8 +422,7 @@ namespace MQL4CSharp.Base
 
         public string ChartExpertAdvisorName(long chart_id)
         {
-            ChartGetTemplate(chart_id);
-            var chart = GetCacheStorage().Charts.GetValueOrDefault(chart_id);
+            var chart = ChartModelLoadAndGet(chart_id, false);
             return (chart?.EAEnabled == true ? chart.EAName : null) ?? "";
         }
 
@@ -287,7 +431,10 @@ namespace MQL4CSharp.Base
             //call ChartExpertAdvisorName, that store a actual ExpertAdvisor in cache
             if (string.IsNullOrEmpty(ChartExpertAdvisorName(chart_id)))
                 return true;
-            var template = "<chart>\r\n</chart>";
+            var chart = ChartModelLoadAndGet(chart_id, true);
+            var expert = ExtractExpertFromTemplate(chart.CurrentTemplateContent).Join("\r\n");
+            var chartContent = chart.CurrentTemplateContent.Join("\r\n");
+            var template = chartContent.Replace(expert, "");
             var res = ChartApplyTemplate(chart_id, Encoding.UTF8.GetBytes(template));
             ChartExpertAdvisorNameWait(chart_id, "");
             return res;
@@ -296,10 +443,19 @@ namespace MQL4CSharp.Base
 
         private bool ChartExpertAdvisorEnablePrivate(long chart_id, string expert_name, string expert_settings)
         {
-            var template = $"<chart>\r\n<expert>\r\nname={expert_name}\r\nflags=343\r\nwindow_num=0\r\n<inputs>";
+            var chart = ChartModelLoadAndGet(chart_id, true);
+            var oldExpert = ExtractExpertFromTemplate(chart.CurrentTemplateContent).Join("\r\n");
+            var chartContent = chart.CurrentTemplateContent.Join("\r\n");
+
+            if (string.IsNullOrEmpty(chart.EAEnabledFlags))
+                chart.EAEnabledFlags = "855";
+            var newExpert = $"<expert>\r\nname={expert_name}\r\nflags={chart.EAEnabledFlags}\r\nwindow_num=0\r\n<inputs>";
             if (expert_settings != null)
-                template += $"\r\n{expert_settings}";
-            template += "\r\n</inputs>\r\n</expert>\r\n</chart>";
+                newExpert += $"\r\n{expert_settings}";
+            newExpert += "\r\n</inputs>\r\n</expert>";
+
+            var template = chartContent;
+            template = !string.IsNullOrEmpty(oldExpert) ? template.Replace(oldExpert, newExpert) : template.Replace("</chart>", $"{newExpert}\r\n</chart>");
             var res = ChartApplyTemplate(chart_id, Encoding.UTF8.GetBytes(template));
             ChartExpertAdvisorNameWait(chart_id, expert_name);
             return res;

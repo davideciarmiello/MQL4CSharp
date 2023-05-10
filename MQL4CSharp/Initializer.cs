@@ -23,6 +23,7 @@ using System.IO;
 using System.Threading;
 using MQL4CSharp;
 using MQL4CSharp.Base.MQL;
+using MQL4CSharp.UserDefined.Managers;
 
 namespace mql4csharp
 {
@@ -32,6 +33,7 @@ namespace mql4csharp
         [DllExport("ExecOnDeinitCompleted", CallingConvention = CallingConvention.StdCall)]
         public static void ExecOnDeinitCompleted(Int64 ix, int reason)
         {
+            OrdersLoggerStaticMethods.OrdersLoggerDeInit(ix);
             //try
             //{
             //    RestServerHelper.RestServerStop(ix);

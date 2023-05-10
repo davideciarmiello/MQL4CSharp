@@ -263,7 +263,7 @@ namespace MQL4CSharp.Base.Enums
         SymbolInfoDouble_1 = 242,
         SymbolInfoInteger_1 = 243,
         SymbolInfoString_1 = 244,
-
+        OrderGetOrderDefString_1 = 245,
 
         ObjectCreate_3 = 1001,
         iCustom_1 = 1000,

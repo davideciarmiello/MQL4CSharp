@@ -3,6 +3,7 @@ using MQL4CSharp.Base.Exceptions;
 using MQL4CSharp.Base.MQL;
 using Newtonsoft.Json.Linq;
 using System;
+using System.Collections;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Linq;
@@ -106,7 +107,17 @@ namespace MQL4CSharp.Base.REST
             output = (method.Method.ReturnType == typeof(void)) ? "" : output;
             if (output != null)
                 output = ConvertValueToRest(method.Method.ReturnType, output);
-            context.Result["result"] = new JValue(output);
+            try
+            {
+                if (output is string || output is double || output is decimal || output is int || output is long || output is DateTime)
+                    context.Result["result"] = new JValue(output);
+                else
+                    context.Result["result"] = JToken.FromObject(output);
+            }
+            catch (ArgumentException)
+            {
+                context.Result["result"] = JToken.FromObject(output);
+            }
         }
 
         private static bool TrySetParametersAsOrder(MQLRestContext context, MethodInfoExtended method)
